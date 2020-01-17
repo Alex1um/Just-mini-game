@@ -9,6 +9,19 @@ from core import *
 class AAA:
 
     def resize(self, resolution):
+        screen = pygame.display.get_surface()
+        caption = pygame.display.get_caption()
+        cursor = pygame.mouse.get_cursor()  # Duoas 16-04-2007
+        flags = screen.get_flags()
+        bits = screen.get_bitsize()
+        pygame.display.init()
+        screen = pygame.display.set_mode(resolution, flags, bits)
+        pygame.display.set_caption(*caption)
+
+        pygame.key.set_mods(0)  # HACK: work-a-round for a SDL bug??
+
+        pygame.mouse.set_cursor(*cursor)  # Duoas 16-04-2007
+        self.screen = screen
         for obj in self.objects:
             obj.adopt(resolution)
 
@@ -70,8 +83,12 @@ class AAA:
                     if e.dict['key'] == 32:
                         self.toggle_fullscreen()
                         break
+                    elif e.dict['key'] == 114:
+                        resolution = tuple(map(int, input().split()))
+                        self.resize(resolution)
                 elif e.type == pygame.QUIT:
                     pygame.quit()
+                print(e)
             self.background.draw(self.screen)
             for obj in self.objects:
                 obj.draw(self.screen)

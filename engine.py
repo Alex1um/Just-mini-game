@@ -176,6 +176,7 @@ class RadialObject(Object):
     def check(self, x, y):
         return (x - self.xc) ** 2 + (y - self.yc) ** 2 <= self.r ** 2
 
+
 class Button(Object):
 
     def __init__(self, x, y, w, h):
