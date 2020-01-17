@@ -4,7 +4,7 @@ import pygame
 from threading import Thread
 
 
-DefaultFont = pygame.font.SysFont('Arial', 5)
+DEFAULTFONT = 'Arial'
 
 
 def nothing(*args, **kwargs):
@@ -20,7 +20,7 @@ class Interface:
         self.sprites = pygame.sprite.Group()
 
 
-class Object(pygame.sprite.Sprite):
+class Object:
 
     def __init__(self,
                  resolution,
@@ -30,7 +30,6 @@ class Object(pygame.sprite.Sprite):
                  h_rel=0,
                  adopt_size=True,
                  adopt_cords=True):
-        super().__init__()
         '''
 
         :param resolution:
@@ -53,10 +52,11 @@ class Object(pygame.sprite.Sprite):
         self.image_height = 100
         # self.color = pygame.color.Color('black')
         self.color = None
+        self.font_size = 16
+        self.font = pygame.font.SysFont(DEFAULTFONT, self.font_size)
         self.text = None
         self.text_shift_x = 0
         self.text_shift_y = 0
-        self.font = DefaultFont
         self.rect = self.get_rect()
 
     def adopt(self, resolution):
@@ -124,7 +124,11 @@ class Object(pygame.sprite.Sprite):
         self.font = args[0] if isinstance(args[0], pygame.font.FontType) else \
             pygame.font.SysFont(*args, **kwargs)
 
-    def text_set(self, text, text_color=(0, 0, 0)):
+    def text_set(self, text, text_color=(0, 255, 0), shit_x=0, shit_y=0):
+        self.text_shift_x, self.text_shift_y = shit_x, shit_y
+        if self.adopt_size:
+            self.text_shift_x *= self.w / 100
+            self.text_shift_y *= self.h / 100
         self.text = self.font.render(text, False, text_color)
 
     def mouse_down(self, x, y):
@@ -133,19 +137,44 @@ class Object(pygame.sprite.Sprite):
     def mouse_up(self, x, y):
         ...
 
+    def mouse_move(self, x, y):
+        ...
+
     def resize(self, w, h):
         self.w, self.h = w, h
 
     def draw(self, screen):
         if self.text:
-            screen.blit(self.text,
-                        (self.x + self.text_shift_x,
-                         self.y + self.text_shift_y))
+            screen.blit(self.text, (self.x + self.text_shift_x, self.y + self.text_shift_y - round(self.font_size * 1.3) / 2))
         if self.color:
             pygame.draw.rect(screen, self.color, self.get_rect())
         if self.image:
             screen.blit(self.image, self.get_rect())
 
+
+class RadialObject(Object):
+
+    def __init__(self,
+                 resolution,
+                 x_rel=0,
+                 y_rel=0,
+                 r_rel=0,
+                 adopt_size=True,
+                 adopt_cords=True,
+                 adopt_order=0):
+        super().__init__(resolution,
+                         x_rel,
+                         y_rel,
+                         r_rel * 2 if not adopt_order else r_rel * 2 * resolution[0] // resolution[1],
+                         r_rel * 2 if adopt_order else r_rel * 2 * resolution[1] // resolution[0],
+                         adopt_size,
+                         adopt_cords)
+        self.r_rel = r_rel
+        self.r = r_rel * resolution[adopt_order]
+        self.xc, self.yc = self.x + self.r, self.y + self.r
+
+    def check(self, x, y):
+        return (x - self.xc) ** 2 + (y - self.yc) ** 2 <= self.r ** 2
 
 class Button(Object):
 
