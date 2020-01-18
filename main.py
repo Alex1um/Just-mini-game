@@ -48,10 +48,10 @@ class AAA:
 
         return screen
 
-    class AAAPlanet(Object):
+    class AAAPlanet(RadialObject):
 
         def __init__(self, planet: Planet, resolution):
-            super().__init__(resolution, planet.x_relative, planet.y_relative, planet.d, planet.d)
+            super().__init__(resolution, planet.x_relative, planet.y_relative, planet.d // 2)
             self.image_set(planet.img, size_mode='%obj')
             self.text_set(planet.name, (0, 255, 0), 100, 50)
 
