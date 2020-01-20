@@ -301,6 +301,27 @@ class Background:
 
 class GameArea:
 
-    def __init__(self):
+    def __init__(self,):
         self.objects = []
         self.sprites = pygame.sprite.Group()
+        self.buttons = []
+        self.mouse_click = None
+
+    def add_objects(self, *objects):
+        for obj in objects:
+            if isinstance(obj, pygame.sprite.Sprite):
+                self.sprites.add(obj)
+            elif isinstance(obj, Button):
+                self.buttons.append(obj)
+            elif isinstance(obj, Object):
+                self.objects.append(obj)
+
+    def adopt(self, resolution):
+        for obj in self.objects:
+            obj.adopt(resolution)
+
+    def load(self):
+        pass
+
+    def connect_mouse_click(self, foo):
+        self.mouse_click = foo
