@@ -29,34 +29,47 @@ class Object:
                  w_rel=0,
                  h_rel=0,
                  adopt_size=True,
-                 adopt_cords=True):
+                 adopt_cords=True,
+                 border=None,
+                 border_color=(0, 0, 0)):
         '''
-
         :param resolution:
-        :param x_rel:
-        :param y_rel:
-        :param w_rel:
-        :param h_rel:
+        :param x_rel: relative(resolution) x
+        :param y_rel: relative(resolution) y
+        :param w_rel: relative(resolution) w
+        :param h_rel: relative(resolution) h
         :param adopt_size: adaptation object size(%) for resolution
         :param adopt_cords: adaptation object cords(%) for resolution
+        :param border: border width
+        :param border_color:
         '''
         self.x_rel, self.y_rel, self.w_rel, self.h_rel = x_rel, y_rel, w_rel, h_rel  # relative
-        self.x, self.y = self.x_rel * resolution[0] // 100, self.y_rel * resolution[1] // 100
-        self.w, self.h = self.w_rel * resolution[0] // 100, self.h_rel * resolution[1] // 100
+        # self.x, self.y = self.x_rel * resolution[0] // 100, self.y_rel * resolution[1] // 100
+        # self.w, self.h = self.w_rel * resolution[0] // 100, self.h_rel * resolution[1] // 100
+
         self.adopt_size = adopt_size
         self.adopt_cords = adopt_cords
+
         self._image = None
         self.image = None
-        self.image_mode = '%obj'
+        self.image_mode = '%obj'  # %obj; %img; px
         self.image_width = 100
         self.image_height = 100
         # self.color = pygame.color.Color('black')
         self.color = None
+
+        self.border_color = border_color
+        self.border = border
+
         self.font_size = 16
         self.font = pygame.font.SysFont(DEFAULTFONT, self.font_size)
         self.text = None
         self.text_shift_x = 0
         self.text_shift_y = 0
+        self.text_color = (0, 0, 0)
+
+        self.adopt(resolution)
+
         self.rect = self.get_rect()
 
     def adopt(self, resolution):
@@ -69,6 +82,26 @@ class Object:
         if self.image and self.image_size_mode == '%obj':
             self.image = pygame.transform.scale(self._image, (self.w * self.image_width // 100, self.image_height * self.h // 100))
         self.rect = self.get_rect()
+
+    def resize(self, w_rel=None, h_rel=None, adopt_size=None, resolution=None):
+        if adopt_size:
+            self.adopt_size = adopt_size
+        if w_rel:
+            self.w_rel = w_rel
+        if h_rel:
+            self.h_rel = h_rel
+        if resolution:
+            self.adopt(resolution)
+
+    def set_pos(self, x_rel, y_rel, adopt_cords, resolution):
+        if x_rel:
+            self.x_rel = x_rel
+        if y_rel:
+            self.y_rel = y_rel
+        if adopt_cords:
+            self.adopt_cords = adopt_cords
+        if resolution:
+            self.adopt(resolution)
 
     def get_rect_from_image(self):
         if self.image is not None:
@@ -124,12 +157,19 @@ class Object:
         self.font = args[0] if isinstance(args[0], pygame.font.FontType) else \
             pygame.font.SysFont(*args, **kwargs)
 
-    def text_set(self, text, text_color=(0, 255, 0), shit_x=0, shit_y=0):
-        self.text_shift_x, self.text_shift_y = shit_x, shit_y
-        if self.adopt_size:
-            self.text_shift_x *= self.w / 100
-            self.text_shift_y *= self.h / 100
-        self.text = self.font.render(text, False, text_color)
+    def text_set(self, text, text_color=None, shift_x=None, shift_y=None):
+        if shift_x:
+            self.text_shift_x = shift_x
+            if self.adopt_size:
+                self.text_shift_x *= self.w / 100
+        if shift_y:
+            self.text_shift_y = shift_y
+            if self.adopt_size:
+                self.text_shift_y *= self.h / 100
+        if text_color:
+            self.text_color = text_color
+        if text:
+            self.text = self.font.render(text, False, self.text_color)
 
     def mouse_down(self, x, y):
         ...
@@ -140,14 +180,13 @@ class Object:
     def mouse_move(self, x, y):
         ...
 
-    def resize(self, w, h):
-        self.w, self.h = w, h
-
     def draw(self, screen):
         if self.text:
             screen.blit(self.text, (self.x + self.text_shift_x, self.y + self.text_shift_y - round(self.font_size * 1.3) / 2))
         if self.color:
             pygame.draw.rect(screen, self.color, self.get_rect())
+        if self.border:
+            pygame.draw.rect(screen, self.border_color, self.get_rect(), self.border)
         if self.image:
             screen.blit(self.image, self.get_rect())
 
@@ -161,14 +200,18 @@ class RadialObject(Object):
                  r_rel=0,
                  adopt_size=True,
                  adopt_cords=True,
-                 adopt_order=0):
+                 adopt_order=0,
+                 border=None,
+                 border_color=(0, 0, 0)):
         super().__init__(resolution,
                          x_rel,
                          y_rel,
                          r_rel * 2 if not adopt_order else r_rel * 2 * resolution[0] // resolution[1],
                          r_rel * 2 if adopt_order else r_rel * 2 * resolution[1] // resolution[0],
                          adopt_size,
-                         adopt_cords)
+                         adopt_cords,
+                         border,
+                         border_color)
         self.r_rel = r_rel
         self.r = r_rel * resolution[adopt_order]
         self.xc, self.yc = self.x + self.r, self.y + self.r
@@ -176,13 +219,41 @@ class RadialObject(Object):
     def check(self, x, y):
         return (x - self.xc) ** 2 + (y - self.yc) ** 2 <= self.r ** 2
 
+    def draw(self, screen):
+        if self.text:
+            screen.blit(self.text, (self.x + self.text_shift_x, self.y + self.text_shift_y - round(self.font_size * 1.3) / 2))
+        if self.color:
+            pygame.draw.ellipse(screen, self.color, self.get_rect())
+        if self.border:
+            pygame.draw.ellipse(screen, self.border_color, self.get_rect(), self.border)
+        if self.image:
+            screen.blit(self.image, self.get_rect())
+
 
 class Button(Object):
 
-    def __init__(self, x, y, w, h):
-        super().__init__(x, y, w, h)
-        self.action_on_mouse_down = nothing
-        self.action_on_mouse_up = nothing
+    def __init__(self,
+                 resolution,
+                 x_rel=0,
+                 y_rel=0,
+                 w_rel=0,
+                 h_rel=0,
+                 adopt_size=True,
+                 adopt_cords=True,
+                 border=None,
+                 border_color=(0, 0, 0)):
+        super().__init__(resolution,
+                         x_rel,
+                         y_rel,
+                         w_rel,
+                         h_rel,
+                         adopt_size,
+                         adopt_cords,
+                         border,
+                         border_color)
+
+        self.action_on_mouse_down = None
+        self.action_on_mouse_up = None
         self.color_on_mouse_up = self.color
         self.color_on_mouse_down = pygame.color.Color('Gray')
         self.image_on_mouse_up = None
@@ -203,7 +274,33 @@ class Button(Object):
             self.action_on_mouse_up()
 
 
-class Window(Object):
+class Background:
 
-    def __init__(self, x, y, w, h):
-        super().__init__(x, y, w, h)
+    def __init__(self, resolution, _image: str, w=100, h=100, mode='%res', x=0, y=0, scale=False):
+        self._image = pygame.image.load(_image)
+        self.scale = scale
+        self.x, self.y = x, y
+        self.mode = mode
+        if mode == '%img':
+            self.w_rel, self.h_rel = self._image.get_width(), self._image.get_height()
+        elif mode == '%res':
+            self.w_rel, self.h_rel = w, h
+        elif mode == 'px':
+            self.w_rel, self.h_rel = w, h
+        self.adopt(resolution)
+
+    def adopt(self, resolution):
+        if self.scale:
+            if self.mode == '%res':
+                self.w, self.h = self.w_rel * resolution[0], self.h_rel * resolution[1]
+            elif self.mode == 'px':
+                self.w, self.h = resolution[0], resolution[1]
+            elif self.mode == '%img':
+                self.w, self.h = self._image.get_width(), self._image.get_height()
+
+
+class GameArea:
+
+    def __init__(self):
+        self.objects = []
+        self.sprites = pygame.sprite.Group()
