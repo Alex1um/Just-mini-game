@@ -29,6 +29,7 @@ def nothing(*args, **kwargs):
 class Interface:
     """
     class for interface(same as Game_Area)
+    but may be global
     """
 
     def __init__(self, click: callable, screen):
@@ -38,7 +39,44 @@ class Interface:
         self.sprites = pygame.sprite.Group()
 
 
-class Object:
+class Sizible:
+
+    def __init__(self, x_rel=0, y_rel=0, w_rel=1, h_rel=1, adopt_size=True, adopt_cords=True,):
+        self.x_rel = x_rel
+        self.y_rel = y_rel
+        self.w_rel = w_rel
+        self.h_rel = h_rel
+        self.adopt_size = True
+        self.adopt_cords = True
+
+    def adopt(self, resolution):
+        if self.adopt_size:
+            self.w, self.h = self.w_rel * resolution[0] // 100, self.h_rel * \
+                             resolution[1] // 100
+        if self.adopt_cords:
+            self.x, self.y = self.x_rel * resolution[0] // 100, self.y_rel * \
+                             resolution[1] // 100
+
+    def resize(self, w_rel=None, h_rel=None, adopt_size=None, resolution=None):
+        """
+        resize or switch parameter
+        :param w_rel: width % of resolution
+        :param h_rel: height % of resolution
+        :param adopt_size:
+        :param resolution:
+        :return:
+        """
+        if adopt_size:
+            self.adopt_size = adopt_size
+        if w_rel:
+            self.w_rel = w_rel
+        if h_rel:
+            self.h_rel = h_rel
+        if resolution:
+            self.adopt(resolution)
+
+
+class Object(Sizible):
 
     def __init__(self,
                  resolution,
@@ -50,6 +88,7 @@ class Object:
                  adopt_cords=True,
                  border=None,
                  border_color=(0, 0, 0)):
+        super().__init__(x_rel, y_rel, w_rel, h_rel, adopt_size, adopt_cords)
         """
         :param resolution:
         :param x_rel: x % if adopt_cords == True else px
@@ -68,11 +107,7 @@ class Object:
         self.adopt_size = adopt_size
         self.adopt_cords = adopt_cords
 
-        self._image: pygame.SurfaceType = None
         self.image: pygame.SurfaceType = None
-        self.image_mode: Union[percent_img, percent_obj, pixels] = '%obj'
-        self.image_width = 100
-        self.image_height = 100
         # self.color = pygame.color.Color('black')
         self.color = None
 
@@ -94,32 +129,8 @@ class Object:
         :param resolution: new resolution
         :return:
         """
-        if self.adopt_size:
-            self.w, self.h = self.w_rel * resolution[0] // 100, self.h_rel * \
-                             resolution[1] // 100
-        if self.adopt_cords:
-            self.x, self.y = self.x_rel * resolution[0] // 100, self.y_rel * \
-                             resolution[1] // 100
-        if self.image and self.image_size_mode == '%obj':
-            self.image = pygame.transform.scale(self._image, (self.w * self.image_width // 100, self.image_height * self.h // 100))
-
-    def resize(self, w_rel=None, h_rel=None, adopt_size=None, resolution=None):
-        """
-
-        :param w_rel: width % of resolution
-        :param h_rel: height % of resolution
-        :param adopt_size:
-        :param resolution:
-        :return:
-        """
-        if adopt_size:
-            self.adopt_size = adopt_size
-        if w_rel:
-            self.w_rel = w_rel
-        if h_rel:
-            self.h_rel = h_rel
-        if resolution:
-            self.adopt(resolution)
+        super().adopt(resolution)
+        # todo: make for image
 
     def set_pos(self, x_rel=None, y_rel=None, adopt_cords=None, resolution=None):
         """
@@ -139,16 +150,6 @@ class Object:
         if resolution:
             self.adopt(resolution)
 
-    def get_rect_from_image(self) -> Tuple[int, int]:
-        """
-        getting sizes of image
-        :return: image size
-        """
-        if self.image is not None:
-            return self.image.get_rect()
-        else:
-            raise AttributeError('No image')
-
     def get_rect(self) -> pygame.rect.RectType:
         """
         getting sizes of object
@@ -156,39 +157,7 @@ class Object:
         """
         return pygame.rect.Rect(self.x, self.y, self.w, self.h)
 
-    def set_image(self,
-                  image_name: str = None,
-                  width: int = 100,
-                  height: int = 100,
-                  size_mode: Union[percent_obj, percent_img, 'pixels'] = '%img'):
-        """
-        setting image or image params
-        :param image_name: name of new image
-        :param width:
-        :param height:
-        :param size_mode: mode for rescale
-        :return:
-        """
-        self._image = pygame.image.load(image_name)
-        if size_mode:
-            self.image_size_mode = size_mode
-        if width:
-            self.image_width = width
-        if height:
-            self.image_height = height
-        if size_mode == 'px':
-            self.image = pygame.transform.scale(self._image, (width, height))
-        elif size_mode == '%img':
-            w, h = self._image.get_width(), self._image.get_height()
-            self.image = pygame.transform.scale(self._image,
-                                                (w * width // 100,
-                                                 h * height // 100))
-        elif size_mode == '%obj':
-            self.image = pygame.transform.scale(self._image,
-                                                (self.w * width // 100,
-                                                 self.h * height // 100))
-
-    def color_set(self, color: Union[rgba, hsva], fmt: str = 'rgb'):
+    def set_color(self, color: Union[rgba, hsva], fmt: str = 'rgb'):
         """
         setting color
         :param color: color rgb or hsv
@@ -211,25 +180,6 @@ class Object:
         """
         return self.x <= x <= self.x + self.w and \
             self.y <= y <= self.h + self.y
-
-    def do_action(self, condition: Union[callable, bool], action: Callable, timer: float):
-        """
-
-        Now useless
-
-        binding action with condition
-        :param condition:
-        :param action:
-        :param timer: delay between cycle
-        :return:
-        """
-        boolean = True if isinstance(condition, bool) else False
-        while 1:
-            if boolean and condition:
-                action()
-            elif condition():
-                action()
-            time.sleep(timer)
 
     def connect_hover(self, action: Callable, delay=0.1):
         self.on_hover = action
@@ -410,6 +360,59 @@ class Button(Object):
         if self.check(x, y):
             self.action_on_mouse_up()
 
+class ImageMethods:
+
+    def __init__(self, cls):
+        pass
+
+class Image:
+
+    def __init__(self, cls, file_name: str, width=100, height=100, mode: Union[percent_img, percent_obj, pixels]='%img'):
+        if file_name:
+            self._image = pygame.image.load(file_name)
+        else:
+            self._image = None
+        self.width = width
+        self.height = height
+        self.mode = mode
+        self.cls = cls
+
+    def set_image(self,
+                  image_name: str = None,
+                  width: int = 100,
+                  height: int = 100,
+                  size_mode: Union[percent_obj, percent_img, 'pixels'] = '%img'):
+        """
+        setting image or image params
+        :param image_name: name of new image
+        :param width:
+        :param height:
+        :param size_mode: mode for rescale
+        :return:
+        """
+        if image_name:
+            self._image = pygame.image.load(image_name)
+        if size_mode:
+            self.mode = size_mode
+        if width:
+            self.width = width
+        if height:
+            self.height = height
+
+    def render(self, w_abs: int=None, h_abs: int=None) -> pygame.SurfaceType:
+        if self.mode == '%obj':
+            return pygame.transform.scale(self._image,
+                                                (w_abs * self.width // 100,
+                                                 h_abs * self.height // 100))
+        elif self.mode == 'px':
+            return pygame.transform.scale(self._image, (self.width, self.height))
+        elif self.mode == '%img':
+            w, h = self._image.get_width(), self._image.get_height()
+            return pygame.transform.scale(self._image,
+                                                (w * self.width // 100,
+                                                 h * self.height // 100))
+        else:
+            return self._image
 
 class Background:
     """
@@ -442,11 +445,14 @@ class Background:
         screen.blit(self.image, self.get_rect())
 
 
-class Sprite(pygame.sprite.Sprite):
+class Sprite(pygame.sprite.Sprite, Sizible):
 
     def __init__(self, x_rel, y_rel, w_rel, h_rel, adopt_size=True, adopt_cords=True, resolution=None):
-        super().__init__()
-        self.x_rel, self.y_rel = x_rel, y_rel
+        pygame.sprite.Sprite.__init__(self)
+        Sizible.__init__(self, x_rel, y_rel, w_rel, h_rel, adopt_size, adopt_cords)
+        if resolution:
+            self.adopt(resolution)
+        self.rect = self.get_rect()
 
     def get_rect(self) -> Tuple[int, int, int, int]:
         return self.x, self.y, self.w, self.h
@@ -465,7 +471,7 @@ class GameArea:
         self.key_board_click = None
         self.background: Background = None
         self.background_music = []
-        self.sounds = {}
+        self.sounds: Dict[str, pygame.mixer.SoundType] = {}
 
     def set_background_music(self, *file_names):
         self.background_music = file_names
@@ -494,11 +500,11 @@ class GameArea:
                 self.objects.append(obj)
 
     def render(self, screen):
-        '''
+        """
         drawing all objects
         :param screen:
         :return:
-        '''
+        """
         if self.background:
             self.background.draw(screen)
         for obj in self.objects:
@@ -508,12 +514,28 @@ class GameArea:
         self.sprites.draw(screen)
 
     def change_resolution(self, resolution: Tuple[int, int]):
+        """
+        changing resolution for all objects
+        :param resolution:
+        :return:
+        """
         for obj in self.objects:
             obj.adopt(resolution)
         for bt in self.buttons:
             bt.adopt(resolution)
         for sprite in self.sprites:
             sprite.adopt(resolution)
+
+    def play_sound(self, sound: str, loops: int=0, maxtime: int=0, fade_ms: int=0):
+        """
+        Don't care how to invoke it from Object
+        :param sound:
+        :param loops:
+        :param maxtime:
+        :param fade_ms:
+        :return:
+        """
+        self.sounds[sound].play(loops, maxtime, fade_ms)
 
     def on_mouse_click(self):
         pass
