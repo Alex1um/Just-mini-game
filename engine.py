@@ -280,13 +280,9 @@ class Background:
         self._image = pygame.image.load(_image)
         self.scale = scale
         self.x, self.y = x, y
+        self.w_rel, self.h_rel = w, h
+        self.image = None
         self.mode = mode
-        if mode == '%img':
-            self.w_rel, self.h_rel = self._image.get_width(), self._image.get_height()
-        elif mode == '%res':
-            self.w_rel, self.h_rel = w, h
-        elif mode == 'px':
-            self.w_rel, self.h_rel = w, h
         self.adopt(resolution)
 
     def adopt(self, resolution):
@@ -295,8 +291,16 @@ class Background:
                 self.w, self.h = self.w_rel * resolution[0], self.h_rel * resolution[1]
             elif self.mode == 'px':
                 self.w, self.h = resolution[0], resolution[1]
+                self.image = pygame.transform.scale(self._image, (self.w, self.h))
             elif self.mode == '%img':
                 self.w, self.h = self._image.get_width(), self._image.get_height()
+            self.image = pygame.transform.scale(self._image, (self.w, self.h))
+
+    def get_rect(self):
+        return self.x, self.y, self.w, self.h
+
+    def draw(self, screen):
+        screen.blit(self.image, self.get_rect())
 
 
 class GameArea:
@@ -306,6 +310,7 @@ class GameArea:
         self.sprites = pygame.sprite.Group()
         self.buttons = []
         self.mouse_click = None
+        self.background: Background = None
 
     def add_objects(self, *objects):
         for obj in objects:
@@ -320,8 +325,22 @@ class GameArea:
         for obj in self.objects:
             obj.adopt(resolution)
 
-    def load(self):
-        pass
+    def render(self, screen):
+        if self.background:
+            self.background.draw(screen)
+        for obj in self.objects:
+            obj.draw(screen)
+        for bt in self.buttons:
+            bt.draw(screen)
+        self.sprites.draw(screen)
+
+    def change_resolution(self, resolution):
+        for obj in self.objects:
+            obj.adopt(resolution)
+        for bt in self.buttons:
+            bt.adopt(resolution)
+        for sprite in self.sprites:
+            sprite.adopt(resolution)
 
     def connect_mouse_click(self, foo):
         self.mouse_click = foo
