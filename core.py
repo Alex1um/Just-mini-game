@@ -27,11 +27,15 @@ class Ship:
 
 class SpaceMap:
 
-    def __init__(self, planet_count):
-        self.planets = []
+    def __init__(self, planets):
+        self.planets = planets
+
+    @classmethod
+    def generate(cls, planet_count):
+        planets = []
         with open('staff\\planet_names.set', 'rb') as f:
             names = pickle.load(f)
-        print(names)
-        self.background = random.choice(glob.glob('galaxes\\*'))
+        background = random.choice(glob.glob('galaxes\\*'))
         for name in random.choices(names, k=planet_count):
-            self.planets.append(Planet(random.randint(5, 7), name))
+            planets.append(Planet(random.randint(5, 7), name))
+        return cls(planets)

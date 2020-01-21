@@ -3,15 +3,33 @@ from typing import *
 import pygame
 from threading import Thread
 
+"""
+all cords and sizes are % of resolution by default
+"""
 
 DEFAULTFONT = 'Arial'
+percent_img = NewType("'%img'", str)
+percent_obj = NewType("'%obj", str)
+pixels = NewType("px", str)
+rgba = NewType('rgba', Tuple[int, int, int, int])
+hsva = NewType('hsva', Tuple[int, int, int, int])
+rgb = NewType('rgb', Tuple[int, int, int])
 
 
 def nothing(*args, **kwargs):
+    """
+    just nothing
+    :param args:
+    :param kwargs:
+    :return:
+    """
     pass
 
 
 class Interface:
+    """
+    class for interface(same as Game_Area)
+    """
 
     def __init__(self, click: callable, screen):
         self.click_foo = click
@@ -32,27 +50,27 @@ class Object:
                  adopt_cords=True,
                  border=None,
                  border_color=(0, 0, 0)):
-        '''
+        """
         :param resolution:
-        :param x_rel: relative(resolution) x
-        :param y_rel: relative(resolution) y
-        :param w_rel: relative(resolution) w
-        :param h_rel: relative(resolution) h
-        :param adopt_size: adaptation object size(%) for resolution
-        :param adopt_cords: adaptation object cords(%) for resolution
+        :param x_rel: x % if adopt_cords == True else px
+        :param y_rel: y % if adopt_cords == True else px
+        :param w_rel: w % if adopt_size == True else px
+        :param h_rel: h % if adopt_size == True else px
+        :param adopt_size: adaptation object for new resolution(if enabled:
+        uses w_rel and h_rel as % of new resolution)
+        :param adopt_cords: adaptation object for new resolution(if enabled:
+        uses x_rel and y_rel as % of new resolution)
         :param border: border width
         :param border_color:
-        '''
+        """
         self.x_rel, self.y_rel, self.w_rel, self.h_rel = x_rel, y_rel, w_rel, h_rel  # relative
-        # self.x, self.y = self.x_rel * resolution[0] // 100, self.y_rel * resolution[1] // 100
-        # self.w, self.h = self.w_rel * resolution[0] // 100, self.h_rel * resolution[1] // 100
 
         self.adopt_size = adopt_size
         self.adopt_cords = adopt_cords
 
-        self._image = None
-        self.image = None
-        self.image_mode = '%obj'  # %obj; %img; px
+        self._image: pygame.SurfaceType = None
+        self.image: pygame.SurfaceType = None
+        self.image_mode: Union[percent_img, percent_obj, pixels] = '%obj'
         self.image_width = 100
         self.image_height = 100
         # self.color = pygame.color.Color('black')
@@ -70,9 +88,12 @@ class Object:
 
         self.adopt(resolution)
 
-        self.rect = self.get_rect()
-
-    def adopt(self, resolution):
+    def adopt(self, resolution: Tuple[int, int]):
+        """
+        Adaptation for new resolution
+        :param resolution: new resolution
+        :return:
+        """
         if self.adopt_size:
             self.w, self.h = self.w_rel * resolution[0] // 100, self.h_rel * \
                              resolution[1] // 100
@@ -81,9 +102,16 @@ class Object:
                              resolution[1] // 100
         if self.image and self.image_size_mode == '%obj':
             self.image = pygame.transform.scale(self._image, (self.w * self.image_width // 100, self.image_height * self.h // 100))
-        self.rect = self.get_rect()
 
     def resize(self, w_rel=None, h_rel=None, adopt_size=None, resolution=None):
+        """
+
+        :param w_rel: width % of resolution
+        :param h_rel: height % of resolution
+        :param adopt_size:
+        :param resolution:
+        :return:
+        """
         if adopt_size:
             self.adopt_size = adopt_size
         if w_rel:
@@ -93,7 +121,15 @@ class Object:
         if resolution:
             self.adopt(resolution)
 
-    def set_pos(self, x_rel, y_rel, adopt_cords, resolution):
+    def set_pos(self, x_rel=None, y_rel=None, adopt_cords=None, resolution=None):
+        """
+        set new position or change settings of positing
+        :param x_rel:
+        :param y_rel:
+        :param adopt_cords:
+        :param resolution:
+        :return:
+        """
         if x_rel:
             self.x_rel = x_rel
         if y_rel:
@@ -103,20 +139,43 @@ class Object:
         if resolution:
             self.adopt(resolution)
 
-    def get_rect_from_image(self):
+    def get_rect_from_image(self) -> Tuple[int, int]:
+        """
+        getting sizes of image
+        :return: image size
+        """
         if self.image is not None:
             return self.image.get_rect()
         else:
             raise AttributeError('No image')
 
-    def get_rect(self):
+    def get_rect(self) -> pygame.rect.RectType:
+        """
+        getting sizes of object
+        :return: sizes
+        """
         return pygame.rect.Rect(self.x, self.y, self.w, self.h)
 
-    def image_set(self, image: str, width=100, height=100, size_mode='%img'):
-        self._image = pygame.image.load(image)
-        self.image_size_mode = size_mode
-        self.image_width = width
-        self.image_height = height
+    def set_image(self,
+                  image_name: str = None,
+                  width: int = 100,
+                  height: int = 100,
+                  size_mode: Union[percent_obj, percent_img, 'pixels'] = '%img'):
+        """
+        setting image or image params
+        :param image_name: name of new image
+        :param width:
+        :param height:
+        :param size_mode: mode for rescale
+        :return:
+        """
+        self._image = pygame.image.load(image_name)
+        if size_mode:
+            self.image_size_mode = size_mode
+        if width:
+            self.image_width = width
+        if height:
+            self.image_height = height
         if size_mode == 'px':
             self.image = pygame.transform.scale(self._image, (width, height))
         elif size_mode == '%img':
@@ -129,7 +188,13 @@ class Object:
                                                 (self.w * width // 100,
                                                  self.h * height // 100))
 
-    def color_set(self, color, fmt: str):
+    def color_set(self, color: Union[rgba, hsva], fmt: str = 'rgb'):
+        """
+        setting color
+        :param color: color rgb or hsv
+        :param fmt: format of color
+        :return:
+        """
         if fmt == 'hsv':
             self.color.hsva = color
         elif fmt == 'rgb':
@@ -138,26 +203,69 @@ class Object:
                 self.color.a = color[3]
 
     def check(self, x, y):
+        """
+        checking position(hover or click)
+        :param x:
+        :param y:
+        :return:
+        """
         return self.x <= x <= self.x + self.w and \
             self.y <= y <= self.h + self.y
 
-    def do_action(self, condition: Union[callable, bool], action, timer, *args, **kwargs):
+    def do_action(self, condition: Union[callable, bool], action: Callable, timer: float):
+        """
+
+        Now useless
+
+        binding action with condition
+        :param condition:
+        :param action:
+        :param timer: delay between cycle
+        :return:
+        """
         boolean = True if isinstance(condition, bool) else False
         while 1:
             if boolean and condition:
-                action(*args, **kwargs)
+                action()
             elif condition():
-                action(*args, **kwargs)
+                action()
             time.sleep(timer)
 
-    def connect_hover(self, get_pos: callable, action: callable, delay=0.1):
-        Thread(target=self.do_action, args=[lambda: self.check(*get_pos()), action, delay]).start()
+    def connect_hover(self, action: Callable, delay=0.1):
+        self.on_hover = action
+
+    def hover(self, x, y):
+        """
+        calls on mouse_move
+        :param x: of mouse
+        :param y: of mouse
+        :return:
+        """
+        if self.check(x, y):
+            self.on_hover()
+
+    def on_hover(self):
+        pass
 
     def font_set(self, *args, **kwargs):
+        """
+        setting font
+        :param args:
+        :param kwargs:
+        :return:
+        """
         self.font = args[0] if isinstance(args[0], pygame.font.FontType) else \
             pygame.font.SysFont(*args, **kwargs)
 
-    def text_set(self, text, text_color=None, shift_x=None, shift_y=None):
+    def text_set(self, text: str, text_color: rgb = None, shift_x: int = None, shift_y: int = None):
+        """
+        setting text and shifts
+        :param text:
+        :param text_color:
+        :param shift_x: shift x
+        :param shift_y: shift y
+        :return:
+        """
         if shift_x:
             self.text_shift_x = shift_x
             if self.adopt_size:
@@ -181,6 +289,11 @@ class Object:
         ...
 
     def draw(self, screen):
+        """
+        just draw
+        :param screen:
+        :return:
+        """
         if self.text:
             screen.blit(self.text, (self.x + self.text_shift_x, self.y + self.text_shift_y - round(self.font_size * 1.3) / 2))
         if self.color:
@@ -192,6 +305,9 @@ class Object:
 
 
 class RadialObject(Object):
+    """
+    object but radial
+    """
 
     def __init__(self,
                  resolution,
@@ -217,6 +333,13 @@ class RadialObject(Object):
         self.xc, self.yc = self.x + self.r, self.y + self.r
 
     def check(self, x, y):
+        """
+        # probably need to optimize
+        checking radial object
+        :param x:
+        :param y:
+        :return:
+        """
         return (x - self.xc) ** 2 + (y - self.yc) ** 2 <= self.r ** 2
 
     def draw(self, screen):
@@ -231,7 +354,9 @@ class RadialObject(Object):
 
 
 class Button(Object):
-
+    """
+    Just button
+    """
     def __init__(self,
                  resolution,
                  x_rel=0,
@@ -266,16 +391,30 @@ class Button(Object):
         self.action_on_mouse_up = action
 
     def mouse_down(self, x, y):
+        """
+        foo must invoke on click
+        :param x:
+        :param y:
+        :return:
+        """
         if self.check(x, y):
             self.action_on_mouse_down()
 
     def mouse_up(self, x, y):
+        """
+        foo must invoke on click
+        :param x:
+        :param y:
+        :return:
+        """
         if self.check(x, y):
             self.action_on_mouse_up()
 
 
 class Background:
-
+    """
+    background as class for some reason...
+    """
     def __init__(self, resolution, _image: str, w=100, h=100, mode='%res', x=0, y=0, scale=False):
         self._image = pygame.image.load(_image)
         self.scale = scale
@@ -303,16 +442,49 @@ class Background:
         screen.blit(self.image, self.get_rect())
 
 
-class GameArea:
+class Sprite(pygame.sprite.Sprite):
 
-    def __init__(self,):
+    def __init__(self, x_rel, y_rel, w_rel, h_rel, adopt_size=True, adopt_cords=True, resolution=None):
+        super().__init__()
+        self.x_rel, self.y_rel = x_rel, y_rel
+
+    def get_rect(self) -> Tuple[int, int, int, int]:
+        return self.x, self.y, self.w, self.h
+
+
+class GameArea:
+    """
+    Class to control all objects
+    """
+
+    def __init__(self):
         self.objects = []
         self.sprites = pygame.sprite.Group()
         self.buttons = []
         self.mouse_click = None
+        self.key_board_click = None
         self.background: Background = None
+        self.background_music = []
+        self.sounds = {}
+
+    def set_background_music(self, *file_names):
+        self.background_music = file_names
+
+    def set_sounds(self, *file_names: str):
+        """
+        Compile sounds to play
+        :param file_names: names of files
+        :return:
+        """
+        for name in file_names:
+            self.sounds[name[:name.rfind('.')]] = pygame.mixer.Sound(name)
 
     def add_objects(self, *objects):
+        """
+        adding object
+        :param objects:
+        :return:
+        """
         for obj in objects:
             if isinstance(obj, pygame.sprite.Sprite):
                 self.sprites.add(obj)
@@ -321,11 +493,12 @@ class GameArea:
             elif isinstance(obj, Object):
                 self.objects.append(obj)
 
-    def adopt(self, resolution):
-        for obj in self.objects:
-            obj.adopt(resolution)
-
     def render(self, screen):
+        '''
+        drawing all objects
+        :param screen:
+        :return:
+        '''
         if self.background:
             self.background.draw(screen)
         for obj in self.objects:
@@ -334,7 +507,7 @@ class GameArea:
             bt.draw(screen)
         self.sprites.draw(screen)
 
-    def change_resolution(self, resolution):
+    def change_resolution(self, resolution: Tuple[int, int]):
         for obj in self.objects:
             obj.adopt(resolution)
         for bt in self.buttons:
@@ -342,5 +515,14 @@ class GameArea:
         for sprite in self.sprites:
             sprite.adopt(resolution)
 
-    def connect_mouse_click(self, foo):
+    def on_mouse_click(self):
+        pass
+
+    def load(self):
+        pass
+
+    def connect_mouse_click(self, foo: Callable):
         self.mouse_click = foo
+
+    def connect_keyboard_click(self, foo: Callable):
+        self.key_board_click = foo

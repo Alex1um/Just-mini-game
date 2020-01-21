@@ -52,7 +52,7 @@ class AAA:
 
         def __init__(self, planet: Planet, resolution):
             super().__init__(resolution, planet.x_relative, planet.y_relative, planet.d // 2)
-            self.image_set(planet.img, size_mode='%obj')
+            self.set_image(planet.img, size_mode='%obj')
             self.text_set(planet.name, (0, 255, 0), 100, 50)
 
     def __init__(self, sizex=None, sizey=None):
@@ -66,13 +66,14 @@ class AAA:
         self.planets = []
         self.sprites = pygame.sprite.Group()
         self.objects = []
-        space_map = SpaceMap(11)
+        space_map = SpaceMap.generate(11)
         self.load_space_map(space_map)
         self.run()
 
     def load_space_map(self, space_map):
-        self.background = Object(self.resolution, 0, 0, 100, 100)
-        self.background.image_set(space_map.background, size_mode='%obj')
+        background = Object(self.resolution, 0, 0, 100, 100)
+        background.set_image(random.choice(glob.glob('galaxes\\*')), size_mode='%obj')
+        self.background = background
         for planet in space_map.planets:
             self.objects.append(self.AAAPlanet(planet, self.resolution))
 
