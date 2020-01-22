@@ -3,7 +3,7 @@ from pygame.locals import *
 pygame.init()
 
 from engine import *
-from core import *
+from test import *
 
 
 class AAA:

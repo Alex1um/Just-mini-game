@@ -620,6 +620,10 @@ class GameArea:
         pass
 
     def connect_mouse_click(self, foo: Callable):
+        """
+        :param foo:
+        :return:
+        """
         self.mouse_click = foo
 
     def connect_keyboard_click(self, foo: Callable):
