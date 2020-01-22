@@ -77,31 +77,67 @@ class Sizible:
 
 
 class Image:
+    """
+    class for using images
+    """
 
-    def __init__(self, file_name: str=None, width=100, height=100, mode: Union[percent_img, percent_obj, pixels]='%img'):
+    def __init__(self,
+                 file_name: str=None,
+                 width=100,
+                 height=100,
+                 mode: Union[percent_img, percent_obj, pixels]='%img',
+                 animated: bool=False,
+                 animation_delay_frames: int=0):
+        """
+        init image
+        :param file_name: name of file
+        :param width: width % or px
+        :param height: height % or px
+        :param mode: mode to scale image
+        :param animated: is it animation
+        :param animation_delay_frames: delay between switching images if animated
+        """
         if file_name:
-            self._image = pygame.image.load(file_name)
+            self._image = [pygame.image.load(file_name)]
         else:
-            self._image = None
+            self._image = []
+        self.animation_delay_frames = animation_delay_frames
+        self.frame = 0
+        self.image_animated = animated
+        self.image_index = 0
         self.image_width = width
         self.image_height = height
         self.image_mode = mode
+
+    def add_images(self, *images: str):
+        """
+        add multiple images
+        :param images: file names
+        :return:
+        """
+        for name in images:
+            self._image.append(pygame.image.load(name))
 
     def set_image(self,
                   image_name: str = None,
                   width: int = 100,
                   height: int = 100,
-                  size_mode: Union[percent_obj, percent_img, 'pixels'] = '%img'):
+                  size_mode: Union[percent_obj, percent_img, 'pixels'] = '%img',
+                  index=0):
         """
         setting image or image params
         :param image_name: name of new image
         :param width:
         :param height:
         :param size_mode: mode for rescale
+        :param index: index of image
         :return:
         """
         if image_name:
-            self._image = pygame.image.load(image_name)
+            if len(self._image) < index:
+                self._image[index] = pygame.image.load(image_name)
+            else:
+                self.add_images(image_name)
         if size_mode:
             self.image_mode = size_mode
         if width:
@@ -110,22 +146,38 @@ class Image:
             self.image_height = height
 
     def image_render(self, w_abs: int=None, h_abs: int=None) -> pygame.SurfaceType:
+        """
+        render image with current mode
+        :param w_abs: width of object to scale image
+        :param h_abs: height of object to scale image
+        :return: image
+        """
+        if self.image_animated:
+            if self.frame == self.animation_delay_frames:
+                self.image_index = (self.image_index + 1) % len(self._image)
+                self.frame = 0
+            else:
+                self.frame += 1
         if self._image:
             if self.image_mode == '%obj':
-                return pygame.transform.scale(self._image,
+                return pygame.transform.scale(self._image[self.image_index],
                                                     (w_abs * self.image_width // 100,
                                                      h_abs * self.image_height // 100))
             elif self.image_mode == 'px':
-                return pygame.transform.scale(self._image, (self.image_width, self.image_height))
+                return pygame.transform.scale(self._image[self.image_index], (self.image_width, self.image_height))
             elif self.image_mode == '%img':
-                w, h = self._image.get_width(), self._image.get_height()
-                return pygame.transform.scale(self._image,
+                w, h = self._image[self.image_index].get_width(), self._image[self.image_index].get_height()
+                return pygame.transform.scale(self._image[self.image_index],
                                                     (w * self.image_width // 100,
                                                      h * self.image_height // 100))
-        return self._image
+        return self._image[self.image_index]
 
-    def image_full(self):
-        return self._image
+    def image_ready(self):
+        """
+        condition of image availability
+        :return:
+        """
+        return bool(self._image)
 
 
 class Object(Sizible, Image):
@@ -301,7 +353,7 @@ class Object(Sizible, Image):
             pygame.draw.rect(screen, self.color, self.get_rect())
         if self.border:
             pygame.draw.rect(screen, self.border_color, self.get_rect(), self.border)
-        if self.image_full():
+        if self.image_ready():
             screen.blit(self.image_render(self.w, self.h), self.get_rect())
 
 
@@ -350,7 +402,7 @@ class RadialObject(Object):
             pygame.draw.ellipse(screen, self.color, self.get_rect())
         if self.border:
             pygame.draw.ellipse(screen, self.border_color, self.get_rect(), self.border)
-        if self.image_full():
+        if self.image_ready():
             screen.blit(self.image_render(self.w, self.h), self.get_rect())
 
 
@@ -412,8 +464,8 @@ class Button(Object):
             self.action_on_mouse_up()
 
 
+class Background(Image):
 
-class Background:
     """
     background as class for some reason...
     """
@@ -422,7 +474,7 @@ class Background:
         self.scale = scale
         self.x, self.y = x, y
         self.w_rel, self.h_rel = w, h
-        self.image = None
+        self.image = self.image_render(self.w, self.h)
         self.mode = mode
         self.adopt(resolution)
 
@@ -432,10 +484,9 @@ class Background:
                 self.w, self.h = self.w_rel * resolution[0], self.h_rel * resolution[1]
             elif self.mode == 'px':
                 self.w, self.h = resolution[0], resolution[1]
-                self.image = pygame.transform.scale(self._image, (self.w, self.h))
-            elif self.mode == '%img':
+            elif self.mode == '%img' and self._image:
                 self.w, self.h = self._image.get_width(), self._image.get_height()
-            self.image = pygame.transform.scale(self._image, (self.w, self.h))
+            self.image = pygame.transform.scale(self.w, self.h)
 
     def get_rect(self):
         return self.x, self.y, self.w, self.h
@@ -445,27 +496,39 @@ class Background:
 
 
 class Sprite(pygame.sprite.Sprite, Sizible, Image):
+    """
+    Sprite or animated sprite
+    """
 
-    def __init__(self, x_rel, y_rel, w_rel, h_rel, adopt_size=True, adopt_cords=True, resolution=None):
+    def __init__(self, x_rel, y_rel, w_rel, h_rel, adopt_size=True, adopt_cords=True, resolution=None, animated=False):
+        self.animated = animated
         pygame.sprite.Sprite.__init__(self)
         Sizible.__init__(self, x_rel, y_rel, w_rel, h_rel, adopt_size, adopt_cords)
-        Image.__init__(self)
-        self.image = self.image_render(self.w, self.h)
+        Image.__init__(self, animated=animated)
         if resolution:
             self.adopt(resolution)
+        self.image = self.image_render(self.w, self.h)  # None
         self.rect = self.get_rect()
 
     def set_image(self,
                   image_name: str = None,
                   width: int = 100,
                   height: int = 100,
-                  size_mode: Union[percent_obj, percent_img, 'pixels'] = '%img'):
-        super().set_image(image_name, width, height, size_mode)
+                  size_mode: Union[percent_obj, percent_img, 'pixels'] = '%img',
+                  index=0):
+        super().set_image(image_name, width, height, size_mode, index)
         self.image = self.image_render(self.w, self.h)
+        self.rect = self.get_rect()
 
     def resize(self, w_rel=None, h_rel=None, adopt_size=None, resolution=None):
         super().resize(w_rel, h_rel, adopt_size, resolution)
         self.image = self.image_render(self.w, self.h)
+        self.rect = self.get_rect()
+
+    def adopt(self, resolution):
+        super().adopt(resolution)
+        self.image = self.image_render(self.w, self.h)
+        self.rect = self.get_rect()
 
     def get_rect(self) -> Tuple[int, int, int, int]:
         return self.x, self.y, self.w, self.h
