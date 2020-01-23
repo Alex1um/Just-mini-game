@@ -2,61 +2,123 @@ import random
 import glob
 import pickle
 import time
+from typing import *
+import utils
+
+
+class Fraction:
+
+    def __init__(self, name):
+        self.name = name
+
+    @classmethod
+    def generate_name(cls):
+        return cls(str(time.time()))
+
+    def __eq__(self, other):
+        return self.name == other.name
 
 
 class City:
 
-    def __init__(self, x, y, fractions: dict):
+    def __init__(self, x_relative: int, y_relative: int, stat: Dict[Fraction, int]):
         """
-        may be some parametrs
+        # todo realize unit production
         :param x:
         :param y:
         """
-        self.x, self.y = x, y
-        self.fractions = fractions
+        self.x_rel, self.y_rel = x_relative, y_relative
+        self.fractions = stat
+        self.available_for_build = []
 
     @classmethod
-    def generate_sity(cls, fractions, most_fraction_index):
+    def generate_sity(cls, fractions: Union[Tuple[Fraction], List[Fraction]], most_fraction: Fraction):
         x, y = random.randint(0, 50), random.randint(0, 50)
-        while x ** 2 + y ** 2 >= 2500:
+        while x ** 2 + y ** 2 >= 2500:  # city position on planet
             x, y = random.randint(0, 50), random.randint(0, 50)
-        table = {}
-        most = random.uniform(0.5, 1)
-        table[fractions[most_fraction_index]] = most
+        stat = {}  # % of fractions impact
+        most = random.uniform(0.5, 1)  # most fraction
+        stat[most_fraction] = most
         rest = 1 - most
-        for fraction in fractions[:most_fraction_index] + fractions[most_fraction_index + 1:]:
+        most_fraction_index = fractions.index(most_fraction)
+        for fraction in fractions[:most_fraction_index] + fractions[most_fraction_index + 1:]:  # calculate other fractions impact
             new = rest * random.random()
             rest -= new
-            table[fraction] = new
-        return cls(x, y, table)
+            stat[fraction] = new
+        return cls(x, y, stat)
 
     def get_fraction(self):
         return max(self.fractions.items(), key=lambda x: x[1])[0]
 
+    def change_fraction_impact(self, mutable_fraction: Fraction, percent: int):
+        self.fractions[mutable_fraction] += percent
+        fractions_changing_impact = utils.break_number_sum(percent, len(self.fractions) - 1)
+        i = 0
+        for fraction in self.fractions.keys():
+            if fraction != mutable_fraction:
+                self.fractions[fraction] -= fractions_changing_impact[i]
+                i += 1
+
 
 class Planet:
 
-    def __init__(self, size, name):
+    def __init__(self, x_rel: int, y_rel: int, map: List[City], orbit, name):
+        self.x_rel, self.y_rel = x_rel, y_rel
+        self.map = map
+        self.orbit = orbit
+        self.name = name
+
+    def get_stat(self):
+        stat = self.map[0].fractions
+        for city in self.map[1:]:
+            for k, v in city.fractions.items():
+                stat[k] += v
+        return stat
+
+    def get_most_fraction(self):
+        return max(self.get_stat().items(), key=lambda x: x[1])[0]
+
+    def change_fraction_imact(self, fraction: Fraction, max_percent=10):
+        city_changing_impact = utils.break_number_sum(random.uniform(0, max_percent), len(self.map))
+        for i in range(len(self.map)):
+            self.map[i].change_fraction_impact(fraction, city_changing_impact[i])
+
+    @classmethod
+    def generate(cls,
+                 diameter: int,
+                 name: str,
+                 fractions: Union[Tuple[Fraction], List[Fraction]],
+                 most_fraction: Fraction,
+                 city_count: int):
+        ''' may be realesed in game_area
         sprite_num = str(random.randint(1, 32))
         if len(sprite_num) == 1:
             sprite_num = '0' + sprite_num
-        self.img = f'planet_{sprite_num}.png'
-        self.hd_img = f'planets_high\\planet{sprite_num}.png'
-        self.map = []
-        self.name = name
-        self.space = []
-        self.fraction = None
-        self.d = size
-        self.x_relative, self.y_relative = random.randint(0, 100 - size), random.randint(0, 100 - size)
+        img = f'planet_{sprite_num}.png'
+        hd_img = f'planets_high\\planet{sprite_num}.png'
+        '''
+        map = [City.generate_sity(fractions, most_fraction) for _ in ' ' * city_count]
+        orbit = []
+        x_relative = random.randint(0, 100 - diameter)
+        y_relative = random.randint(0, 100 - diameter)
+        return cls(x_relative, y_relative, map, orbit, name)
 
 
 class Ship:
+    """
+    #todo realize me
+    hit boxes may be complex shape(might be using Sprites) or only crit zones
+    """
 
     def __init__(self):
-        self.weapons = []
+        pass
 
 
 class SpaceMap:
+    """
+    #todo realize my methods:
+    flight between planets
+    """
 
     def __init__(self, planets):
         self.planets = planets
@@ -71,16 +133,6 @@ class SpaceMap:
         return cls(planets)
 
 
-class Fraction:
-
-    def __init__(self, name):
-        self.name = name
-
-    @classmethod
-    def generate_name(cls):
-        return cls(str(time.time()))
-
-
 class Game:
     """
 
@@ -92,3 +144,4 @@ class Game:
     def generate(cls, number_of_fraction, planet_count):
         fractions = [Fraction.generate_name() for _ in ' ' * number_of_fraction]
         space_map = SpaceMap.generate(planet_count)
+        return cls(fractions, space_map)
