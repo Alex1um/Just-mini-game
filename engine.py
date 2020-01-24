@@ -82,7 +82,7 @@ class Image:
     """
 
     def __init__(self,
-                 file_name: str=None,
+                 file_name: Union[str, Iterable]=None,
                  width=100,
                  height=100,
                  mode: Union[percent_img, percent_obj, pixels]='%img',
@@ -97,12 +97,12 @@ class Image:
         :param animated: is it animation
         :param animation_delay_frames: delay between switching images if animated
         """
+        self._image = []
         if file_name:
-            self._image = [pygame.image.load(file_name)]
-        else:
-            self._image = []
+            # self._image = [pygame.image.load(file_name)]
+            self.add_images(file_name)
         self.animation_delay_frames = animation_delay_frames
-        self.frame = 0
+        self._frame = 0
         self.image_animated = animated
         self.image_index = 0
         self.image_width = width
@@ -153,11 +153,11 @@ class Image:
         :return: image
         """
         if self.image_animated:
-            if self.frame == self.animation_delay_frames:
+            if self._frame == self.animation_delay_frames:
                 self.image_index = (self.image_index + 1) % len(self._image)
-                self.frame = 0
+                self._frame = 0
             else:
-                self.frame += 1
+                self._frame += 1
         if self._image:
             if self.image_mode == '%obj':
                 return pygame.transform.scale(self._image[self.image_index],
@@ -178,6 +178,9 @@ class Image:
         :return:
         """
         return bool(self._image)
+
+    def get_image_rect(self, image=None) -> Tuple[int, int]:
+        return image.get_rect() if image else self._image[0].get_rect()
 
 
 class Object(Sizible, Image):
@@ -469,11 +472,22 @@ class Background(Image):
     """
     background as class for some reason...
     """
-    def __init__(self, resolution, _image: str, w=100, h=100, mode='%res', x=0, y=0, scale=False):
-        self._image = pygame.image.load(_image)
+    def __init__(self,
+                 resolution,
+                 image_name: Union[str, Iterable],
+                 animated=False,
+                 frame_delay=0,
+                 w=100,
+                 h=100,
+                 mode='%res',
+                 x=0,
+                 y=0,
+                 scale=False):
+        Image.__init__(self, image_name, animated=animated, animation_delay_frames=frame_delay)
         self.scale = scale
         self.x, self.y = x, y
         self.w_rel, self.h_rel = w, h
+        self.w, self.h = w * resolution[0] / 100, h * resolution[1] / 100
         self.image = self.image_render(self.w, self.h)
         self.mode = mode
         self.adopt(resolution)
@@ -481,11 +495,12 @@ class Background(Image):
     def adopt(self, resolution):
         if self.scale:
             if self.mode == '%res':
-                self.w, self.h = self.w_rel * resolution[0], self.h_rel * resolution[1]
+                self.w, self.h = self.w_rel * resolution[0] / 100, self.h_rel * resolution[1] / 100
             elif self.mode == 'px':
-                self.w, self.h = resolution[0], resolution[1]
+                self.w, self.h = self.w_rel, self.h_rel
             elif self.mode == '%img' and self._image:
-                self.w, self.h = self._image.get_width(), self._image.get_height()
+                w, h = self.get_image_rect()
+                self.w, self.h = w * self.w_rel / 100, h * self.h_rel / 100
             self.image = pygame.transform.scale(self.w, self.h)
 
     def get_rect(self):

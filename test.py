@@ -114,8 +114,7 @@ class AAA:
         self.run()
 
     def load_space_map(self, space_map):
-        background = Object(self.resolution, 0, 0, 100, 100)
-        background.set_image(random.choice(glob.glob('galaxes\\*')), size_mode='%obj')
+        background = Background(self.resolution, random.choice(glob.glob('galaxes\\*')))
         self.background = background
         for planet in space_map.planets:
             self.objects.append(self.AAAPlanet(planet, self.resolution))
