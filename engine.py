@@ -487,27 +487,26 @@ class Background(Image):
         self.scale = scale
         self.x, self.y = x, y
         self.w_rel, self.h_rel = w, h
-        self.w, self.h = w * resolution[0] / 100, h * resolution[1] / 100
-        self.image = self.image_render(self.w, self.h)
-        self.mode = mode
         self.adopt(resolution)
+        self.mode = mode
 
     def adopt(self, resolution):
         if self.scale:
             if self.mode == '%res':
-                self.w, self.h = self.w_rel * resolution[0] / 100, self.h_rel * resolution[1] / 100
+                self.w, self.h = self.w_rel * resolution[0] // 100, self.h_rel * resolution[1] // 100
             elif self.mode == 'px':
                 self.w, self.h = self.w_rel, self.h_rel
             elif self.mode == '%img' and self._image:
                 w, h = self.get_image_rect()
-                self.w, self.h = w * self.w_rel / 100, h * self.h_rel / 100
-            self.image = pygame.transform.scale(self.w, self.h)
+                self.w, self.h = w * self.w_rel // 100, h * self.h_rel // 100
+        else:
+            self.w, self.h = resolution
 
     def get_rect(self):
         return self.x, self.y, self.w, self.h
 
     def draw(self, screen):
-        screen.blit(self.image, self.get_rect())
+        screen.blit(self.image_render(self.w, self.h), self.get_rect())
 
 
 class Sprite(pygame.sprite.Sprite, Sizible, Image):
