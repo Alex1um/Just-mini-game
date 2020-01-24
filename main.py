@@ -2,6 +2,7 @@ from core import *
 from engine import *
 import pygame
 from threading import Thread
+from templates import *
 
 
 class Client:
@@ -9,6 +10,7 @@ class Client:
     def __init__(self):
         # Todo realize Game ares
         pygame.init()
+        self.current_game_area: GameArea = None
         self.resolution = (1200, 800)
         self.fps = 30
         self.screen = pygame.display.set_mode(self.resolution)
@@ -16,30 +18,49 @@ class Client:
         self.exit = False
 
         main_menu = GameArea()
-        bt_new_game = Button(self.resolution, 20, 20, 60, 10, border_color=(255, 255, 255), border=2)
+        settings = GameArea()
+
+        bt_new_game = Button(self.resolution, 20, 20, 60, 10,
+                             border_color=(255, 255, 255), border=2)
         bt_new_game.set_color((150, 150, 150))
+        bt_new_game.set_font('Arial', 50)
         bt_new_game.color_on_mouse_down = pygame.Color('gray')
-        bt_new_game.set_text('Начать игру', (0, 255, 0), 43, 50)
+        bt_new_game.set_text('Начать игру', (0, 0, 0), 30, 30)
 
-        bt_settings = Button(self.resolution, 20, 40, 60, 10, border_color=(255, 255, 255), border=2)
+        bt_settings = Button(self.resolution, 20, 40, 60, 10,
+                             border_color=(255, 255, 255), border=2)
         bt_settings.set_color((150, 150, 150))
-        bt_settings.set_text('Настройки', (0, 255, 0), 43, 50)
+        bt_settings.set_font('Arial', 50)
+        bt_settings.set_text('Настройки', (0, 0, 0), 33, 30)
         bt_settings.color_on_mouse_down = pygame.Color('gray')
+        bt_settings.connect_mouse_up(lambda x: self.switch_game_area(settings))
 
-        bt_exit = Button(self.resolution, 20, 60, 60, 10, border_color=(255, 255, 255), border=2)
+        bt_exit = Button(self.resolution, 20, 60, 60, 10,
+                         border_color=(255, 255, 255), border=2)
         bt_exit.set_color((150, 150, 150))
-        bt_exit.set_text('Выход', (0, 255, 0), 43, 50)
+        bt_exit.set_font('Arial', 50)
+        bt_exit.set_text('Выход', (0, 0, 0), 40, 30)
         bt_exit.color_on_mouse_down = pygame.Color('gray')
 
         main_menu.add_objects(bt_new_game, bt_settings, bt_exit)
+
+        te_res_x = TextEdit(self.resolution, 20, 20, 25, 5, border=2)
+        te_res_x.color_default = (200, 200, 200)
+        te_res_x.set_color((200, 200, 200))
+        te_res_x.color_filling = (160, 160, 160)
+        settings.add_objects(te_res_x)
         # bg = Background(self.resolution, "galaxes\\galaxy_1.jpg")
         # bg.image_mode = '%obj'
         # main_menu.background = bg
 
-        self.current_game_area = main_menu
-        self.current_game_area.load()
+        self.switch_game_area(main_menu)
 
         self.run()
+
+    def switch_game_area(self, game_area):
+        pygame.draw.rect(self.screen, (0, 0, 0), (0, 0, *self.resolution))
+        self.current_game_area = game_area
+        self.current_game_area.load()
 
     def run(self):
         clock = pygame.time.Clock()
@@ -55,6 +76,8 @@ class Client:
                     self.current_game_area.on_mouse_down(*e.dict['pos'])
                 elif e.type == pygame.QUIT:
                     self.exit = True
+                elif e.type == pygame.KEYDOWN:
+                    self.current_game_area.on_key_down(pygame.key.name(e.key))
             self.current_game_area.render(self.screen)
             pygame.display.flip()
             clock.tick(self.fps)

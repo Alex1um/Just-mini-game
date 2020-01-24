@@ -224,7 +224,8 @@ class Object(Sizible, Image):
 
         self.font_size = 16
         self.font = pygame.font.SysFont(DEFAULTFONT, self.font_size)
-        self.text = None
+        self._text = None
+        self.text = ''
         self.text_shift_x = 0
         self.text_shift_y = 0
         self.text_color = (0, 0, 0)
@@ -314,7 +315,7 @@ class Object(Sizible, Image):
             self.on_hover(self)
             self._hovered = True
 
-    def font_set(self, *args, **kwargs):
+    def set_font(self, *args, **kwargs):
         """
         setting font
         :param args:
@@ -324,7 +325,7 @@ class Object(Sizible, Image):
         self.font = args[0] if isinstance(args[0], pygame.font.FontType) else \
             pygame.font.SysFont(*args, **kwargs)
 
-    def set_text(self, text: str, text_color: rgb = None, shift_x: int = None, shift_y: int = None):
+    def set_text(self, text: str='', text_color: rgb = None, shift_x: int = None, shift_y: int = None):
         """
         setting text and shifts
         :param text:
@@ -344,7 +345,8 @@ class Object(Sizible, Image):
         if text_color:
             self.text_color = text_color
         if text:
-            self.text = self.font.render(text, False, self.text_color)
+            self.text = text
+            self._text = self.font.render(text, False, self.text_color)
 
     def draw(self, screen):
         """
@@ -359,7 +361,7 @@ class Object(Sizible, Image):
         if self.image_ready():
             screen.blit(self.image_render(self.w, self.h), self.get_rect())
         if self.text:
-            screen.blit(self.text, (self.x + self.text_shift_x, self.y + self.text_shift_y - round(self.font_size * 1.3) / 2))
+            screen.blit(self._text, (self.x + self.text_shift_x, self.y + self.text_shift_y - round(self.font_size * 1.3) / 2))
 
 
 class RadialObject(Object):
@@ -568,6 +570,57 @@ class Sprite(pygame.sprite.Sprite, Sizible, Image):
         return self.x, self.y, self.w, self.h
 
 
+class TextEdit(Object):
+
+    def __init__(self,
+                 resolution,
+                 x_rel=0,
+                 y_rel=0,
+                 w_rel=0,
+                 h_rel=0,
+                 adopt_size=True,
+                 adopt_cords=True,
+                 border=None,
+                 border_color=(255, 255, 255),
+                 adopt_text=True):
+        super().__init__(resolution,
+                         x_rel,
+                         y_rel,
+                         w_rel,
+                         h_rel,
+                         adopt_size,
+                         adopt_cords,
+                         border,
+                         border_color)
+        self.set_text(text_color=(255, 255, 255), shift_x=1, shift_y=15)
+        if adopt_text:
+            self.set_font('Arial', round(self.h * 0.75))
+        self.color_filling = (200, 200, 200)
+        self.color_default = self.color
+        self.delay = 1000
+        self.high = False
+
+    def on_mouse_up(self, x, y):
+        if self.check(x, y):
+            self.set_color(self.color_filling)
+            self.high = True
+            self.set_text(self.text + '|')
+        elif self.high:
+            self.set_color(self.color_default)
+            self.high = False
+            self.set_text(self.text[:-1])
+
+    def on_key_down(self, key: str):
+        if self.high:
+            if len(key) == 1:
+                self.set_text(self.text[:-1] + key + '|')
+            elif key == 'backspace':
+                self.set_text(self.text[:-2] + '|')
+
+    def draw(self, screen):
+        super().draw(screen)
+
+
 class GameArea:
     """
     Class to control all objects
@@ -580,6 +633,7 @@ class GameArea:
         self.background: Background = None
         self.background_music = []
         self.sounds: Dict[str, pygame.mixer.SoundType] = {}
+        self.text_edits: List[TextEdit] = []
 
     def set_background_music(self, *file_names):
         self.background_music = file_names
@@ -604,6 +658,8 @@ class GameArea:
                 self.sprites.add(obj)
             elif isinstance(obj, Button):
                 self.buttons.append(obj)
+            elif isinstance(obj, TextEdit):
+                self.text_edits.append(obj)
             elif isinstance(obj, Object):
                 self.objects.append(obj)
 
@@ -619,6 +675,8 @@ class GameArea:
             obj.draw(screen)
         for bt in self.buttons:
             bt.draw(screen)
+        for obj in self.text_edits:
+            obj.draw(screen)
         self.sprites.draw(screen)
 
     def change_resolution(self, resolution: Tuple[int, int]):
@@ -646,9 +704,10 @@ class GameArea:
         self.sounds[sound].play(loops, maxtime, fade_ms)
 
     def on_mouse_up(self, x, y):
-        print(x, y)
         for bt in self.buttons:
             bt.mouse_up(x, y)
+        for obj in self.text_edits:
+            obj.on_mouse_up(x, y)
 
     def on_mouse_down(self, x, y):
         for bt in self.buttons:
@@ -659,6 +718,13 @@ class GameArea:
             bt.hover(x, y)
         for obj in self.objects:
             obj.hover(x, y)
+
+    def on_key_up(self, x, y):
+        pass
+
+    def on_key_down(self, key):
+        for obj in self.text_edits:
+            obj.on_key_down(key)
 
     def load(self):
         pass

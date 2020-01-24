@@ -1,11 +1,12 @@
 from engine import *
 
 
-MAIN_MENU = GameArea()
-SPACE_MAP = GameArea()
+class MainMenu(GameArea):
+    def __init__(self, resolution):
+        super().__init__()
 
-resolution = (1, 1)
 
-bt_start = Button(resolution, 30, 40, 20, 5)
-bt_start.connect_mouse_up(lambda: SPACE_MAP.load() and MAIN_MENU.load())
-MAIN_MENU.add_objects(bt_start)
+class Settings(GameArea):
+
+    def __init__(self):
+        pass
