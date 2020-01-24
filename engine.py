@@ -275,10 +275,11 @@ class Object(Sizible, Image):
         :return:
         """
         if isinstance(color, pygame.color.Color):
-            self.color.r = color.r
-            self.color.b = color.b
-            self.color.g = color.g
-            self.color.a = color.a
+            self.color = color
+            # self.color.r = color.r
+            # self.color.b = color.b
+            # self.color.g = color.g
+            # self.color.a = color.a
         elif fmt == 'hsv':
             self.color.hsva = color
         elif fmt == 'rgb':
@@ -323,7 +324,7 @@ class Object(Sizible, Image):
         self.font = args[0] if isinstance(args[0], pygame.font.FontType) else \
             pygame.font.SysFont(*args, **kwargs)
 
-    def text_set(self, text: str, text_color: rgb = None, shift_x: int = None, shift_y: int = None):
+    def set_text(self, text: str, text_color: rgb = None, shift_x: int = None, shift_y: int = None):
         """
         setting text and shifts
         :param text:
@@ -351,14 +352,14 @@ class Object(Sizible, Image):
         :param screen:
         :return:
         """
-        if self.text:
-            screen.blit(self.text, (self.x + self.text_shift_x, self.y + self.text_shift_y - round(self.font_size * 1.3) / 2))
         if self.color:
             pygame.draw.rect(screen, self.color, self.get_rect())
         if self.border:
             pygame.draw.rect(screen, self.border_color, self.get_rect(), self.border)
         if self.image_ready():
             screen.blit(self.image_render(self.w, self.h), self.get_rect())
+        if self.text:
+            screen.blit(self.text, (self.x + self.text_shift_x, self.y + self.text_shift_y - round(self.font_size * 1.3) / 2))
 
 
 class RadialObject(Object):
@@ -400,14 +401,14 @@ class RadialObject(Object):
         return (x - self.xc) ** 2 + (y - self.yc) ** 2 <= self.r ** 2
 
     def draw(self, screen):
-        if self.text:
-            screen.blit(self.text, (self.x + self.text_shift_x, self.y + self.text_shift_y - round(self.font_size * 1.3) / 2))
         if self.color:
             pygame.draw.ellipse(screen, self.color, self.get_rect())
         if self.border:
             pygame.draw.ellipse(screen, self.border_color, self.get_rect(), self.border)
         if self.image_ready():
             screen.blit(self.image_render(self.w, self.h), self.get_rect())
+        if self.text:
+            screen.blit(self.text, (self.x + self.text_shift_x, self.y + self.text_shift_y - round(self.font_size * 1.3) / 2))
 
 
 class Button(Object):
@@ -437,6 +438,7 @@ class Button(Object):
         self.action_on_mouse_down = nothing
         self.action_on_mouse_up = nothing
         self.color_on_mouse_down = (220, 220, 220)
+        self.color_on_mouse_up = self.color
         self._pressed = False
 
     def connect_mouse_down(self, action):
@@ -466,6 +468,7 @@ class Button(Object):
         elif self._hovered:
             self.not_hover(self)
             self._pressed = False
+            self.set_color(self.color_on_mouse_up)
             self._hovered = False
 
     def mouse_up(self, x, y):
@@ -476,6 +479,7 @@ class Button(Object):
         :return:
         """
         if self.check(x, y):
+            self.set_color(self.color_on_mouse_up)
             self.action_on_mouse_up(self)
             self._pressed = False
 
