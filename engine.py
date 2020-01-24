@@ -222,18 +222,18 @@ class Object(Sizible, Image):
         self.border_color = border_color
         self.border = border
 
-        self.font_size = 16
+        self.adopt(resolution)
+
         self.font = pygame.font.SysFont(DEFAULTFONT, self.font_size)
         self._text = None
         self.text = ''
-        self.text_shift_x = 0
-        self.text_shift_y = 0
+        self.text_align = 'center'
+        self.text_valign = 'center'
         self.text_color = (0, 0, 0)
 
         self._hovered = False
         self.on_hover = nothing
         self.not_hover = nothing
-        self.adopt(resolution)
 
     def adopt(self, resolution: Tuple[int, int]):
         """
@@ -242,6 +242,8 @@ class Object(Sizible, Image):
         :return:
         """
         super().adopt(resolution)
+        if self.adopt_size:
+            self.font_size = round(min(self.w, self.h) * 0.75)
 
     def set_pos(self, x_rel=None, y_rel=None, adopt_cords=None, resolution=None):
         """
@@ -325,7 +327,7 @@ class Object(Sizible, Image):
         self.font = args[0] if isinstance(args[0], pygame.font.FontType) else \
             pygame.font.SysFont(*args, **kwargs)
 
-    def set_text(self, text: str='', text_color: rgb = None, shift_x: int = None, shift_y: int = None):
+    def set_text(self, text: str='', text_color: rgb = None, align:str='', valign:str=''):
         """
         setting text and shifts
         :param text:
@@ -334,14 +336,10 @@ class Object(Sizible, Image):
         :param shift_y: shift y
         :return:
         """
-        if shift_x:
-            self.text_shift_x = shift_x
-            if self.adopt_size:
-                self.text_shift_x *= self.w / 100
-        if shift_y:
-            self.text_shift_y = shift_y
-            if self.adopt_size:
-                self.text_shift_y *= self.h / 100
+        if align:
+            self.text_align = align
+        if valign:
+            self.text_valign = valign
         if text_color:
             self.text_color = text_color
         if text:
@@ -361,7 +359,16 @@ class Object(Sizible, Image):
         if self.image_ready():
             screen.blit(self.image_render(self.w, self.h), self.get_rect())
         if self.text:
-            screen.blit(self._text, (self.x + self.text_shift_x, self.y + self.text_shift_y - round(self.font_size * 1.3) / 2))
+            x, y, w, h = self._text.get_rect(center=(self.w // 2 + self.x, self.h // 2 + self.y))
+            if self.text_align == 'left':
+                x = self.x
+            elif self.text_align == 'right':
+                x = self.x + self.w
+            if self.text_valign == 'top':
+                y = self.y
+            elif self.text_valign == 'bottom':
+                y = self.y + self.h
+            screen.blit(self._text, (x, y, w, h))
 
 
 class RadialObject(Object):
@@ -410,7 +417,17 @@ class RadialObject(Object):
         if self.image_ready():
             screen.blit(self.image_render(self.w, self.h), self.get_rect())
         if self.text:
-            screen.blit(self.text, (self.x + self.text_shift_x, self.y + self.text_shift_y - round(self.font_size * 1.3) / 2))
+            x, y, w, h = self._text.get_rect(
+                center=(self.w // 2 + self.x, self.h // 2 + self.y))
+            if self.text_align == 'left':
+                x = self.x
+            elif self.text_align == 'right':
+                x = self.x + self.w
+            if self.text_valign == 'top':
+                y = self.y
+            elif self.text_valign == 'bottom':
+                y = self.y + self.h
+            screen.blit(self._text, (x, y, w, h))
 
 
 class Button(Object):
@@ -581,8 +598,7 @@ class TextEdit(Object):
                  adopt_size=True,
                  adopt_cords=True,
                  border=None,
-                 border_color=(255, 255, 255),
-                 adopt_text=True):
+                 border_color=(255, 255, 255)):
         super().__init__(resolution,
                          x_rel,
                          y_rel,
@@ -592,13 +608,12 @@ class TextEdit(Object):
                          adopt_cords,
                          border,
                          border_color)
-        self.set_text(text_color=(255, 255, 255), shift_x=1, shift_y=15)
-        if adopt_text:
-            self.set_font('Arial', round(self.h * 0.75))
+        self.set_text(text_color=(255, 255, 255), align='left')
         self.color_filling = (200, 200, 200)
         self.color_default = self.color
         self.delay = 1000
         self.high = False
+        self.text_condition: Callable = lambda *args: True
 
     def on_mouse_up(self, x, y):
         if self.check(x, y):
@@ -612,7 +627,7 @@ class TextEdit(Object):
 
     def on_key_down(self, key: str):
         if self.high:
-            if len(key) == 1:
+            if len(key) == 1 and self.text_condition(self, key):
                 self.set_text(self.text[:-1] + key + '|')
             elif key == 'backspace':
                 self.set_text(self.text[:-2] + '|')
