@@ -98,7 +98,7 @@ class Planet:
         hd_img = f'planets_high\\planet{sprite_num}.png'
         '''
         map = [City.generate_sity(fractions, most_fraction) for _ in ' ' * city_count]
-        orbit = []
+        orbit: List[Ship] = []
         x_relative = random.randint(0, 100 - diameter)
         y_relative = random.randint(0, 100 - diameter)
         return cls(x_relative, y_relative, map, orbit, name)
