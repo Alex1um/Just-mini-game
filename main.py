@@ -29,7 +29,6 @@ class Client:
         bt_exit = Button(self.resolution, 20, 60, 60, 10, border_color=(255, 255, 255), border=2)
         bt_exit.set_color((150, 150, 150))
         bt_exit.set_text('Выход', (0, 255, 0), 43, 50)
-        bt_exit.connect_mouse_down(lambda x: self.quit)
         bt_exit.color_on_mouse_down = pygame.Color('gray')
 
         main_menu.add_objects(bt_new_game, bt_settings, bt_exit)
@@ -41,9 +40,6 @@ class Client:
         self.current_game_area.load()
 
         self.run()
-
-    def quit(self):
-        self.exit = True
 
     def run(self):
         clock = pygame.time.Clock()
