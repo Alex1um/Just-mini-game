@@ -5,6 +5,9 @@ import time
 from typing import *
 import utils
 
+SHIP_TYPES = ['destroyer', 'warp-ship', 'fat-man', 'soldier', 'long-range']
+FRACTIONS = ['red', 'blue']
+SHIP_STATUS = ['PLANET', 'TRAVEL', 'BATTLE']
 
 class Fraction:
 
@@ -75,6 +78,9 @@ class Planet:
                 stat[k] += v
         return stat
 
+    def get_name(self):
+        return str(self.name)
+
     def get_most_fraction(self):
         return max(self.get_stat().items(), key=lambda x: x[1])[0]
 
@@ -104,14 +110,29 @@ class Planet:
         return cls(x_relative, y_relative, map, orbit, name)
 
 
-class Ship:
-    """
-    #todo realize me
-    hit boxes may be complex shape(might be using Sprites) or only crit zones
-    """
+class Squad:
+    def __init__(self, planet):
+        self.planet = planet
+        self.status = 'PLANET'
+        self.ships = {}         {TYPE_OF_SHIP: N_OF_SHIPS}
+        for i in SHIP_TYPES:
+                self.ships[i] = 0
 
-    def __init__(self):
+    def set_ships(self, ships: dict):
+        self.ships = ships
+
+    def travel(self):
         pass
+
+
+class Ship:
+
+    def __init__(self, damage, health, speed, attack_range):
+        self.damage = damage
+        self.health = health
+        self.speed = speed
+        self.attack_range = attack_range
+
 
 
 class SpaceMap:
