@@ -420,13 +420,13 @@ class RadialObject(Object):
             x, y, w, h = self._text.get_rect(
                 center=(self.w // 2 + self.x, self.h // 2 + self.y))
             if self.text_align == 'left':
-                x = self.x
+                x = self.x + 5
             elif self.text_align == 'right':
-                x = self.x + self.w
+                x = self.x + self.w - 5
             if self.text_valign == 'top':
-                y = self.y
+                y = self.y + 5
             elif self.text_valign == 'bottom':
-                y = self.y + self.h
+                y = self.y + self.h - 5
             screen.blit(self._text, (x, y, w, h))
 
 
