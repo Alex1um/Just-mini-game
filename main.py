@@ -42,7 +42,7 @@ class Client:
 
         main_menu.add_objects(bt_new_game, bt_settings, bt_exit)
 
-        res_condition = lambda obj, key: key.isdigit() and len(obj.text) < 5
+        res_condition = lambda obj, key: key.isdigit() and (key != '0' if len(obj.text) == 0 else len(obj.text) < 4)
 
         te_res_x = TextEdit(self.resolution, 20, 20, 25, 5, border=2)
         te_res_x.color_default = (200, 200, 200)

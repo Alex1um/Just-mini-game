@@ -226,7 +226,7 @@ class Object(Sizible, Image):
 
         self.font = pygame.font.SysFont(DEFAULTFONT, self.font_size)
         self._text = None
-        self.text = ''
+        self.text = None
         self.text_align = 'center'
         self.text_valign = 'center'
         self.text_color = (0, 0, 0)
@@ -327,7 +327,7 @@ class Object(Sizible, Image):
         self.font = args[0] if isinstance(args[0], pygame.font.FontType) else \
             pygame.font.SysFont(*args, **kwargs)
 
-    def set_text(self, text: str='', text_color: rgb = None, align:str='', valign:str=''):
+    def set_text(self, text: str=None, text_color: rgb = None, align:str='', valign:str=''):
         """
         setting text and shifts
         :param text:
@@ -342,7 +342,7 @@ class Object(Sizible, Image):
             self.text_valign = valign
         if text_color:
             self.text_color = text_color
-        if text:
+        if text is not None:
             self.text = text
             self._text = self.font.render(text, False, self.text_color)
 
@@ -358,16 +358,16 @@ class Object(Sizible, Image):
             pygame.draw.rect(screen, self.border_color, self.get_rect(), self.border)
         if self.image_ready():
             screen.blit(self.image_render(self.w, self.h), self.get_rect())
-        if self.text:
+        if self.text is not None:
             x, y, w, h = self._text.get_rect(center=(self.w // 2 + self.x, self.h // 2 + self.y))
             if self.text_align == 'left':
                 x = self.x + 5
             elif self.text_align == 'right':
-                x = self.x + self.w - 5
+                x = self.x + self.w - 5 - w
             if self.text_valign == 'top':
                 y = self.y + 5
             elif self.text_valign == 'bottom':
-                y = self.y + self.h - 5
+                y = self.y + self.h - 5 - h
             screen.blit(self._text, (x, y, w, h))
 
 
@@ -608,32 +608,43 @@ class TextEdit(Object):
                          adopt_cords,
                          border,
                          border_color)
-        self.set_text(text_color=(255, 255, 255), align='left')
+        self.high = False
+        self.set_text('', text_color=(255, 255, 255), align='left')
         self.color_filling = (200, 200, 200)
         self.color_default = self.color
         self.delay = 1000
-        self.high = False
         self.text_condition: Callable = lambda *args: True
 
     def on_mouse_up(self, x, y):
         if self.check(x, y):
-            self.set_color(self.color_filling)
             self.high = True
-            self.set_text(self.text + '|')
+            self.set_color(self.color_filling)
+            self.set_text(self.text)
         elif self.high:
-            self.set_color(self.color_default)
             self.high = False
-            self.set_text(self.text[:-1])
+            self.set_color(self.color_default)
+            self.set_text(self.text)
 
     def on_key_down(self, key: str):
         if self.high:
-            if len(key) == 1 and self.text_condition(self, key):
-                self.set_text(self.text[:-1] + key + '|')
+            if self.text_condition(self, key):
+                self.set_text(self.text + key)
             elif key == 'backspace':
-                self.set_text(self.text[:-2] + '|')
+                self.set_text(self.text[:-1])
 
     def draw(self, screen):
         super().draw(screen)
+
+    def set_text(self, text: str=None, text_color: rgb = None, align:str='', valign:str=''):
+        if align:
+            self.text_align = align
+        if valign:
+            self.text_valign = valign
+        if text_color:
+            self.text_color = text_color
+        if text is not None:
+            self.text = text
+            self._text = self.font.render(self.text + '|' if self.high else self.text, False, self.text_color)
 
 
 class GameArea:
