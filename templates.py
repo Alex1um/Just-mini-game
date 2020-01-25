@@ -54,7 +54,6 @@ class Settings(GameArea):
         lb_res = Object(resolution, 40, 10, 20, 8)
         lb_res.set_text('Разрешение', (255, 255, 255), align='center', valign='center')
 
-
         self.add_objects(te_res_x, te_res_y, lb_res)
         # bg = Background(self.resolution, "galaxes\\galaxy_1.jpg")
         # bg.image_mode = '%obj'

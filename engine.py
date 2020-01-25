@@ -235,6 +235,18 @@ class Object(Sizible, Image):
         self.on_hover = nothing
         self.not_hover = nothing
 
+    def on_key_down(self, key):
+        pass
+
+    def on_key_up(self, key):
+        pass
+
+    def on_mouse_up(self, x, y):
+        pass
+
+    def on_mouse_down(self, x, y):
+        pass
+
     def adopt(self, resolution: Tuple[int, int]):
         """
         Adaptation for new resolution
@@ -466,7 +478,7 @@ class Button(Object):
     def connect_mouse_up(self, action):
         self.action_on_mouse_up = action
 
-    def mouse_down(self, x, y):
+    def on_mouse_down(self, x, y):
         """
         foo must invoke on click
         :param x:
@@ -490,7 +502,7 @@ class Button(Object):
             self.set_color(self.color_on_mouse_up)
             self._hovered = False
 
-    def mouse_up(self, x, y):
+    def on_mouse_up(self, x, y):
         """
         foo must invoke on click
         :param x:
@@ -655,11 +667,9 @@ class GameArea:
     def __init__(self):
         self.objects: List[Object] = []
         self.sprites = pygame.sprite.Group()
-        self.buttons: List[Button] = []
         self.background: Background = None
         self.background_music = []
         self.sounds: Dict[str, pygame.mixer.SoundType] = {}
-        self.text_edits: List[TextEdit] = []
 
     def set_background_music(self, *file_names):
         self.background_music = file_names
@@ -682,10 +692,6 @@ class GameArea:
         for obj in objects:
             if isinstance(obj, pygame.sprite.Sprite):
                 self.sprites.add(obj)
-            elif isinstance(obj, Button):
-                self.buttons.append(obj)
-            elif isinstance(obj, TextEdit):
-                self.text_edits.append(obj)
             elif isinstance(obj, Object):
                 self.objects.append(obj)
 
@@ -699,10 +705,6 @@ class GameArea:
             self.background.draw(screen)
         for obj in self.objects:
             obj.draw(screen)
-        for bt in self.buttons:
-            bt.draw(screen)
-        for obj in self.text_edits:
-            obj.draw(screen)
         self.sprites.draw(screen)
 
     def change_resolution(self, resolution: Tuple[int, int]):
@@ -713,8 +715,6 @@ class GameArea:
         """
         for obj in self.objects:
             obj.adopt(resolution)
-        for bt in self.buttons:
-            bt.adopt(resolution)
         for sprite in self.sprites:
             sprite.adopt(resolution)
 
@@ -730,26 +730,23 @@ class GameArea:
         self.sounds[sound].play(loops, maxtime, fade_ms)
 
     def on_mouse_up(self, x, y):
-        for bt in self.buttons:
-            bt.mouse_up(x, y)
-        for obj in self.text_edits:
+        for obj in self.objects:
             obj.on_mouse_up(x, y)
 
     def on_mouse_down(self, x, y):
-        for bt in self.buttons:
-            bt.mouse_down(x, y)
+        for obj in self.objects:
+            obj.on_mouse_down(x, y)
 
     def on_mouse_motion(self, x, y):
-        for bt in self.buttons:
-            bt.hover(x, y)
         for obj in self.objects:
             obj.hover(x, y)
 
-    def on_key_up(self, x, y):
-        pass
+    def on_key_up(self, key):
+        for obj in self.objects:
+            obj.on_key_up(key)
 
     def on_key_down(self, key):
-        for obj in self.text_edits:
+        for obj in self.objects:
             obj.on_key_down(key)
 
     def load(self):
