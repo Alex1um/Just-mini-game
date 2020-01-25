@@ -15,6 +15,7 @@ class Client:
         self.resolution = (800, 800)
         self.fps = 30
         self.screen = pygame.display.set_mode(self.resolution)
+        self.full_screen = False
 
         self.exit = False
 
@@ -40,8 +41,9 @@ class Client:
         caption = pygame.display.get_caption()
         cursor = pygame.mouse.get_cursor()  # Duoas 16-04-2007
         flags = self.screen.get_flags()
-        if fullscreen:
+        if fullscreen and not self.full_screen or not fullscreen and self.full_screen:
             flags ^= FULLSCREEN
+            self.full_screen = not self.full_screen
         bits = self.screen.get_bitsize()
         # pygame.display.quit()
         pygame.display.init()

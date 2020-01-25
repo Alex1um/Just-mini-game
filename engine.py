@@ -109,6 +109,7 @@ class Image:
         self.image_width = width
         self.image_height = height
         self.image_mode = mode
+        self.image_enabled = True
 
     def add_images(self, *images: str):
         """
@@ -178,7 +179,7 @@ class Image:
         condition of image availability
         :return:
         """
-        return bool(self._image)
+        return bool(self._image) and self.image_enabled
 
     def get_image_rect(self, image=None) -> Tuple[int, int]:
         return image.get_rect() if image else self._image[0].get_rect()
