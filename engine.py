@@ -223,7 +223,7 @@ class Object(Sizible, Image):
         self.adopt_size = adopt_size
         self.adopt_cords = adopt_cords
 
-        self.color = pygame.color.Color('black')
+        self.color = None
         # self.color = None
 
         self.border_color = border_color
@@ -299,15 +299,17 @@ class Object(Sizible, Image):
         :param fmt: format of color
         :return:
         """
+        if color and self.color is None:
+            self.color = pygame.Color('black')
         if isinstance(color, pygame.color.Color):
             self.color = color
             # self.color.r = color.r
             # self.color.b = color.b
             # self.color.g = color.g
             # self.color.a = color.a
-        elif fmt == 'hsv':
+        elif fmt == 'hsv' and color:
             self.color.hsva = color
-        elif fmt == 'rgb':
+        elif fmt == 'rgb' and color:
             self.color.r, self.color.g, self.color.b = color[:3]
             if len(color) > 3:
                 self.color.a = color[3]
@@ -466,7 +468,8 @@ class Button(Object):
                  adopt_size=True,
                  adopt_cords=True,
                  border=None,
-                 border_color=(0, 0, 0)):
+                 border_color=(0, 0, 0),
+                 adopt_order=None):
         super().__init__(resolution,
                          x_rel,
                          y_rel,
@@ -475,7 +478,8 @@ class Button(Object):
                          adopt_size,
                          adopt_cords,
                          border,
-                         border_color)
+                         border_color,
+                         adopt_order)
 
         self.action_on_mouse_down = nothing
         self.action_on_mouse_up = nothing
@@ -621,7 +625,8 @@ class TextEdit(Object):
                  adopt_size=True,
                  adopt_cords=True,
                  border=None,
-                 border_color=(255, 255, 255)):
+                 border_color=(255, 255, 255),
+                 adopt_order=None):
         super().__init__(resolution,
                          x_rel,
                          y_rel,
@@ -630,7 +635,8 @@ class TextEdit(Object):
                          adopt_size,
                          adopt_cords,
                          border,
-                         border_color)
+                         border_color,
+                         adopt_order)
         self.high = False
         self.set_text('', text_color=(255, 255, 255), align='left')
         self.color_filling = (200, 200, 200)

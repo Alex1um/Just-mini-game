@@ -61,7 +61,7 @@ class Settings(GameArea):
         bt_ok.color_on_mouse_down = bt_down_color
 
         def change_res(obj: Button, load_obj):
-            main_object.switch_resolution(int(te_res_x.text), int(te_res_y.text))
+            main_object.switch_resolution(int(te_res_x.text), int(te_res_y.text), bt_fullscreen.image_enabled)
             main_object.switch_game_area(load_obj)
 
         bt_ok.connect_mouse_up(lambda e: change_res(e, main_object.main_menu))
@@ -79,9 +79,21 @@ class Settings(GameArea):
         bt_apply.color_on_mouse_down = bt_down_color
         bt_apply.connect_mouse_up(lambda e: change_res(e, main_object.settings))
 
-        bt_fullscreen = Button(resolution, 20, 30, 50, 50,)
+        bt_fullscreen = Button(resolution, 20, 30, 5, 5, adopt_order=0, border_color=(150, 150, 150), border=2)
+        bt_fullscreen.set_image('staff\\check_box.jpg', size_mode='%obj')
+        bt_fullscreen.image_enabled = main_object.full_screen
+        bt_fullscreen.set_color((255, 255, 255))
 
-        self.add_objects(te_res_x, te_res_y, lb_res, bt_ok, bt_cancel, bt_apply)
+        def switch_image(e):
+            e.image_enabled = not e.image_enabled
+
+        bt_fullscreen.connect_mouse_up(switch_image)
+        # bt_fullscreen.image_enabled = False
+
+        lb_fullscreen = Object(resolution, 25, 30, 10, 5)
+        lb_fullscreen.set_text('Полный экран', (255, 255, 255), align='left')
+
+        self.add_objects(te_res_x, te_res_y, lb_res, bt_ok, bt_cancel, bt_apply, bt_fullscreen, lb_fullscreen)
         # bg = Background(self.resolution, "galaxes\\galaxy_1.jpg")
         # bg.image_mode = '%obj'
         # main_menu.background = bg
