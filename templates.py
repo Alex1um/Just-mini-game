@@ -54,7 +54,18 @@ class Settings(GameArea):
         lb_res = Object(resolution, 40, 10, 20, 8)
         lb_res.set_text('Разрешение', (255, 255, 255), align='center', valign='center')
 
-        self.add_objects(te_res_x, te_res_y, lb_res)
+        bt_ok = Button(resolution, 55, 40, 25, 5, border=2)
+        bt_ok.set_color((200, 200, 200))
+        bt_ok.color_on_mouse_down = pygame.Color('red')
+
+        def change_res(obj: Button):
+            main_object.switch_resolution(int(te_res_x.text), int(te_res_y.text))
+            main_object.switch_game_area(main_object.main_menu)
+
+        bt_ok.connect_mouse_up(change_res)
+
+
+        self.add_objects(te_res_x, te_res_y, lb_res, bt_ok)
         # bg = Background(self.resolution, "galaxes\\galaxy_1.jpg")
         # bg.image_mode = '%obj'
         # main_menu.background = bg

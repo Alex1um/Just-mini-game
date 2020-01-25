@@ -213,6 +213,7 @@ class Object(Sizible, Image):
         """
         self.x_rel, self.y_rel, self.w_rel, self.h_rel = x_rel, y_rel, w_rel, h_rel  # relative
 
+        self.text = None
         self.adopt_size = adopt_size
         self.adopt_cords = adopt_cords
 
@@ -223,10 +224,7 @@ class Object(Sizible, Image):
         self.border = border
 
         self.adopt(resolution)
-
-        self.font = pygame.font.SysFont(DEFAULTFONT, self.font_size)
         self._text = None
-        self.text = None
         self.text_align = 'center'
         self.text_valign = 'center'
         self.text_color = (0, 0, 0)
@@ -256,6 +254,12 @@ class Object(Sizible, Image):
         super().adopt(resolution)
         if self.adopt_size:
             self.font_size = round(min(self.w, self.h) * 0.75)
+            self.font = pygame.font.SysFont(DEFAULTFONT, self.font_size)
+            if self.text is not None:
+                self._text = self.text_render()
+
+    def text_render(self):
+        return self.font.render(self.text, False, self.text_color)
 
     def set_pos(self, x_rel=None, y_rel=None, adopt_cords=None, resolution=None):
         """
@@ -356,7 +360,7 @@ class Object(Sizible, Image):
             self.text_color = text_color
         if text is not None:
             self.text = text
-            self._text = self.font.render(text, False, self.text_color)
+            self._text = self.text_render()
 
     def draw(self, screen):
         """
@@ -647,17 +651,8 @@ class TextEdit(Object):
     def draw(self, screen):
         super().draw(screen)
 
-    def set_text(self, text: str=None, text_color: rgb = None, align:str='', valign:str=''):
-        if align:
-            self.text_align = align
-        if valign:
-            self.text_valign = valign
-        if text_color:
-            self.text_color = text_color
-        if text is not None:
-            self.text = text
-            self._text = self.font.render(self.text + '|' if self.high else self.text, False, self.text_color)
-
+    def text_render(self):
+        return self.font.render(self.text + '|' if self.high else self.text, False, self.text_color)
 
 class GameArea:
     """
@@ -749,5 +744,8 @@ class GameArea:
         for obj in self.objects:
             obj.on_key_down(key)
 
-    def load(self):
-        pass
+    def load(self, resolution):
+        for obj in self.objects:
+            obj.adopt(resolution)
+        for sprite in self.sprites:
+            sprite.adopt(resolution)
