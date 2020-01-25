@@ -42,21 +42,25 @@ class Interface:
 
 class Sizible:
 
-    def __init__(self, x_rel=0, y_rel=0, w_rel=1, h_rel=1, adopt_size=True, adopt_cords=True,):
+    def __init__(self, x_rel=0, y_rel=0, w_rel=1, h_rel=1, adopt_size=True, adopt_cords=True, adopt_order=None):
         self.x_rel = x_rel
         self.y_rel = y_rel
         self.w_rel = w_rel
         self.h_rel = h_rel
         self.adopt_size = True
         self.adopt_cords = True
+        self.adopt_order = adopt_order
 
     def adopt(self, resolution):
-        if self.adopt_size:
-            self.w, self.h = self.w_rel * resolution[0] // 100, self.h_rel * \
-                             resolution[1] // 100
         if self.adopt_cords:
             self.x, self.y = self.x_rel * resolution[0] // 100, self.y_rel * \
                              resolution[1] // 100
+        if self.adopt_size:
+            if self.adopt_order is not None:
+                resolution = (resolution[self.adopt_order], resolution[self.adopt_order])
+            self.w, self.h = self.w_rel * resolution[0] // 100, self.h_rel * \
+                             resolution[1] // 100
+
 
     def resize(self, w_rel=None, h_rel=None, adopt_size=None, resolution=None):
         """
@@ -196,8 +200,9 @@ class Object(Sizible, Image):
                  adopt_size=True,
                  adopt_cords=True,
                  border=None,
-                 border_color=(0, 0, 0)):
-        Sizible.__init__(self, x_rel, y_rel, w_rel, h_rel, adopt_size, adopt_cords)
+                 border_color=(0, 0, 0),
+                 adopt_order=None):
+        Sizible.__init__(self, x_rel, y_rel, w_rel, h_rel, adopt_size, adopt_cords, adopt_order)
         Image.__init__(self, None)
         """
         :param resolution:
@@ -406,12 +411,13 @@ class RadialObject(Object):
         super().__init__(resolution,
                          x_rel,
                          y_rel,
-                         r_rel * 2 if not adopt_order else r_rel * 2 * resolution[0] // resolution[1],
-                         r_rel * 2 if adopt_order else r_rel * 2 * resolution[1] // resolution[0],
+                         r_rel,
+                         r_rel,
                          adopt_size,
                          adopt_cords,
                          border,
-                         border_color)
+                         border_color,
+                         adopt_order)
         self.r_rel = r_rel
         self.r = r_rel * resolution[adopt_order]
         self.xc, self.yc = self.x + self.r, self.y + self.r

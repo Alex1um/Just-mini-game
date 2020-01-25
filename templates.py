@@ -79,7 +79,7 @@ class Settings(GameArea):
         bt_apply.color_on_mouse_down = bt_down_color
         bt_apply.connect_mouse_up(lambda e: change_res(e, main_object.settings))
 
-
+        bt_fullscreen = Button(resolution, 20, 30, 50, 50,)
 
         self.add_objects(te_res_x, te_res_y, lb_res, bt_ok, bt_cancel, bt_apply)
         # bg = Background(self.resolution, "galaxes\\galaxy_1.jpg")
