@@ -110,9 +110,9 @@ class SpaceMapScreen(GameArea):
         resolution = main_object.resolution
         self.background = Background(resolution, random.choice(glob.glob('galaxes\\*')))
 
-    class Planet(RadialObject):
+    class APlanet(RadialObject):
 
-        def __init__(self, resolution, planet: Planet, img_number):
+        def __init__(self, resolution, planet: Planet, img_number, cls):
             # todo write ships
             y = planet.y_rel + planet.r_rel if planet.y_rel < 50 else planet.y_rel - len(planet.fractions_impact) * 2
             self.stat_boxes = [Object(resolution,
@@ -124,6 +124,17 @@ class SpaceMapScreen(GameArea):
                 len(planet.fractions_impact) * 2,
                 2
             )]
+            self.cls = cls
+            self.squads = {
+                MovableObject(
+                    resolution,
+                    planet.x_rel,
+                    planet.y_rel,
+                    2,
+                    2,
+                    border=2,
+                    border_color=(255, 255, 255)
+                ): planet.squads[i] for i in range(len(planet.squads))}
             super().__init__(resolution,
                              planet.x_rel,
                              planet.y_rel,
@@ -136,6 +147,8 @@ class SpaceMapScreen(GameArea):
             self.set_font(font_scale=40)
             self.planet = planet
             self.stat = False
+            for squad in self.squads.keys():
+                squad.set_color((255, 255, 255))
             for box in self.stat_boxes:
                 box.set_text(text_color=(255, 255, 255), align='left')
 
@@ -144,13 +157,17 @@ class SpaceMapScreen(GameArea):
             if self.stat:
                 for box in self.stat_boxes:
                     box.draw(screen)
+            for squad in self.squads.keys():
+                squad.draw(screen)
 
         def adopt(self, resolution: Tuple[int, int]):
             super().adopt(resolution)
             for box in self.stat_boxes:
                 box.adopt(resolution)
+            for squad in self.squads.keys():
+                squad.adopt(resolution)
 
-        def on_hover(self, e):
+        def on_hover(self, e, x, y):
             if not self._hovered:
                 statistic = sorted(self.planet.get_statistic().items(), key=lambda x: x[0].name)
                 for i, item in enumerate(statistic):
@@ -158,15 +175,33 @@ class SpaceMapScreen(GameArea):
                     self.stat_boxes[i].set_text(f'{fract.name} - {round(percent * 100)}')
             self.stat = True
 
-        def not_hover(self, e):
+        def not_hover(self, e, x, y):
             self.stat = False
+
+        def hover(self, x, y):
+            super().hover(x, y)
+            for squad in self.squads.keys():
+                squad.hover(x, y)
+
+        def on_mouse_up(self, x, y):
+            for squad in self.squads.keys():
+                if squad.grabbed:
+                    for obj in self.cls.objects:
+                        if isinstance(obj, SpaceMapScreen.APlanet) and self is not obj and obj.check(squad.x, squad.y):
+                            self.squads[squad].start_travel(obj.planet)
+                    squad.x, squad.y = squad.sx, squad.sy
+                squad.on_mouse_up(x, y)
+
+        def on_mouse_down(self, x, y):
+            for squad in self.squads.keys():
+                squad.on_mouse_down(x, y)
 
     def load(self, resolution, space_map: SpaceMap):
 
         images = random.choices(glob.glob('planets_high\\*.png'), k=len(space_map.planets))
         pp = []
         for i, planet in enumerate(space_map.planets):
-            p = self.Planet(resolution, planet, images[i][12:])
+            p = self.APlanet(resolution, planet, images[i][12:], self)
             pp.append(p)
         self.add_objects(*pp)
         super().load(resolution)

@@ -240,10 +240,10 @@ class Object(Sizible, Image):
 
         self._hovered = False
 
-    def not_hover(self, e):
+    def not_hover(self, e, x, y):
         pass
 
-    def on_hover(self, e):
+    def on_hover(self, e, x, y):
         pass
 
     def on_key_down(self, key):
@@ -339,10 +339,10 @@ class Object(Sizible, Image):
         """
         if self.enable:
             if self.check(x, y):
-                self.on_hover(self)
+                self.on_hover(self, x, y)
                 self._hovered = True
             elif self._hovered:
-                self.not_hover(self)
+                self.not_hover(self, x, y)
                 self._hovered = False
 
     def set_font(self, *args, font_scale=None, **kwargs):
@@ -533,11 +533,11 @@ class Button(Object):
     def hover(self, x, y):
         if self.check(x, y):
             if not self._pressed:
-                self.on_hover(self)
+                self.on_hover(self, x, y)
             self._hovered = True
             return
         elif self._hovered:
-            self.not_hover(self)
+            self.not_hover(self, x, y)
             self._pressed = False
             self.set_color(self.color_on_mouse_up)
             self._hovered = False
@@ -684,6 +684,53 @@ class TextEdit(Object):
 
     def text_render(self):
         return self.font.render(self.text + '|' if self.high else self.text, False, self.text_color)
+
+
+class MovableObject(Object):
+
+    def __init__(self,
+                 resolution,
+                 x_rel=0,
+                 y_rel=0,
+                 w_rel=0,
+                 h_rel=0,
+                 adopt_size=True,
+                 adopt_cords=True,
+                 border=None,
+                 border_color=(0, 0, 0),
+                 adopt_order=None,
+                 font_scale=100):
+        super().__init__(resolution,
+                         x_rel,
+                         y_rel,
+                         w_rel,
+                         h_rel,
+                         adopt_size,
+                         adopt_cords,
+                         border,
+                         border_color,
+                         adopt_order,
+                         font_scale)
+        self.grabbed = False
+        self.sx, self.sy = self.x, self.y
+        self.grabbed_x = None
+        self.grabbed_y = None
+
+    def on_mouse_down(self, x, y):
+        if self.check(x, y):
+            self.grabbed = True
+            self.sx, self.sy = self.x, self.y
+            self.grabbed_x = x
+            self.grabbed_y = y
+
+    def on_mouse_up(self, x, y):
+        self.grabbed = False
+
+    def hover(self, x, y):
+        if self.grabbed:
+            self.x, self.y = self.x + x - self.grabbed_x, self.y + y - self.grabbed_y
+            self.grabbed_x = x
+            self.grabbed_y = y
 
 
 class GameArea:

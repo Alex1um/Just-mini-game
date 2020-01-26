@@ -59,6 +59,7 @@ class Client:
 
     def new_game(self):
         self.game = Game.generate(5, 19)
+        self.game.space_map.planets[0].squads.append(Squad(self.game.space_map.planets[0], self.game.fractions[0]))
         self.switch_game_area(self.space_map_area, self.game.space_map)
 
     def run(self):

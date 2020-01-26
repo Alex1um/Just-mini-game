@@ -116,7 +116,7 @@ class Squad:
     def get_status(self):
         return self.status
 
-    def start_travel(self, destination):
+    def start_travel(self, destination: Planet):
         self.status = 'TRAVEL'
         self.destination = destination
         speed = float('inf')               # count
