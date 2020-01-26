@@ -22,6 +22,9 @@ class Fraction:
     def __eq__(self, other):
         return self.name == other.name
 
+    def __hash__(self):
+        return self.name.__hash__()
+
 
 class City:
 
@@ -66,7 +69,12 @@ class City:
 
 class Planet:
 
-    def __init__(self, x_rel: int, y_rel: int, r_rel, map: List[City], orbit, name):
+    def __init__(self,
+                 x_rel: int,
+                 y_rel: int,
+                 r_rel,
+                 map: List[City],
+                 orbit, name):
         self.x_rel, self.y_rel = x_rel, y_rel
         self.map = map
         self.orbit = orbit
@@ -109,7 +117,7 @@ class Planet:
         orbit = []
         x_relative = random.randint(0, 100 - diameter)
         y_relative = random.randint(0, 100 - diameter)
-        return cls(x_relative, y_relative, map, orbit, name)
+        return cls(x_relative, y_relative, diameter, map, orbit, name)
 
 
 class Squad:
@@ -171,12 +179,20 @@ class SpaceMap:
         self.planets = planets
 
     @classmethod
-    def generate(cls, planet_count, diameter: Tuple[int, int]):
+    def generate(cls,
+                 planet_count,
+                 diameter: Tuple[int, int],
+                 fractions,
+                 city_count: Tuple[int, int]):
         planets = []
         with open('staff\\planet_names.set', 'rb') as f:
             names = pickle.load(f)
         for name in random.choices(names, k=planet_count):
-            planets.append(Planet.generate(random.randint(*diameter), name, ))
+            planets.append(Planet.generate(random.randint(*diameter),
+                                           name,
+                                           fractions,
+                                           random.choice(fractions),
+                                           random.randint(*city_count)))
         return cls(planets)
 
 
@@ -191,5 +207,5 @@ class Game:
     @classmethod
     def generate(cls, number_of_fraction, planet_count):
         fractions = [Fraction.generate_name() for _ in ' ' * number_of_fraction]
-        space_map = SpaceMap.generate(planet_count)
+        space_map = SpaceMap.generate(planet_count, (5, 7), fractions, (1, 5))
         return cls(fractions, space_map)
