@@ -124,17 +124,9 @@ class SpaceMapScreen(GameArea):
                 len(planet.fractions_impact) * 2,
                 2
             )]
+            self.squads = {}
             self.cls = cls
-            self.squads = {
-                MovableObject(
-                    resolution,
-                    planet.x_rel,
-                    planet.y_rel,
-                    2,
-                    2,
-                    border=2,
-                    border_color=(255, 255, 255)
-                ): planet.squads[i] for i in range(len(planet.squads))}
+            self.update(planet, resolution)
             super().__init__(resolution,
                              planet.x_rel,
                              planet.y_rel,
@@ -145,26 +137,41 @@ class SpaceMapScreen(GameArea):
             self.set_image(self.img, size_mode='%obj')
             self.set_text(planet.name, (0, 255, 0), align='left', text_pos='left' if self.x_rel > 50 else 'right')
             self.set_font(font_scale=40)
-            self.planet = planet
             self.stat = False
-            for squad in self.squads.keys():
+            for squad in self.squads.values():
                 squad.set_color((255, 255, 255))
             for box in self.stat_boxes:
                 box.set_text(text_color=(255, 255, 255), align='left')
+
+        def update(self, planet, res):
+            self.planet = planet
+            for squad in set(self.squads.keys()) - set(planet.squads):
+                del self.squads[squad]
+            for squad in set(planet.squads) - set(self.squads.keys()):
+                self.squads[squad] = MovableObject(
+                    res,
+                    planet.x_rel,
+                    planet.y_rel,
+                    2,
+                    2,
+                    border=2,
+                    border_color=(255, 255, 255)
+                )
+
 
         def draw(self, screen):
             super().draw(screen)
             if self.stat:
                 for box in self.stat_boxes:
                     box.draw(screen)
-            for squad in self.squads.keys():
+            for squad in self.squads.values():
                 squad.draw(screen)
 
         def adopt(self, resolution: Tuple[int, int]):
             super().adopt(resolution)
             for box in self.stat_boxes:
                 box.adopt(resolution)
-            for squad in self.squads.keys():
+            for squad in self.squads.values():
                 squad.adopt(resolution)
 
         def on_hover(self, e, x, y):
@@ -180,28 +187,29 @@ class SpaceMapScreen(GameArea):
 
         def hover(self, x, y):
             super().hover(x, y)
-            for squad in self.squads.keys():
+            for squad in self.squads.values():
                 squad.hover(x, y)
 
         def on_mouse_up(self, x, y):
-            for squad in self.squads.keys():
+            for squad_game, squad in self.squads.items():
                 if squad.grabbed:
                     for obj in self.cls.objects:
-                        if isinstance(obj, SpaceMapScreen.APlanet) and self is not obj and obj.check(squad.x, squad.y):
-                            self.squads[squad].start_travel(obj.planet)
+                        if self is not obj and obj.check(squad.x, squad.y):
+                            print(squad_game.start_travel(obj.planet))
                     squad.x, squad.y = squad.sx, squad.sy
                 squad.on_mouse_up(x, y)
 
         def on_mouse_down(self, x, y):
-            for squad in self.squads.keys():
+            for squad in self.squads.values():
                 squad.on_mouse_down(x, y)
+
+    def update(self, main):
+        for i, planet in enumerate(self.objects):
+            planet.update(main.game.space_map.planets[i], main.resolution)
 
     def load(self, resolution, space_map: SpaceMap):
 
         images = random.choices(glob.glob('planets_high\\*.png'), k=len(space_map.planets))
-        pp = []
         for i, planet in enumerate(space_map.planets):
-            p = self.APlanet(resolution, planet, images[i][12:], self)
-            pp.append(p)
-        self.add_objects(*pp)
+            self.add_objects(self.APlanet(resolution, planet, images[i][12:], self))
         super().load(resolution)

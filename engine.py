@@ -746,6 +746,9 @@ class GameArea:
         self.sounds: Dict[str, pygame.mixer.SoundType] = {}
         self.interface: Interface = None
 
+    def update(self, main):
+        pass
+
     def set_background_music(self, *file_names):
         self.background_music = file_names
 

@@ -78,6 +78,7 @@ class Client:
                     self.exit = True
                 elif e.type == pygame.KEYDOWN:
                     self.current_game_area.on_key_down(pygame.key.name(e.key))
+            self.current_game_area.update(self)
             self.current_game_area.render(self.screen)
             pygame.display.flip()
             clock.tick(self.fps)
