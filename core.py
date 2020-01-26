@@ -122,16 +122,20 @@ class Squad:
         self.ships = ships
 
     def start_travel(self, destination):
+        self.status = 'TRAVEL'
         self.destination = destination
         speed = float('inf')               # count
         for i in self.ships:
             speed = min(i.get_speed(), speed)
             
-        self.travel_time = 0
+        self.travel_time = float('inf')
+        x1, y1 = self.planet.get_coords()
+        x2, y2 = self.destination.get_coords
         return self.travel_time
 
     def travel_complited(self):
         self.planet = self.destination
+        self.status = 'PLANET'
 
     
 
