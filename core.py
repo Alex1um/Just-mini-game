@@ -68,6 +68,7 @@ class City:
 
 class Battle:
     def __init__(self, squads, fractions):
+        self.stime = time()
         self.squads = squads
         self.start_coords = [500, 500]
         self.fractions = fractions
@@ -83,8 +84,7 @@ class Battle:
         ctime = time()
         d = ctime - self.stime
         TICK = 0.5
-
-        for i in range(d//TICK):
+        for i in range(int(d//TICK)):
             for k, ship in enumerate(self.ships):
                 if ship['status'] == 'TRAVEL':
                     for i in range(ship['ship'].get_speed * TICK):
@@ -153,6 +153,9 @@ class Planet:
         if len(self.fractions) > 1:
             self.battle = Battle(self.squads, self.fractions)
             self.status = 'BATTLE'
+
+    def get_state(self):
+        return self.status
     
     def get_battle(self):
         return self.battle
@@ -171,7 +174,7 @@ class Planet:
         return self.x_rel, self.y_rel
 
     def get_most_fraction(self):
-        return max(self.get_stat().items(), key=lambda x: x[1])[0]
+        return max(self.get_status().items(), key=lambda x: x[1])[0]
 
     def change_fraction_imact(self, fraction: Fraction, max_percent=10):
         city_changing_impact = utils.break_number_sum(random.uniform(0, max_percent), len(self.map))
@@ -309,13 +312,21 @@ class Game:
         return cls(fractions, space_map)
 
 
-'''
-ship_destroyer = Ship('destroyer', 100, 50, 250, 10)
-ship_speeder = Ship('speeder', 100, 50, 250, 10)
+ship_destroyer = Ship('destroyer', 100, 50, 250, 10, 10)
+ship_speeder = Ship('speeder', 100, 50, 250, 10, 10)
 planet_earth = Planet(60, 20, 5, [], 3, 'earth')
 planet_mars = Planet(30, 60, 5, [], 3, 'mars')
-squad1 = Squad(planet_earth)
-squad1.set_ships([ship_destroyer])
+squad1 = Squad(planet_earth, 'BLUE')
+squad1.set_ships([ship_destroyer, ship_speeder])
+squad2 = Squad(planet_earth, 'BLACK')
+squad2.set_ships([ship_destroyer, ship_destroyer])
+planet_earth.add_squad(squad1)
+planet_earth.add_squad(squad2)
+print(planet_earth.get_state())
+battle = planet_earth.get_battle()
+print(battle.get_state())
+
+'''
 print(squad1.get_status())
 print(squad1.get_planet().get_name())
 res = squad1.start_travel(planet_mars)
