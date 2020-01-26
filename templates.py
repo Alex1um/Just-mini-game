@@ -124,9 +124,18 @@ class SpaceMapScreen(GameArea):
                 len(planet.fractions_impact) * 2,
                 2
             )]
+            self.squads = {planet.squads[i]: MovableObject(
+                resolution,
+                planet.x_rel,
+                planet.y_rel,
+                2,
+                2,
+                border=2,
+                border_color=(255, 255, 255)
+            ) for i in range(len(planet.squads))}
             self.squads = {}
             self.cls = cls
-            self.update(planet, resolution)
+            self.planet = planet
             super().__init__(resolution,
                              planet.x_rel,
                              planet.y_rel,
@@ -157,7 +166,7 @@ class SpaceMapScreen(GameArea):
                     border=2,
                     border_color=(255, 255, 255)
                 )
-            if planet.battle:
+            if planet.get_battle():
                 self.set_text('!' + self.text)
             elif '!' == self.text[0]:
                 self.set_text(self.text[1:])

@@ -113,6 +113,7 @@ class Planet:
         self.x_rel, self.y_rel = x_rel, y_rel
         self.fractions_impact = fractions_impact
         self.orbit = orbit
+        self.battle = None
         self.name = name
         self.r_rel = r_rel
         self.status = 'PEACE'
