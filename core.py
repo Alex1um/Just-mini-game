@@ -121,8 +121,20 @@ class Squad:
     def set_ships(self, ships: dict):
         self.ships = ships
 
-    def travel(self, destination):
-        self.planet = destination
+    def start_travel(self, destination):
+        self.destination = destination
+        speed = float('inf')               # count
+        for i in self.ships:
+            speed = min(i.get_speed(), speed)
+            
+        self.travel_time = 0
+        return self.travel_time
+
+    def travel_complited(self):
+        self.planet = self.destination
+
+    
+
         
 
 
@@ -134,7 +146,18 @@ class Ship:
         self.speed = speed
         self.attack_range = attack_range
 
+    def get_speed(self):
+        return self.speed
 
+    def get_health(self):
+        return self.speed
+
+    def get_attack_range(self):
+        return self.speed
+
+    def get_damage(self):
+        return self.speed
+    
 
 class SpaceMap:
     """
