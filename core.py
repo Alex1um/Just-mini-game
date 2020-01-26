@@ -6,8 +6,8 @@ from typing import *
 import utils
 
 SHIP_TYPES = ['destroyer', 'warp-ship', 'fat-man', 'soldier', 'long-range']
-FRACTIONS = ['red', 'blue']
-SHIP_STATUS = ['PLANET', 'TRAVEL', 'BATTLE']
+FRACTIONS = ['RED', 'BLUE']
+SHIP_STATUS = ['PLANET', 'TRAVEL']
 
 class Fraction:
 
@@ -121,8 +121,9 @@ class Squad:
     def set_ships(self, ships: dict):
         self.ships = ships
 
-    def travel(self):
-        pass
+    def travel(self, destination):
+        self.planet = destination
+        
 
 
 class Ship:
