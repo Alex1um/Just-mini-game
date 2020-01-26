@@ -21,7 +21,7 @@ class Client:
 
         self.settings = Settings(self)
         self.main_menu = MainMenu(self)
-        self.space_map = SpaceMap(self)
+        self.space_map_area = SpaceMapScreen(self)
 
         self.switch_game_area(self.main_menu)
 
@@ -56,6 +56,10 @@ class Client:
 
     def quit(self, e):
         self.exit = True
+
+    def new_game(self):
+        self.game = Game.generate(5, 19)
+        self.switch_game_area(self.space_map_area, self.space_map)
 
     def run(self):
         clock = pygame.time.Clock()

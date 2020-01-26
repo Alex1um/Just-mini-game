@@ -62,11 +62,12 @@ class City:
 
 class Planet:
 
-    def __init__(self, x_rel: int, y_rel: int, map: List[City], orbit, name):
+    def __init__(self, x_rel: int, y_rel: int, r_rel, map: List[City], orbit, name):
         self.x_rel, self.y_rel = x_rel, y_rel
         self.map = map
         self.orbit = orbit
         self.name = name
+        self.r_rel = r_rel
 
     def get_stat(self):
         stat = self.map[0].fractions
@@ -101,7 +102,7 @@ class Planet:
         orbit: List[Ship] = []
         x_relative = random.randint(0, 100 - diameter)
         y_relative = random.randint(0, 100 - diameter)
-        return cls(x_relative, y_relative, map, orbit, name)
+        return cls(x_relative, y_relative, diameter, map, orbit, name)
 
 
 class Ship:
@@ -124,12 +125,12 @@ class SpaceMap:
         self.planets = planets
 
     @classmethod
-    def generate(cls, planet_count):
+    def generate(cls, planet_count, diameter: Tuple[int, int]):
         planets = []
         with open('staff\\planet_names.set', 'rb') as f:
             names = pickle.load(f)
         for name in random.choices(names, k=planet_count):
-            planets.append(Planet(random.randint(5, 7), name))
+            planets.append(Planet.generate(random.randint(*diameter), name, ))
         return cls(planets)
 
 
@@ -138,7 +139,8 @@ class Game:
 
     """
     def __init__(self, fractions, space_map):
-        pass
+        self.fractions = fractions
+        self.space_map = space_map
 
     @classmethod
     def generate(cls, number_of_fraction, planet_count):
