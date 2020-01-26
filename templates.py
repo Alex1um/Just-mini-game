@@ -113,9 +113,11 @@ class SpaceMapScreen(GameArea):
     class Planet(RadialObject):
 
         def __init__(self, resolution, planet: Planet, img_number):
+            # todo write ships
+            y = planet.y_rel + planet.r_rel if planet.y_rel < 50 else planet.y_rel - len(planet.fractions_impact) * 2
             self.stat_boxes = [Object(resolution,
                                       planet.x_rel,
-                                      planet.y_rel + i,
+                                      y + i,
                                       5,
                                       2) for i in range(
                 0,
@@ -135,7 +137,7 @@ class SpaceMapScreen(GameArea):
             self.planet = planet
             self.stat = False
             for box in self.stat_boxes:
-                box.set_text(text_color=(255, 0, 0), align='left')
+                box.set_text(text_color=(255, 255, 255), align='left')
 
         def draw(self, screen):
             super().draw(screen)
