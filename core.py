@@ -83,6 +83,10 @@ class Planet:
         self.fractions.add(squad.get_fraction())
         if len(self.fractions) > 1:
             self.battle = Battle()
+            self.status = 'BATTLE'
+    
+    def get_battle():
+        return self.battle
 
     def get_stat(self):
         stat = self.map[0].fractions
