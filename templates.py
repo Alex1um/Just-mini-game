@@ -157,6 +157,10 @@ class SpaceMapScreen(GameArea):
                     border=2,
                     border_color=(255, 255, 255)
                 )
+            if planet.battle:
+                self.set_text('!' + self.text)
+            elif '!' == self.text[0]:
+                self.set_text(self.text[1:])
 
 
         def draw(self, screen):
