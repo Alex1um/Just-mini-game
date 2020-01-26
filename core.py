@@ -32,6 +32,74 @@ class Fraction:
     def __repr__(self):
         return self.name
 
+class Battle:
+    def __init__(self, squads, fractions):
+        self.stime = time()
+        self.squads = squads
+        self.start_coords = [500, 500]
+        self.fractions = fractions
+        self.ships = []
+        self.bullets = []
+
+        for squad in squads:
+            for ship in squad.get_ships():
+                self.ships.append({'fraction': squad.get_fraction(), 'ship': ship, 'xs': self.start_coords[0], 'ys': self.start_coords[1], 'xf': self.start_coords[0], 'yf': self.start_coords[1], 'status': 'FIXED'})
+
+
+    def get_state(self):
+        ctime = time()
+        d = ctime - self.stime
+        TICK = 0.5
+        for i in range(int(d//TICK)):
+            for k, ship in enumerate(self.ships):
+                if ship['status'] == 'TRAVEL':
+                    for i in range(ship['ship'].get_speed * TICK):
+
+                        if ship['fx'] == ship['sx'] and ship['fy'] == ship['sy']:
+                            self.ships[k]['status'] = 'FIXED'
+                            break
+
+                        a = ship['fx'] - ship['sx']
+                        b = ship['fy'] - ship['sy']
+                        if abs(a) > abs(b):
+                            if a < 0:
+                                self.ships[k]['sx'] -= 1
+                            if a > 0:
+                                self.ships[k]['sx'] += 1
+                        else:
+                            if b < 0:
+                                self.ships[k]['sy'] -= 1
+                            if b > 0:
+                                self.ships[k]['sy'] += 1
+                aims = {}
+                for ind, enemy in self.ships:
+                    if ind != k:
+                        dist = ((enemy['sx'] - ship['sx']) ** 2 + (enemy['sy'] - ship['sx']) ** 2) ** 0.5
+                        if dist < ship[ship].get_attack_range():
+                            aims[dist] = (enemy['sx'], enemy['sy'])
+                aim = aims[min(aims)]
+                self.bullets.append(aim)
+        self.stime = ctime
+        return self.ships, self.bullets
+
+    def change_pos(self, fraction, ship, nx, ny):
+        for k, i in enumerate(self.ships):
+            if i['ship'] == ship:
+                i['xf'] = nx
+                i['yf'] = ny
+                if i['xs'] != nx or i['yf'] != ny:
+                    self.ships[k]['status'] = 'TRAVEL'
+
+    def add_squad(self, squad):
+        for ship in squad.get_ships():
+            self.ships.append({'fraction': squad.get_fraction(), 'ship': ship, 'xs': self.start_coords[0], 'ys': self.start_coords[1], 'xf': self.start_coords[0], 'yf': self.start_coords[1], 'status': 'FIXED'})
+
+    def start_battle(self):
+        self.stime = time()
+
+    def escape(self, fraction):
+        pass
+
 
 class Planet:
 
@@ -55,7 +123,21 @@ class Planet:
         self.squads.append(squad)
         self.fractions.add(squad.get_fraction())
         if len(self.fractions) > 1:
-            self.battle = Battle()
+            self.battle = Battle(self.squads, self.fractions)
+            self.status = 'BATTLE'
+
+    def get_state(self):
+        return self.status
+
+    def get_battle(self):
+        return self.battle
+
+    def get_status(self):
+        stat = self.map[0].fractions
+        for city in self.map[1:]:
+            for k, v in city.fractions.items():
+                stat[k] += v
+        return stat
 
     def get_statistic(self):
         return self.fractions_impact
@@ -66,8 +148,13 @@ class Planet:
     def get_coords(self):
         return self.x_rel, self.y_rel
 
+    def get_most_fraction(self):
+        return max(self.get_statistic().items(), key=lambda x: x[1])[0]
+
     def change_fraction_imact(self, fraction: Fraction, max_percent=10):
-        pass
+        city_changing_impact = utils.break_number_sum(random.uniform(0, max_percent), len(self.map))
+        for i in range(len(self.map)):
+            self.map[i].change_fraction_impact(fraction, city_changing_impact[i])
 
     @classmethod
     def generate(cls,
@@ -98,13 +185,13 @@ class Squad:
     def __init__(self, planet, fraction):
         self.planet = planet
         self.status = 'PLANET'
-        self.ships = {}         # {TYPE_OF_SHIP: N_OF_SHIPS}
+        self.ships = []        # {TYPE_OF_SHIP: N_OF_SHIPS}
         self.fraction = fraction
 
     def get_fraction(self):
         return self.fraction
 
-    def set_ships(self, ships: dict):
+    def set_ships(self, ships: list):
         self.ships = ships
 
     def get_planet(self):
@@ -134,19 +221,18 @@ class Squad:
         self.status = 'PLANET'
 
 
-class Battle:
-    def __init__(self):
-        pass
-
-
 class Ship:
 
-    def __init__(self, name, damage, health, speed, attack_range):
+    def __init__(self, name, damage, health, speed, attack_range, size):
+        self.size = size
         self.name = name
         self.damage = damage
         self.health = health
         self.speed = speed
         self.attack_range = attack_range
+
+    def get_size(self):
+        return self.size
 
     def get_name(self):
         return self.name
@@ -202,3 +288,35 @@ class Game:
         fractions = [Fraction(name) for name in {'red', 'green', 'blue', 'black', 'white'}]
         space_map = SpaceMap.generate(planet_count, (5, 7), fractions)
         return cls(fractions, space_map)
+
+
+# ship_destroyer = Ship('destroyer', 100, 50, 250, 10, 10)
+# ship_speeder = Ship('speeder', 100, 50, 250, 10, 10)
+# planet_earth = Planet(60, 20, 5, [], 3, 'earth')
+# planet_mars = Planet(30, 60, 5, [], 3, 'mars')
+# squad1 = Squad(planet_earth, 'BLUE')
+# squad1.set_ships([ship_destroyer, ship_speeder])
+# squad2 = Squad(planet_earth, 'BLACK')
+# squad2.set_ships([ship_destroyer, ship_destroyer])
+# planet_earth.add_squad(squad1)
+# planet_earth.add_squad(squad2)
+# print(planet_earth.get_state())
+# battle = planet_earth.get_battle()
+# print(battle.get_state())
+
+'''
+print(squad1.get_status())
+print(squad1.get_planet().get_name())
+res = squad1.start_travel(planet_mars)
+print(res[0].get_name())
+print(res[1].get_name())
+print(res[2])
+print(squad1.get_status())
+squad1.finish_travel()
+print(squad1.get_planet().get_name())
+
+print(ship_destroyer.get_name())
+print(ship_destroyer.get_damage())
+print(ship_destroyer.get_health())
+print(ship_destroyer.get_speed())
+print(ship_destroyer.get_attack_range())'''
