@@ -124,7 +124,7 @@ class SpaceMapScreen(GameArea):
             self.set_font(font_scale=50)
             self.planet = planet
 
-    def load(self, resolution, space_map: SpaceMap):#
+    def load(self, resolution, space_map: SpaceMap):
         images = random.choices(glob.glob('planets_high\\*.png'), k=len(space_map.planets))
         pp = []
         for i, planet in enumerate(space_map.planets):

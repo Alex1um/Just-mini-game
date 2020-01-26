@@ -204,6 +204,7 @@ class Object(Sizible, Image):
                  font_scale=100):
         Sizible.__init__(self, x_rel, y_rel, w_rel, h_rel, adopt_size, adopt_cords, adopt_order)
         Image.__init__(self, None)
+        self.enable = True
         """
         :param resolution:
         :param x_rel: x % if adopt_cords == True else px
@@ -335,12 +336,13 @@ class Object(Sizible, Image):
         :param y: of mouse
         :return:
         """
-        if self._hovered:
-            self.not_hover(self)
-            self._hovered = False
-        if self.check(x, y):
-            self.on_hover(self)
-            self._hovered = True
+        if self.enable:
+            if self._hovered:
+                self.not_hover(self)
+                self._hovered = False
+            if self.check(x, y):
+                self.on_hover(self)
+                self._hovered = True
 
     def set_font(self, *args, font_scale=None, **kwargs):
         """
@@ -382,25 +384,26 @@ class Object(Sizible, Image):
         :param screen:
         :return:
         """
-        if self.color:
-            pygame.draw.rect(screen, self.color, self.get_rect())
-        if self.border:
-            pygame.draw.rect(screen, self.border_color, self.get_rect(), self.border)
-        if self.image_ready():
-            screen.blit(self.image_render(self.w, self.h), self.get_rect())
-        if self.text is not None:
-            x, y, w, h = self._text.get_rect(center=(self.w // 2 + self.x, self.h // 2 + self.y))
-            if self.text_align == 'left':
-                x = self.x + 5
-            elif self.text_align == 'right':
-                x = self.x + self.w - 5 - w
-            if self.text_valign == 'top':
-                y = self.y + 5
-            elif self.text_valign == 'bottom':
-                y = self.y + self.h - 5 - h
-            if self.text_pos == 'right':
-                x += self.w
-            screen.blit(self._text, (x, y, w, h))
+        if self.enable:
+            if self.color:
+                pygame.draw.rect(screen, self.color, self.get_rect())
+            if self.border:
+                pygame.draw.rect(screen, self.border_color, self.get_rect(), self.border)
+            if self.image_ready():
+                screen.blit(self.image_render(self.w, self.h), self.get_rect())
+            if self.text is not None:
+                x, y, w, h = self._text.get_rect(center=(self.w // 2 + self.x, self.h // 2 + self.y))
+                if self.text_align == 'left':
+                    x = self.x + 5
+                elif self.text_align == 'right':
+                    x = self.x + self.w - 5 - w
+                if self.text_valign == 'top':
+                    y = self.y + 5
+                elif self.text_valign == 'bottom':
+                    y = self.y + self.h - 5 - h
+                if self.text_pos == 'right':
+                    x += self.w
+                screen.blit(self._text, (x, y, w, h))
 
 
 class RadialObject(Object):
@@ -566,8 +569,11 @@ class Background(Image):
         self.scale = scale
         self.x, self.y = x, y
         self.w_rel, self.h_rel = w, h
-        self.w, self.h = resolution[0] * w // 100, resolution[1] * h // 100
+        self.adopt(resolution)
         self.image_mode = mode
+
+    def adopt(self, resolution):
+        self.w, self.h = resolution[0] * self.w_rel // 100, resolution[1] * self.h_rel // 100
 
     def get_rect(self):
         return self.x, self.y, self.w, self.h
@@ -731,6 +737,8 @@ class GameArea:
         :param resolution:
         :return:
         """
+        if self.background:
+            self.background.adopt(resolution)
         for obj in self.objects:
             obj.adopt(resolution)
         for sprite in self.sprites:
@@ -768,7 +776,4 @@ class GameArea:
             obj.on_key_down(key)
 
     def load(self, resolution):
-        for obj in self.objects:
-            obj.adopt(resolution)
-        for sprite in self.sprites:
-            sprite.adopt(resolution)
+        self.change_resolution(resolution)
