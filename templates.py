@@ -128,6 +128,8 @@ class SpaceMapScreen(GameArea):
         images = random.choices(glob.glob('planets_high\\*.png'), k=len(space_map.planets))
         pp = []
         for i, planet in enumerate(space_map.planets):
-            pp.append(self.Planet(resolution, planet, images[i][12:]))
+            p = self.Planet(resolution, planet, images[i][12:])
+            pp.append(p)
+
         self.add_objects(*pp)
         super().load(resolution)
