@@ -87,36 +87,37 @@ class Battle:
         for i in range(int(d//TICK)):
             for k, ship in enumerate(self.ships):
                 if ship['status'] == 'TRAVEL':
-                    for i in range(ship['ship'].get_speed * TICK):
+                    for i in range(int(ship['ship'].get_speed() * TICK)):
 
-                        if ship['fx'] == ship['sx'] and ship['fy'] == ship['sy']:
+                        if ship['xf'] == ship['xs'] and ship['yf'] == ship['ys']:
                             self.ships[k]['status'] = 'FIXED'
                             break
 
-                        a = ship['fx'] - ship['sx']
-                        b = ship['fy'] - ship['sy']
+                        a = ship['xf'] - ship['xs']
+                        b = ship['yf'] - ship['ys']
                         if abs(a) > abs(b):
                             if a < 0:
-                                self.ships[k]['sx'] -= 1
+                                self.ships[k]['xs'] -= 1
                             if a > 0:
-                                self.ships[k]['sx'] += 1
+                                self.ships[k]['xs'] += 1
                         else:
                             if b < 0:
-                                self.ships[k]['sy'] -= 1
+                                self.ships[k]['ys'] -= 1
                             if b > 0:
-                                self.ships[k]['sy'] += 1
+                                self.ships[k]['ys'] += 1
                 aims = {}
-                for ind, enemy in self.ships:
+                for ind, enemy in enumerate(self.ships):
                     if ind != k:
-                        dist = ((enemy['sx'] - ship['sx']) ** 2 + (enemy['sy'] - ship['sx']) ** 2) ** 0.5
-                        if dist < ship[ship].get_attack_range():
-                            aims[dist] = (enemy['sx'], enemy['sy'])
-                aim = aims[min(aims)]
-                self.bullets.append(aim)
+                        dist = ((enemy['xs'] - ship['xs']) ** 2 + (enemy['ys'] - ship['ys']) ** 2) ** 0.5
+                        if dist < ship['ship'].get_attack_range():
+                            aims[dist] = (enemy['xs'], enemy['ys'])
+                if aims:
+                    aim = aims[min(aims)]
+                    self.bullets.append(aim)
         self.stime = ctime
         return self.ships, self.bullets
 
-    def change_pos(self, fraction, ship, nx, ny):
+    def change_pos(self, ship, nx, ny):
         for k, i in enumerate(self.ships):
             if i['ship'] == ship:
                 i['xf'] = nx
@@ -313,18 +314,35 @@ class Game:
 
 
 ship_destroyer = Ship('destroyer', 100, 50, 250, 10, 10)
+ship_destroyer2 = Ship('destroyer2', 100, 50, 250, 10, 10)
 ship_speeder = Ship('speeder', 100, 50, 250, 10, 10)
 planet_earth = Planet(60, 20, 5, [], 3, 'earth')
 planet_mars = Planet(30, 60, 5, [], 3, 'mars')
 squad1 = Squad(planet_earth, 'BLUE')
-squad1.set_ships([ship_destroyer, ship_speeder])
+squad1.set_ships([ship_destroyer, ship_destroyer2])
 squad2 = Squad(planet_earth, 'BLACK')
-squad2.set_ships([ship_destroyer, ship_destroyer])
+squad2.set_ships([ship_speeder])
 planet_earth.add_squad(squad1)
 planet_earth.add_squad(squad2)
 print(planet_earth.get_state())
 battle = planet_earth.get_battle()
+battle.change_pos(ship_destroyer2, 0, 500)
+
+time1 = time()
+o = 0
+while time() - time1 < 1.5:
+    p = 1
+    '''
+    if (time() - time1) // 0.1 != o:
+        o = (time() - time1) // 0.1
+        for i in battle.get_state()[0]:
+            if i['ship'] == ship_destroyer2:
+                print(time(), i)'''
 print(battle.get_state())
+'''
+for i in battle.get_state()[0]:
+            if i['ship'] == ship_destroyer2:
+                print(i['xs'], i['ys'])'''
 
 '''
 print(squad1.get_status())
