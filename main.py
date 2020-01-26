@@ -59,7 +59,7 @@ class Client:
 
     def new_game(self):
         self.game = Game.generate(5, 19)
-        self.switch_game_area(self.space_map_area, self.space_map)
+        self.switch_game_area(self.space_map_area, self.game.space_map)
 
     def run(self):
         clock = pygame.time.Clock()

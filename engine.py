@@ -61,7 +61,6 @@ class Sizible:
             self.w, self.h = self.w_rel * resolution[0] // 100, self.h_rel * \
                              resolution[1] // 100
 
-
     def resize(self, w_rel=None, h_rel=None, adopt_size=None, resolution=None):
         """
         resize or switch parameter
@@ -201,9 +200,11 @@ class Object(Sizible, Image):
                  adopt_cords=True,
                  border=None,
                  border_color=(0, 0, 0),
-                 adopt_order=None):
+                 adopt_order=None,
+                 font_scale=100):
         Sizible.__init__(self, x_rel, y_rel, w_rel, h_rel, adopt_size, adopt_cords, adopt_order)
         Image.__init__(self, None)
+        self.enable = True
         """
         :param resolution:
         :param x_rel: x % if adopt_cords == True else px
@@ -220,6 +221,7 @@ class Object(Sizible, Image):
         self.x_rel, self.y_rel, self.w_rel, self.h_rel = x_rel, y_rel, w_rel, h_rel  # relative
 
         self.text = None
+        self.font_scale = font_scale
         self.adopt_size = adopt_size
         self.adopt_cords = adopt_cords
 
@@ -233,6 +235,7 @@ class Object(Sizible, Image):
         self._text = None
         self.text_align = 'center'
         self.text_valign = 'center'
+        self.text_pos = None
         self.text_color = (0, 0, 0)
 
         self._hovered = False
@@ -259,8 +262,7 @@ class Object(Sizible, Image):
         """
         super().adopt(resolution)
         if self.adopt_size:
-            self.font_size = round(min(self.w, self.h) * 0.75)
-            self.font = pygame.font.SysFont(DEFAULTFONT, self.font_size)
+            self.font = pygame.font.SysFont(DEFAULTFONT, round(min(self.w, self.h) * 0.75) * self.font_scale // 100)
             if self.text is not None:
                 self._text = self.text_render()
 
@@ -334,24 +336,28 @@ class Object(Sizible, Image):
         :param y: of mouse
         :return:
         """
-        if self._hovered:
-            self.not_hover(self)
-            self._hovered = False
-        if self.check(x, y):
-            self.on_hover(self)
-            self._hovered = True
+        if self.enable:
+            if self._hovered:
+                self.not_hover(self)
+                self._hovered = False
+            if self.check(x, y):
+                self.on_hover(self)
+                self._hovered = True
 
-    def set_font(self, *args, **kwargs):
+    def set_font(self, *args, font_scale=None, **kwargs):
         """
         setting font
         :param args:
         :param kwargs:
         :return:
         """
-        self.font = args[0] if isinstance(args[0], pygame.font.FontType) else \
-            pygame.font.SysFont(*args, **kwargs)
+        if self.font_scale:
+            self.font_scale = font_scale
+        if args:
+            self.font = args[0] if isinstance(args[0], pygame.font.FontType) else \
+                pygame.font.SysFont(*args, **kwargs)
 
-    def set_text(self, text: str=None, text_color: rgb = None, align:str='', valign:str=''):
+    def set_text(self, text: str=None, text_color: rgb = None, align:str=None, valign:str=None, text_pos=None):
         """
         setting text and shifts
         :param text:
@@ -369,6 +375,8 @@ class Object(Sizible, Image):
         if text is not None:
             self.text = text
             self._text = self.text_render()
+        if text_pos:
+            self.text_pos = text_pos
 
     def draw(self, screen):
         """
@@ -376,23 +384,26 @@ class Object(Sizible, Image):
         :param screen:
         :return:
         """
-        if self.color:
-            pygame.draw.rect(screen, self.color, self.get_rect())
-        if self.border:
-            pygame.draw.rect(screen, self.border_color, self.get_rect(), self.border)
-        if self.image_ready():
-            screen.blit(self.image_render(self.w, self.h), self.get_rect())
-        if self.text is not None:
-            x, y, w, h = self._text.get_rect(center=(self.w // 2 + self.x, self.h // 2 + self.y))
-            if self.text_align == 'left':
-                x = self.x + 5
-            elif self.text_align == 'right':
-                x = self.x + self.w - 5 - w
-            if self.text_valign == 'top':
-                y = self.y + 5
-            elif self.text_valign == 'bottom':
-                y = self.y + self.h - 5 - h
-            screen.blit(self._text, (x, y, w, h))
+        if self.enable:
+            if self.color:
+                pygame.draw.rect(screen, self.color, self.get_rect())
+            if self.border:
+                pygame.draw.rect(screen, self.border_color, self.get_rect(), self.border)
+            if self.image_ready():
+                screen.blit(self.image_render(self.w, self.h), self.get_rect())
+            if self.text is not None:
+                x, y, w, h = self._text.get_rect(center=(self.w // 2 + self.x, self.h // 2 + self.y))
+                if self.text_align == 'left':
+                    x = self.x + 5
+                elif self.text_align == 'right':
+                    x = self.x + self.w - 5 - w
+                if self.text_valign == 'top':
+                    y = self.y + 5
+                elif self.text_valign == 'bottom':
+                    y = self.y + self.h - 5 - h
+                if self.text_pos == 'right':
+                    x += self.w
+                screen.blit(self._text, (x, y, w, h))
 
 
 class RadialObject(Object):
@@ -409,7 +420,8 @@ class RadialObject(Object):
                  adopt_cords=True,
                  adopt_order=0,
                  border=None,
-                 border_color=(0, 0, 0)):
+                 border_color=(0, 0, 0),
+                 font_scale=100):
         super().__init__(resolution,
                          x_rel,
                          y_rel,
@@ -419,7 +431,8 @@ class RadialObject(Object):
                          adopt_cords,
                          border,
                          border_color,
-                         adopt_order)
+                         adopt_order,
+                         font_scale)
         self.r_rel = r_rel
         self.r = r_rel * resolution[adopt_order]
         self.xc, self.yc = self.x + self.r, self.y + self.r
@@ -452,6 +465,10 @@ class RadialObject(Object):
                 y = self.y + 5
             elif self.text_valign == 'bottom':
                 y = self.y + self.h - 5
+            if self.text_pos == 'right':
+                x += self.w
+            elif self.text_pos == 'left':
+                x -= w + 5
             screen.blit(self._text, (x, y, w, h))
 
 
@@ -469,7 +486,8 @@ class Button(Object):
                  adopt_cords=True,
                  border=None,
                  border_color=(0, 0, 0),
-                 adopt_order=None):
+                 adopt_order=None,
+                 font_scale=100):
         super().__init__(resolution,
                          x_rel,
                          y_rel,
@@ -479,7 +497,8 @@ class Button(Object):
                          adopt_cords,
                          border,
                          border_color,
-                         adopt_order)
+                         adopt_order,
+                         font_scale)
 
         self.action_on_mouse_down = nothing
         self.action_on_mouse_up = nothing
@@ -550,8 +569,11 @@ class Background(Image):
         self.scale = scale
         self.x, self.y = x, y
         self.w_rel, self.h_rel = w, h
-        self.w, self.h = resolution[0] * w // 100, resolution[1] * h // 100
+        self.adopt(resolution)
         self.image_mode = mode
+
+    def adopt(self, resolution):
+        self.w, self.h = resolution[0] * self.w_rel // 100, resolution[1] * self.h_rel // 100
 
     def get_rect(self):
         return self.x, self.y, self.w, self.h
@@ -614,7 +636,8 @@ class TextEdit(Object):
                  adopt_cords=True,
                  border=None,
                  border_color=(255, 255, 255),
-                 adopt_order=None):
+                 adopt_order=None,
+                 font_scale=100):
         super().__init__(resolution,
                          x_rel,
                          y_rel,
@@ -624,7 +647,8 @@ class TextEdit(Object):
                          adopt_cords,
                          border,
                          border_color,
-                         adopt_order)
+                         adopt_order,
+                         font_scale)
         self.high = False
         self.set_text('', text_color=(255, 255, 255), align='left')
         self.color_filling = (200, 200, 200)
@@ -713,6 +737,8 @@ class GameArea:
         :param resolution:
         :return:
         """
+        if self.background:
+            self.background.adopt(resolution)
         for obj in self.objects:
             obj.adopt(resolution)
         for sprite in self.sprites:
@@ -750,7 +776,4 @@ class GameArea:
             obj.on_key_down(key)
 
     def load(self, resolution):
-        for obj in self.objects:
-            obj.adopt(resolution)
-        for sprite in self.sprites:
-            sprite.adopt(resolution)
+        self.change_resolution(resolution)
