@@ -114,7 +114,7 @@ class Squad:
     def __init__(self, planet):
         self.planet = planet
         self.status = 'PLANET'
-        self.ships = {}         {TYPE_OF_SHIP: N_OF_SHIPS}
+        self.ships = {}         # {TYPE_OF_SHIP: N_OF_SHIPS}
         for i in SHIP_TYPES:
                 self.ships[i] = 0
 
