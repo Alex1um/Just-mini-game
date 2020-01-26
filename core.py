@@ -65,9 +65,9 @@ class City:
 
 class Planet:
 
-    def __init__(self, x_rel: int, y_rel: int, r_rel, map: List[City], orbit, name):
+    def __init__(self, x_rel: int, y_rel: int, r_rel, _map: List[City], orbit, name):
         self.x_rel, self.y_rel = x_rel, y_rel
-        self.map = map
+        self.map = _map
         self.orbit = orbit
         self.name = name
         self.r_rel = r_rel
@@ -119,11 +119,18 @@ class Squad:
         self.planet = planet
         self.status = 'PLANET'
         self.ships = {}         # {TYPE_OF_SHIP: N_OF_SHIPS}
-        for i in SHIP_TYPES:
-                self.ships[i] = 0
 
     def set_ships(self, ships: dict):
         self.ships = ships
+    
+    def get_planet(self):
+        return self.planet
+
+    def get_ships(self):
+        return self.ships
+
+    def get_status(self):
+        return self.status
 
     def start_travel(self, destination):
         self.status = 'TRAVEL'
@@ -131,13 +138,12 @@ class Squad:
         speed = float('inf')               # count
         for i in self.ships:
             speed = min(i.get_speed(), speed)
-            
         self.travel_time = float('inf')
         x1, y1 = self.planet.get_coords()
         x2, y2 = self.destination.get_coords()
         S = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
-        self.travel_time = S // speed
-        return self.travel_time
+        self.travel_time = S / speed
+        return self.planet, self.destination, self.travel_time
 
     def finish_travel(self):
         self.planet = self.destination
@@ -146,23 +152,27 @@ class Squad:
 
 class Ship:
 
-    def __init__(self, damage, health, speed, attack_range):
+    def __init__(self, name, damage, health, speed, attack_range):
+        self.name = name
         self.damage = damage
         self.health = health
         self.speed = speed
         self.attack_range = attack_range
 
+    def get_name(self):
+        return self.name
+
     def get_speed(self):
         return self.speed
 
     def get_health(self):
-        return self.speed
+        return self.health
 
     def get_attack_range(self):
-        return self.speed
+        return self.attack_range
 
     def get_damage(self):
-        return self.speed
+        return self.damage
     
 
 class SpaceMap:
@@ -197,3 +207,26 @@ class Game:
         fractions = [Fraction.generate_name() for _ in ' ' * number_of_fraction]
         space_map = SpaceMap.generate(planet_count)
         return cls(fractions, space_map)
+
+
+ship_destroyer = Ship('destroyer', 100, 50, 250, 10)
+planet_earth = Planet(60, 20, 5, [], 3, 'earth')
+planet_mars = Planet(30, 60, 5, [], 3, 'mars')
+squad1 = Squad(planet_earth)
+squad1.set_ships({ship_destroyer: 10})
+print(squad1.get_status())
+print(squad1.get_planet().get_name())
+res = squad1.start_travel(planet_mars)
+print(res[0].get_name())
+print(res[1].get_name())
+print(res[2])
+print(squad1.get_status())
+squad1.finish_travel()
+print(squad1.get_planet().get_name())
+
+'''
+print(ship_destroyer.get_name())
+print(ship_destroyer.get_damage())
+print(ship_destroyer.get_health())
+print(ship_destroyer.get_speed())
+print(ship_destroyer.get_attack_range())'''
