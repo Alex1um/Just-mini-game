@@ -65,6 +65,40 @@ class City:
                 self.fractions[fraction] -= fractions_changing_impact[i]
                 i += 1
 
+class Battle:
+    def __init__(self, squads, fractions):
+        self.squads = squads
+        start_coords = [0.0, 0.0]
+        self.fractions = fractions
+        self.state = {}
+
+        for fraction in self.fractions:
+            self.state[fraction] = {}
+
+        for squad in squads:
+            for ship in squad.get_ships():
+                if ship in self.state[squad.get_fraction()]:
+                    self.state[squad.get_fraction()][ship]['n'] += squad.get_ships[ship]
+                else:
+                    self.state[squad.get_fraction()][ship] = {'n': squad.get_ships[ship], 'x': start_coords[0], 'y': start_coords[1]}
+                
+    
+    def get_state(self):
+        return self.state
+
+    def change_pos(self, fraction, ship, nx, ny):
+        self.state[fraction]][ship]['x'] = nx
+        self.state[fraction]][ship]['y'] = ny
+
+    def add_squad(self, squad):
+        pass
+
+    def start_battle(self):
+        pass
+
+    def escape(self, fraction):
+        pass
+
 
 class Planet:
 
@@ -82,13 +116,13 @@ class Planet:
         self.squads.append(squad)
         self.fractions.add(squad.get_fraction())
         if len(self.fractions) > 1:
-            self.battle = Battle()
+            self.battle = Battle(self.squads, self.fractions)
             self.status = 'BATTLE'
     
-    def get_battle():
+    def get_battle(self):
         return self.battle
 
-    def get_stat(self):
+    def get_status(self):
         stat = self.map[0].fractions
         for city in self.map[1:]:
             for k, v in city.fractions.items():
@@ -167,11 +201,6 @@ class Squad:
     def finish_travel(self):
         self.planet = self.destination
         self.status = 'PLANET'        
-
-
-class Battle:
-    def __init__(self):
-        pass
 
 
 class Ship:
