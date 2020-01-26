@@ -106,7 +106,7 @@ class SpaceMapScreen(GameArea):
 
     def __init__(self, main_object):
         super().__init__()
-        resolution = (1, 1)
+        resolution = main_object.resolution
         self.background = Background(resolution, random.choice(glob.glob('galaxes\\*')))
 
     class Planet(RadialObject):
@@ -120,15 +120,14 @@ class SpaceMapScreen(GameArea):
             self.img = f'planets\\{img_number}'
             self.img_hd = f'planets_high\\{img_number}'
             self.set_image(self.img, size_mode='%obj')
+            self.set_text(planet.name, (255, 0, 0), align='left', text_pos='left' if self.x_rel > 50 else 'right')
+            self.set_font(font_scale=50)
             self.planet = planet
-            super().__init__(resolution,
-                             planet.x_rel,
-                             planet.y_rel,
-                             size)
 
-    def load(self, resolution, space_map: SpaceMap):
+    def load(self, resolution, space_map: SpaceMap):#
         images = random.choices(glob.glob('planets_high\\*.png'), k=len(space_map.planets))
+        pp = []
         for i, planet in enumerate(space_map.planets):
-            self.objects.append(self.Planet(resolution, planet, images[i][12:]))
-
+            pp.append(self.Planet(resolution, planet, images[i][12:]))
+        self.add_objects(*pp)
         super().load(resolution)
