@@ -71,6 +71,15 @@ class Planet:
         self.orbit = orbit
         self.name = name
         self.r_rel = r_rel
+        self.status = 'PEACE'
+        self.squads = []
+        self.fractions = set()
+
+    def add_squad(self, squad):
+        self.squads.append(squad)
+        self.fractions.add(squad.get_fraction())
+        if len(self.fractions) > 1:
+            self.battle = Battle()
 
     def get_stat(self):
         stat = self.map[0].fractions
@@ -113,12 +122,15 @@ class Planet:
         y_relative = random.randint(0, 100 - diameter)
         return cls(x_relative, y_relative, diameter, map, orbit, name)
 
-
 class Squad:
-    def __init__(self, planet):
+    def __init__(self, planet, fraction):
         self.planet = planet
         self.status = 'PLANET'
         self.ships = {}         # {TYPE_OF_SHIP: N_OF_SHIPS}
+        self.fraction = fraction
+
+    def get_fraction(self):
+        return self.fraction
 
     def set_ships(self, ships: dict):
         self.ships = ships
@@ -148,6 +160,11 @@ class Squad:
     def finish_travel(self):
         self.planet = self.destination
         self.status = 'PLANET'        
+
+
+class Battle:
+    def __init__(self):
+        pass
 
 
 class Ship:
@@ -209,6 +226,7 @@ class Game:
         return cls(fractions, space_map)
 
 
+'''
 ship_destroyer = Ship('destroyer', 100, 50, 250, 10)
 planet_earth = Planet(60, 20, 5, [], 3, 'earth')
 planet_mars = Planet(30, 60, 5, [], 3, 'mars')
@@ -224,7 +242,6 @@ print(squad1.get_status())
 squad1.finish_travel()
 print(squad1.get_planet().get_name())
 
-'''
 print(ship_destroyer.get_name())
 print(ship_destroyer.get_damage())
 print(ship_destroyer.get_health())
