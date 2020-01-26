@@ -1,4 +1,7 @@
 from engine import *
+import random
+import glob
+from core import SpaceMap, Planet
 
 
 class MainMenu(GameArea):
@@ -11,6 +14,7 @@ class MainMenu(GameArea):
         bt_new_game.set_color((150, 150, 150))
         bt_new_game.color_on_mouse_down = pygame.Color('gray')
         bt_new_game.set_text('Начать игру', (0, 0, 0))
+        bt_new_game.connect_mouse_up(lambda x: main_object.switch_game_area(main_object.space_map))
 
         bt_settings = Button(resolution, 20, 40, 60, 10,
                              border_color=(255, 255, 255), border=2)
@@ -97,3 +101,24 @@ class Settings(GameArea):
         # bg = Background(self.resolution, "galaxes\\galaxy_1.jpg")
         # bg.image_mode = '%obj'
         # main_menu.background = bg
+
+
+class SpaceMapScreen(GameArea):
+
+    def __init__(self, main_object):
+        super().__init__()
+        resolution = (1, 1)
+
+        self.background = Background(resolution, random.choice(glob.glob('galaxes\\*')), mode='%res')
+
+    class Planet(RadialObject):
+
+        def __init__(self, resolution, planet: Planet):
+            super().__init__(resolution,
+                             planet.x_rel,
+                             planet.y_rel,
+                             )
+
+    def load(self, resolution, space_map: SpaceMap):
+        for planet in space_map.planets:
+            pass

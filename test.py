@@ -139,4 +139,4 @@ class AAA:
             self.clock.tick(30)
 
 
-AAA(1000, 1000)
+AAA(1920, 1080)

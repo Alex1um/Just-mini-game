@@ -21,15 +21,16 @@ class Client:
 
         self.settings = Settings(self)
         self.main_menu = MainMenu(self)
+        self.space_map = SpaceMap(self)
 
         self.switch_game_area(self.main_menu)
 
         self.run()
 
-    def switch_game_area(self, game_area):
+    def switch_game_area(self, game_area, *args, **kwargs):
         pygame.draw.rect(self.screen, (0, 0, 0), (0, 0, *self.resolution))
         self.current_game_area = game_area
-        self.current_game_area.load(self.resolution)
+        self.current_game_area.load(self.resolution, *args, **kwargs)
 
     def switch_resolution(self, width=None, height=None, fullscreen=False):
         w, h = self.resolution

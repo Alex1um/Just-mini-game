@@ -542,7 +542,7 @@ class Background(Image):
                  frame_delay=0,
                  w=100,
                  h=100,
-                 mode='%res',
+                 mode='%obj',
                  x=0,
                  y=0,
                  scale=False):
@@ -550,20 +550,8 @@ class Background(Image):
         self.scale = scale
         self.x, self.y = x, y
         self.w_rel, self.h_rel = w, h
-        self.adopt(resolution)
-        self.mode = mode
-
-    def adopt(self, resolution):
-        if self.scale and self.image_ready():
-            if self.mode == '%res':
-                self.w, self.h = self.w_rel * resolution[0] // 100, self.h_rel * resolution[1] // 100
-            elif self.mode == 'px':
-                self.w, self.h = self.w_rel, self.h_rel
-            elif self.mode == '%img' and self._image:
-                w, h = self.get_image_rect()
-                self.w, self.h = w * self.w_rel // 100, h * self.h_rel // 100
-        else:
-            self.w, self.h = resolution
+        self.w, self.h = resolution[0] * w // 100, resolution[1] * h // 100
+        self.image_mode = mode
 
     def get_rect(self):
         return self.x, self.y, self.w, self.h
@@ -667,6 +655,7 @@ class TextEdit(Object):
     def text_render(self):
         return self.font.render(self.text + '|' if self.high else self.text, False, self.text_color)
 
+
 class GameArea:
     """
     Class to control all objects
@@ -678,6 +667,7 @@ class GameArea:
         self.background: Background = None
         self.background_music = []
         self.sounds: Dict[str, pygame.mixer.SoundType] = {}
+        self.interface: Interface = None
 
     def set_background_music(self, *file_names):
         self.background_music = file_names
@@ -714,6 +704,8 @@ class GameArea:
         for obj in self.objects:
             obj.draw(screen)
         self.sprites.draw(screen)
+        if self.interface:
+            self.interface.render()
 
     def change_resolution(self, resolution: Tuple[int, int]):
         """
