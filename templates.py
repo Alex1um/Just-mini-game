@@ -3,7 +3,6 @@ import random
 import glob
 from core import SpaceMap, Planet
 
-
 class MainMenu(GameArea):
     def __init__(self, main_object):
         super().__init__()
