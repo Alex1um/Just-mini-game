@@ -2,7 +2,9 @@ from engine import *
 import random
 import glob
 from core import SpaceMap, Planet
+import os
 
+os.chdir('/Users/iliakateshov/Desktop/Just-mini-game-master')
 
 class MainMenu(GameArea):
     def __init__(self, main_object):
@@ -84,7 +86,7 @@ class Settings(GameArea):
         bt_apply.connect_mouse_up(lambda e: change_res(e, main_object.settings))
 
         bt_fullscreen = Button(resolution, 20, 30, 5, 5, adopt_order=0, border_color=(150, 150, 150), border=2)
-        bt_fullscreen.set_image('staff\\check_box.jpg', size_mode='%obj')
+        bt_fullscreen.set_image('staff/check_box.jpg', size_mode='%obj')
         bt_fullscreen.image_enabled = main_object.full_screen
         bt_fullscreen.set_color((255, 255, 255))
 
