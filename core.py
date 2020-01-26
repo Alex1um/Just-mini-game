@@ -4,6 +4,7 @@ import pickle
 import time
 from typing import *
 import utils
+from time import time
 
 SHIP_TYPES = ['destroyer', 'warp-ship', 'fat-man', 'soldier', 'long-range']
 FRACTIONS = ['RED', 'BLUE']
@@ -68,7 +69,7 @@ class City:
 class Battle:
     def __init__(self, squads, fractions):
         self.squads = squads
-        start_coords = [0.0, 0.0]
+        start_coords = [500, 500]
         self.fractions = fractions
         self.state = {}
 
@@ -80,21 +81,54 @@ class Battle:
                 if ship in self.state[squad.get_fraction()]:
                     self.state[squad.get_fraction()][ship]['n'] += squad.get_ships[ship]
                 else:
-                    self.state[squad.get_fraction()][ship] = {'n': squad.get_ships[ship], 'x': start_coords[0], 'y': start_coords[1]}
+                    self.state[squad.get_fraction()][ship] = {'n': squad.get_ships[ship], 'xs': start_coords[0], 'ys': start_coords[1], 'xf': start_coords[0], 'yf': start_coords[1], 'status': 'FIXED'}
                 
     
     def get_state(self):
+        ctime = time()
+        d = ctime - self.stime
+        #self.stime = ctime
+        TICK = 0.5
+
+        for i in range(d//TICK):
+            for fraction in self.state:
+                for ship in fraction:
+                    if self.state[fraction][ship]['status'] == 'TRAVEL':
+                        for i in range(ship.get_speed * TICK):
+
+                            if self.state[fraction][ship]['fx'] == self.state[fraction][ship]['sx'] and self.state[fraction][ship]['fy'] == self.state[fraction][ship]['sy']:
+                                self.state[fraction][ship]['status'] = 'FIXED'
+                                break
+
+                            a = self.state[fraction][ship]['fx'] - self.state[fraction][ship]['sx']
+                            b = self.state[fraction][ship]['fy'] - self.state[fraction][ship]['sy']
+                            if abs(a) > abs(b):
+                                if a < 0:
+                                    self.state[fraction][ship]['sx'] -= 1
+                                if a > 0:
+                                    self.state[fraction][ship]['sx'] += 1
+                            else:
+                                if b < 0:
+                                    self.state[fraction][ship]['sy'] -= 1
+                                if b > 0:
+                                    self.state[fraction][ship]['sy'] += 1
+
         return self.state
 
     def change_pos(self, fraction, ship, nx, ny):
-        self.state[fraction]][ship]['x'] = nx
-        self.state[fraction]][ship]['y'] = ny
+        self.state[fraction][ship]['xf'] = nx
+        self.state[fraction][ship]['yf'] = ny
+        if self.state[fraction][ship]['xs'] != nx or self.state[fraction][ship]['yf'] != ny:
+            self.state[fraction][ship]['status'] = 'TRAVEL'
 
     def add_squad(self, squad):
-        pass
+        if ship in self.state[squad.get_fraction()]:
+                    self.state[squad.get_fraction()][ship]['n'] += squad.get_ships[ship]
+                else:
+                    self.state[squad.get_fraction()][ship] = {'n': squad.get_ships[ship], 'xs': start_coords[0], 'ys': start_coords[1], 'xf': start_coords[0], 'yf': start_coords[1]}
 
     def start_battle(self):
-        pass
+        self.stime = time()
 
     def escape(self, fraction):
         pass
