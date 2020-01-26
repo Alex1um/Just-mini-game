@@ -5,6 +5,10 @@ import time
 from typing import *
 import utils
 
+SHIP_TYPES = ['destroyer', 'warp-ship', 'fat-man', 'soldier', 'long-range']
+FRACTIONS = ['RED', 'BLUE']
+SHIP_STATUS = ['PLANET', 'TRAVEL']
+
 
 class Fraction:
 
@@ -76,6 +80,9 @@ class Planet:
                 stat[k] += v
         return stat
 
+    def get_name(self):
+        return str(self.name)
+
     def get_most_fraction(self):
         return max(self.get_stat().items(), key=lambda x: x[1])[0]
 
@@ -99,20 +106,59 @@ class Planet:
         hd_img = f'planets_high\\planet{sprite_num}.png'
         '''
         map = [City.generate_sity(fractions, most_fraction) for _ in ' ' * city_count]
-        orbit: List[Ship] = []
+        orbit = []
         x_relative = random.randint(0, 100 - diameter)
         y_relative = random.randint(0, 100 - diameter)
-        return cls(x_relative, y_relative, diameter, map, orbit, name)
+        return cls(x_relative, y_relative, map, orbit, name)
+
+
+class Squad:
+    def __init__(self, planet):
+        self.planet = planet
+        self.status = 'PLANET'
+        self.ships = {}         # {TYPE_OF_SHIP: N_OF_SHIPS}
+        for i in SHIP_TYPES:
+                self.ships[i] = 0
+
+    def set_ships(self, ships: dict):
+        self.ships = ships
+
+    def start_travel(self, destination):
+        self.status = 'TRAVEL'
+        self.destination = destination
+        speed = float('inf')               # count
+        for i in self.ships:
+            speed = min(i.get_speed(), speed)
+
+        self.travel_time = float('inf')
+        x1, y1 = self.planet.get_coords()
+        x2, y2 = self.destination.get_coords
+        return self.travel_time
+
+    def travel_complited(self):
+        self.planet = self.destination
+        self.status = 'PLANET'
 
 
 class Ship:
-    """
-    #todo realize me
-    hit boxes may be complex shape(might be using Sprites) or only crit zones
-    """
 
-    def __init__(self):
-        pass
+    def __init__(self, damage, health, speed, attack_range):
+        self.damage = damage
+        self.health = health
+        self.speed = speed
+        self.attack_range = attack_range
+
+    def get_speed(self):
+        return self.speed
+
+    def get_health(self):
+        return self.speed
+
+    def get_attack_range(self):
+        return self.speed
+
+    def get_damage(self):
+        return self.speed
 
 
 class SpaceMap:
