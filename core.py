@@ -82,7 +82,6 @@ class Battle:
     def get_state(self):
         ctime = time()
         d = ctime - self.stime
-        #self.stime = ctime
         TICK = 0.5
 
         for i in range(d//TICK):
@@ -114,6 +113,7 @@ class Battle:
                             aims[dist] = (enemy['sx'], enemy['sy'])
                 aim = aims[min(aims)]
                 self.bullets.append(aim)
+        self.stime = ctime
         return self.ships, self.bullets
 
     def change_pos(self, fraction, ship, nx, ny):
