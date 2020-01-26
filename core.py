@@ -4,6 +4,7 @@ import pickle
 import time
 from typing import *
 import utils
+import uuid
 
 SHIP_TYPES = ['destroyer', 'warp-ship', 'fat-man', 'soldier', 'long-range']
 FRACTIONS = ['RED', 'BLUE']
@@ -17,54 +18,19 @@ class Fraction:
 
     @classmethod
     def generate_name(cls):
-        return cls(str(time.time()))
+        return cls(str(uuid.uuid4()))
 
     def __eq__(self, other):
         return self.name == other.name
 
     def __hash__(self):
-        return self.name.__hash__()
+        return hash(self.name)
 
+    def __str__(self):
+        return self.name
 
-class City:
-
-    def __init__(self, x_relative: int, y_relative: int, stat: Dict[Fraction, int]):
-        """
-        # todo realize unit production
-        :param x:
-        :param y:
-        """
-        self.x_rel, self.y_rel = x_relative, y_relative
-        self.fractions = stat
-        self.available_for_build = []
-
-    @classmethod
-    def generate_sity(cls, fractions: Union[Tuple[Fraction], List[Fraction]], most_fraction: Fraction):
-        x, y = random.randint(0, 50), random.randint(0, 50)
-        while x ** 2 + y ** 2 >= 2500:  # city position on planet
-            x, y = random.randint(0, 50), random.randint(0, 50)
-        stat = {}  # % of fractions impact
-        most = random.uniform(0.5, 1)  # most fraction
-        stat[most_fraction] = most
-        rest = 1 - most
-        most_fraction_index = fractions.index(most_fraction)
-        for fraction in fractions[:most_fraction_index] + fractions[most_fraction_index + 1:]:  # calculate other fractions impact
-            new = rest * random.random()
-            rest -= new
-            stat[fraction] = new
-        return cls(x, y, stat)
-
-    def get_fraction(self):
-        return max(self.fractions.items(), key=lambda x: x[1])[0]
-
-    def change_fraction_impact(self, mutable_fraction: Fraction, percent: int):
-        self.fractions[mutable_fraction] += percent
-        fractions_changing_impact = utils.break_number_sum(percent, len(self.fractions) - 1)
-        i = 0
-        for fraction in self.fractions.keys():
-            if fraction != mutable_fraction:
-                self.fractions[fraction] -= fractions_changing_impact[i]
-                i += 1
+    def __repr__(self):
+        return self.name
 
 
 class Planet:
@@ -73,10 +39,11 @@ class Planet:
                  x_rel: int,
                  y_rel: int,
                  r_rel,
-                 _map: List[City],
-                 orbit, name):
+                 orbit,
+                 name,
+                 fractions_impact):
         self.x_rel, self.y_rel = x_rel, y_rel
-        self.map = _map
+        self.fractions_impact = fractions_impact
         self.orbit = orbit
         self.name = name
         self.r_rel = r_rel
@@ -90,12 +57,8 @@ class Planet:
         if len(self.fractions) > 1:
             self.battle = Battle()
 
-    def get_stat(self):
-        stat = self.map[0].fractions
-        for city in self.map[1:]:
-            for k, v in city.fractions.items():
-                stat[k] += v
-        return stat
+    def get_statistic(self):
+        return self.fractions_impact
 
     def get_name(self):
         return str(self.name)
@@ -103,21 +66,15 @@ class Planet:
     def get_coords(self):
         return self.x_rel, self.y_rel
 
-    def get_most_fraction(self):
-        return max(self.get_stat().items(), key=lambda x: x[1])[0]
-
     def change_fraction_imact(self, fraction: Fraction, max_percent=10):
-        city_changing_impact = utils.break_number_sum(random.uniform(0, max_percent), len(self.map))
-        for i in range(len(self.map)):
-            self.map[i].change_fraction_impact(fraction, city_changing_impact[i])
+        pass
 
     @classmethod
     def generate(cls,
                  diameter: int,
                  name: str,
                  fractions: Union[Tuple[Fraction], List[Fraction]],
-                 most_fraction: Fraction,
-                 city_count: int):
+                 most_fraction: Fraction):
         ''' may be realesed in game_area
         sprite_num = str(random.randint(1, 32))
         if len(sprite_num) == 1:
@@ -125,11 +82,16 @@ class Planet:
         img = f'planet_{sprite_num}.png'
         hd_img = f'planets_high\\planet{sprite_num}.png'
         '''
-        map = [City.generate_sity(fractions, most_fraction) for _ in ' ' * city_count]
         orbit: List[Ship] = []
         x_relative = random.randint(0, 100 - diameter)
         y_relative = random.randint(0, 100 - diameter)
-        return cls(x_relative, y_relative, diameter, map, orbit, name)
+        impact = {}
+        impact[most_fraction] = random.uniform(0.5, 1)
+        imp = utils.break_number_sum(1 - impact[most_fraction], len(fractions) - 1)
+        most_fraction_index = fractions.index(most_fraction)
+        for i, fraction in enumerate(fractions[:most_fraction_index] + fractions[most_fraction_index + 1:]):
+            impact[fraction] = imp[i]
+        return cls(x_relative, y_relative, diameter, orbit, name, impact)
 
 
 class Squad:
@@ -215,8 +177,7 @@ class SpaceMap:
     def generate(cls,
                  planet_count,
                  diameter: Tuple[int, int],
-                 fractions,
-                 city_count: Tuple[int, int]):
+                 fractions):
         planets = []
         with open('staff\\planet_names.set', 'rb') as f:
             names = pickle.load(f)
@@ -224,8 +185,7 @@ class SpaceMap:
             planets.append(Planet.generate(random.randint(*diameter),
                                            name,
                                            fractions,
-                                           random.choice(fractions),
-                                           random.randint(*city_count)))
+                                           random.choice(fractions)))
         return cls(planets)
 
 
@@ -239,6 +199,6 @@ class Game:
 
     @classmethod
     def generate(cls, number_of_fraction, planet_count):
-        fractions = [Fraction.generate_name() for _ in ' ' * number_of_fraction]
-        space_map = SpaceMap.generate(planet_count, (5, 7), fractions, (1, 5))
+        fractions = [Fraction(name) for name in {'red', 'green', 'blue', 'black', 'white'}]
+        space_map = SpaceMap.generate(planet_count, (5, 7), fractions)
         return cls(fractions, space_map)

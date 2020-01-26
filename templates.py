@@ -3,6 +3,7 @@ import random
 import glob
 from core import SpaceMap, Planet
 
+
 class MainMenu(GameArea):
     def __init__(self, main_object):
         super().__init__()
@@ -112,6 +113,15 @@ class SpaceMapScreen(GameArea):
     class Planet(RadialObject):
 
         def __init__(self, resolution, planet: Planet, img_number):
+            self.stat_boxes = [Object(resolution,
+                                      planet.x_rel,
+                                      planet.y_rel + i,
+                                      5,
+                                      2) for i in range(
+                0,
+                len(planet.fractions_impact) * 2,
+                2
+            )]
             super().__init__(resolution,
                              planet.x_rel,
                              planet.y_rel,
@@ -120,16 +130,41 @@ class SpaceMapScreen(GameArea):
             self.img = f'planets\\{img_number}'
             self.img_hd = f'planets_high\\{img_number}'
             self.set_image(self.img, size_mode='%obj')
-            self.set_text(planet.name, (255, 0, 0), align='left', text_pos='left' if self.x_rel > 50 else 'right')
-            self.set_font(font_scale=50)
+            self.set_text(planet.name, (0, 255, 0), align='left', text_pos='left' if self.x_rel > 50 else 'right')
+            self.set_font(font_scale=40)
             self.planet = planet
+            self.stat = False
+            for box in self.stat_boxes:
+                box.set_text(text_color=(255, 0, 0), align='left')
+
+        def draw(self, screen):
+            super().draw(screen)
+            if self.stat:
+                for box in self.stat_boxes:
+                    box.draw(screen)
+
+        def adopt(self, resolution: Tuple[int, int]):
+            super().adopt(resolution)
+            for box in self.stat_boxes:
+                box.adopt(resolution)
+
+        def on_hover(self, e):
+            if not self._hovered:
+                statistic = sorted(self.planet.get_statistic().items(), key=lambda x: x[0].name)
+                for i, item in enumerate(statistic):
+                    fract, percent = item
+                    self.stat_boxes[i].set_text(f'{fract.name} - {round(percent * 100)}')
+            self.stat = True
+
+        def not_hover(self, e):
+            self.stat = False
 
     def load(self, resolution, space_map: SpaceMap):
+
         images = random.choices(glob.glob('planets_high\\*.png'), k=len(space_map.planets))
         pp = []
         for i, planet in enumerate(space_map.planets):
             p = self.Planet(resolution, planet, images[i][12:])
             pp.append(p)
-
         self.add_objects(*pp)
         super().load(resolution)

@@ -239,8 +239,12 @@ class Object(Sizible, Image):
         self.text_color = (0, 0, 0)
 
         self._hovered = False
-        self.on_hover = nothing
-        self.not_hover = nothing
+
+    def not_hover(self, e):
+        pass
+
+    def on_hover(self, e):
+        pass
 
     def on_key_down(self, key):
         pass
@@ -266,8 +270,8 @@ class Object(Sizible, Image):
             if self.text is not None:
                 self._text = self.text_render()
 
-    def text_render(self):
-        return self.font.render(self.text, False, self.text_color)
+    def text_render(self, aa=False):
+        return self.font.render(self.text, aa, self.text_color)
 
     def set_pos(self, x_rel=None, y_rel=None, adopt_cords=None, resolution=None):
         """
@@ -326,9 +330,6 @@ class Object(Sizible, Image):
         return self.x <= x <= self.x + self.w and \
             self.y <= y <= self.h + self.y
 
-    def connect_hover(self, action: Callable, delay=0.1):
-        self.on_hover = action
-
     def hover(self, x, y):
         """
         calls on mouse_move
@@ -337,12 +338,12 @@ class Object(Sizible, Image):
         :return:
         """
         if self.enable:
-            if self._hovered:
-                self.not_hover(self)
-                self._hovered = False
             if self.check(x, y):
                 self.on_hover(self)
                 self._hovered = True
+            elif self._hovered:
+                self.not_hover(self)
+                self._hovered = False
 
     def set_font(self, *args, font_scale=None, **kwargs):
         """
@@ -422,6 +423,8 @@ class RadialObject(Object):
                  border=None,
                  border_color=(0, 0, 0),
                  font_scale=100):
+        self.r_rel = r_rel // 2 + 0.5
+        self.r = r_rel * resolution[adopt_order] // 100
         super().__init__(resolution,
                          x_rel,
                          y_rel,
@@ -433,9 +436,12 @@ class RadialObject(Object):
                          border_color,
                          adopt_order,
                          font_scale)
-        self.r_rel = r_rel
-        self.r = r_rel * resolution[adopt_order]
         self.xc, self.yc = self.x + self.r, self.y + self.r
+
+    def adopt(self, resolution: Tuple[int, int]):
+        super().adopt(resolution)
+        self.xc, self.yc = self.x + self.r, self.y + self.r
+        self.r = self.r_rel * resolution[self.adopt_order] // 100
 
     def check(self, x, y):
         """
