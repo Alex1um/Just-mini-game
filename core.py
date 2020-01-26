@@ -69,19 +69,14 @@ class City:
 class Battle:
     def __init__(self, squads, fractions):
         self.squads = squads
-        start_coords = [500, 500]
+        self.start_coords = [500, 500]
         self.fractions = fractions
-        self.state = {}
-
-        for fraction in self.fractions:
-            self.state[fraction] = {}
+        self.ships = []
+        self.bullets = []
 
         for squad in squads:
             for ship in squad.get_ships():
-                if ship in self.state[squad.get_fraction()]:
-                    self.state[squad.get_fraction()][ship]['n'] += squad.get_ships[ship]
-                else:
-                    self.state[squad.get_fraction()][ship] = {'n': squad.get_ships[ship], 'xs': start_coords[0], 'ys': start_coords[1], 'xf': start_coords[0], 'yf': start_coords[1], 'status': 'FIXED'}
+                self.ships.append({'fraction': squad.get_fraction(), 'ship': ship, 'xs': self.start_coords[0], 'ys': self.start_coords[1], 'xf': self.start_coords[0], 'yf': self.start_coords[1], 'status': 'FIXED'})
                 
     
     def get_state(self):
@@ -91,41 +86,47 @@ class Battle:
         TICK = 0.5
 
         for i in range(d//TICK):
-            for fraction in self.state:
-                for ship in fraction:
-                    if self.state[fraction][ship]['status'] == 'TRAVEL':
-                        for i in range(ship.get_speed * TICK):
+            for k, ship in enumerate(self.ships):
+                if ship['status'] == 'TRAVEL':
+                    for i in range(ship['ship'].get_speed * TICK):
 
-                            if self.state[fraction][ship]['fx'] == self.state[fraction][ship]['sx'] and self.state[fraction][ship]['fy'] == self.state[fraction][ship]['sy']:
-                                self.state[fraction][ship]['status'] = 'FIXED'
-                                break
+                        if ship['fx'] == ship['sx'] and ship['fy'] == ship['sy']:
+                            self.ships[k]['status'] = 'FIXED'
+                            break
 
-                            a = self.state[fraction][ship]['fx'] - self.state[fraction][ship]['sx']
-                            b = self.state[fraction][ship]['fy'] - self.state[fraction][ship]['sy']
-                            if abs(a) > abs(b):
-                                if a < 0:
-                                    self.state[fraction][ship]['sx'] -= 1
-                                if a > 0:
-                                    self.state[fraction][ship]['sx'] += 1
-                            else:
-                                if b < 0:
-                                    self.state[fraction][ship]['sy'] -= 1
-                                if b > 0:
-                                    self.state[fraction][ship]['sy'] += 1
-
-        return self.state
+                        a = ship['fx'] - ship['sx']
+                        b = ship['fy'] - ship['sy']
+                        if abs(a) > abs(b):
+                            if a < 0:
+                                self.ships[k]['sx'] -= 1
+                            if a > 0:
+                                self.ships[k]['sx'] += 1
+                        else:
+                            if b < 0:
+                                self.ships[k]['sy'] -= 1
+                            if b > 0:
+                                self.ships[k]['sy'] += 1
+                aims = {}
+                for ind, enemy in self.ships:
+                    if ind != k:
+                        dist = ((enemy['sx'] - ship['sx']) ** 2 + (enemy['sy'] - ship['sx']) ** 2) ** 0.5
+                        if dist < ship[ship].get_attack_range():
+                            aims[dist] = (enemy['sx'], enemy['sy'])
+                aim = aims[min(aims)]
+                self.bullets.append(aim)
+        return self.ships, self.bullets
 
     def change_pos(self, fraction, ship, nx, ny):
-        self.state[fraction][ship]['xf'] = nx
-        self.state[fraction][ship]['yf'] = ny
-        if self.state[fraction][ship]['xs'] != nx or self.state[fraction][ship]['yf'] != ny:
-            self.state[fraction][ship]['status'] = 'TRAVEL'
+        for k, i in enumerate(self.ships):
+            if i['ship'] == ship:
+                i['xf'] = nx
+                i['yf'] = ny
+                if i['xs'] != nx or i['yf'] != ny:
+                    self.ships[k]['status'] = 'TRAVEL'
 
     def add_squad(self, squad):
-        if ship in self.state[squad.get_fraction()]:
-                    self.state[squad.get_fraction()][ship]['n'] += squad.get_ships[ship]
-                else:
-                    self.state[squad.get_fraction()][ship] = {'n': squad.get_ships[ship], 'xs': start_coords[0], 'ys': start_coords[1], 'xf': start_coords[0], 'yf': start_coords[1]}
+        for ship in squad.get_ships():
+            self.ships.append({'fraction': squad.get_fraction(), 'ship': ship, 'xs': self.start_coords[0], 'ys': self.start_coords[1], 'xf': self.start_coords[0], 'yf': self.start_coords[1], 'status': 'FIXED'})
 
     def start_battle(self):
         self.stime = time()
@@ -239,12 +240,16 @@ class Squad:
 
 class Ship:
 
-    def __init__(self, name, damage, health, speed, attack_range):
+    def __init__(self, name, damage, health, speed, attack_range, size):
+        self.size = size
         self.name = name
         self.damage = damage
         self.health = health
         self.speed = speed
         self.attack_range = attack_range
+
+    def get_size(self):
+        return self.size
 
     def get_name(self):
         return self.name
