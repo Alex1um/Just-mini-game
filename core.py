@@ -73,13 +73,22 @@ class Planet:
                  x_rel: int,
                  y_rel: int,
                  r_rel,
-                 map: List[City],
+                 _map: List[City],
                  orbit, name):
         self.x_rel, self.y_rel = x_rel, y_rel
-        self.map = map
+        self.map = _map
         self.orbit = orbit
         self.name = name
         self.r_rel = r_rel
+        self.status = 'PEACE'
+        self.squads = []
+        self.fractions = set()
+
+    def add_squad(self, squad):
+        self.squads.append(squad)
+        self.fractions.add(squad.get_fraction())
+        if len(self.fractions) > 1:
+            self.battle = Battle()
 
     def get_stat(self):
         stat = self.map[0].fractions
@@ -90,6 +99,9 @@ class Planet:
 
     def get_name(self):
         return str(self.name)
+
+    def get_coords(self):
+        return self.x_rel, self.y_rel
 
     def get_most_fraction(self):
         return max(self.get_stat().items(), key=lambda x: x[1])[0]
@@ -114,22 +126,33 @@ class Planet:
         hd_img = f'planets_high\\planet{sprite_num}.png'
         '''
         map = [City.generate_sity(fractions, most_fraction) for _ in ' ' * city_count]
-        orbit = []
+        orbit: List[Ship] = []
         x_relative = random.randint(0, 100 - diameter)
         y_relative = random.randint(0, 100 - diameter)
         return cls(x_relative, y_relative, diameter, map, orbit, name)
 
 
 class Squad:
-    def __init__(self, planet):
+    def __init__(self, planet, fraction):
         self.planet = planet
         self.status = 'PLANET'
         self.ships = {}         # {TYPE_OF_SHIP: N_OF_SHIPS}
-        for i in SHIP_TYPES:
-                self.ships[i] = 0
+        self.fraction = fraction
+
+    def get_fraction(self):
+        return self.fraction
 
     def set_ships(self, ships: dict):
         self.ships = ships
+
+    def get_planet(self):
+        return self.planet
+
+    def get_ships(self):
+        return self.ships
+
+    def get_status(self):
+        return self.status
 
     def start_travel(self, destination):
         self.status = 'TRAVEL'
@@ -137,36 +160,46 @@ class Squad:
         speed = float('inf')               # count
         for i in self.ships:
             speed = min(i.get_speed(), speed)
-
         self.travel_time = float('inf')
         x1, y1 = self.planet.get_coords()
-        x2, y2 = self.destination.get_coords
-        return self.travel_time
+        x2, y2 = self.destination.get_coords()
+        S = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+        self.travel_time = S / speed
+        return self.planet, self.destination, self.travel_time
 
-    def travel_complited(self):
+    def finish_travel(self):
         self.planet = self.destination
         self.status = 'PLANET'
 
 
+class Battle:
+    def __init__(self):
+        pass
+
+
 class Ship:
 
-    def __init__(self, damage, health, speed, attack_range):
+    def __init__(self, name, damage, health, speed, attack_range):
+        self.name = name
         self.damage = damage
         self.health = health
         self.speed = speed
         self.attack_range = attack_range
 
+    def get_name(self):
+        return self.name
+
     def get_speed(self):
         return self.speed
 
     def get_health(self):
-        return self.speed
+        return self.health
 
     def get_attack_range(self):
-        return self.speed
+        return self.attack_range
 
     def get_damage(self):
-        return self.speed
+        return self.damage
 
 
 class SpaceMap:
