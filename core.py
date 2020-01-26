@@ -81,6 +81,9 @@ class Planet:
     def get_name(self):
         return str(self.name)
 
+    def get_coords(self):
+        return self.x_rel, self.y_rel
+
     def get_most_fraction(self):
         return max(self.get_stat().items(), key=lambda x: x[1])[0]
 
@@ -130,16 +133,14 @@ class Squad:
             
         self.travel_time = float('inf')
         x1, y1 = self.planet.get_coords()
-        x2, y2 = self.destination.get_coords
+        x2, y2 = self.destination.get_coords()
+        S = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+        self.travel_time = S // speed
         return self.travel_time
 
-    def travel_complited(self):
+    def finish_travel(self):
         self.planet = self.destination
-        self.status = 'PLANET'
-
-    
-
-        
+        self.status = 'PLANET'        
 
 
 class Ship:
