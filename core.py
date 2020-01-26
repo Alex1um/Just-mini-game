@@ -202,13 +202,13 @@ class Squad:
     def __init__(self, planet, fraction):
         self.planet = planet
         self.status = 'PLANET'
-        self.ships = {}         # {TYPE_OF_SHIP: N_OF_SHIPS}
+        self.ships = []        # {TYPE_OF_SHIP: N_OF_SHIPS}
         self.fraction = fraction
 
     def get_fraction(self):
         return self.fraction
 
-    def set_ships(self, ships: dict):
+    def set_ships(self, ships: list):
         self.ships = ships
     
     def get_planet(self):
@@ -311,10 +311,11 @@ class Game:
 
 '''
 ship_destroyer = Ship('destroyer', 100, 50, 250, 10)
+ship_speeder = Ship('speeder', 100, 50, 250, 10)
 planet_earth = Planet(60, 20, 5, [], 3, 'earth')
 planet_mars = Planet(30, 60, 5, [], 3, 'mars')
 squad1 = Squad(planet_earth)
-squad1.set_ships({ship_destroyer: 10})
+squad1.set_ships([ship_destroyer])
 print(squad1.get_status())
 print(squad1.get_planet().get_name())
 res = squad1.start_travel(planet_mars)
