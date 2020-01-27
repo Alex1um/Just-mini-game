@@ -226,3 +226,23 @@ class SpaceMapScreen(GameArea):
         for i, planet in enumerate(space_map.planets):
             self.add_objects(self.APlanet(resolution, planet, images[i][12:], self))
         super().load(resolution)
+
+
+class BattleScreen(GameArea):
+
+    def __init__(self, main_object):
+        super().__init__()
+        resolution = main_object.resolution
+        self.background = BattleScreen(resolution)
+        self.planet_index = None
+
+    def load(self, resolution, planet_index):
+        self.planet = planet_index
+
+    def update(self, main):
+        self.objects = []
+        battle = main.game.space_map.planets[self.planet_index].battle
+        for x, y in battle.bullets:
+            self.add_objects(RadialObject(main.resolution, x, y, 1, 1))
+        for ship in battle.ships:
+            pass

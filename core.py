@@ -32,6 +32,7 @@ class Fraction:
     def __repr__(self):
         return self.name
 
+
 class Battle:
     def __init__(self, squads, fractions):
         self.stime = time()
