@@ -61,7 +61,7 @@ class Client:
     def new_game(self):
         self.game = Game.generate(5, 19)
         self.fraction = random.choice(self.game.fractions)
-        self.fraction = self.game.fractions[0]
+        self.fraction = self.game.fractions[1]
         ship_destroyer = Ship('destroyer', 1, 50000, 250, 1000, 1, 10)
         ship_destroyer2 = Ship('destroyer2', 1, 50000, 250, 1000, 1, 10)
         Squad(self.game.space_map.planets[0], self.game.fractions[0]).set_ships([ship_destroyer])

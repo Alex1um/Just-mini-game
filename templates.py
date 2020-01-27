@@ -119,12 +119,14 @@ class SpaceMapScreen(GameArea):
             self.stat_boxes = [Object(resolution,
                                       planet.x_rel,
                                       y + i,
-                                      5,
+                                      10,
                                       2) for i in range(
                 0,
                 len(planet.fractions_impact) * 2,
                 2
             )]
+            for i in range(len(planet.fractions_impact)):
+                self.stat_boxes[i].set_color((100, 100, 255), fmt='hsva')
             self.squads = {planet.squads[i]: MovableObject(
                 resolution,
                 planet.x_rel,
@@ -132,7 +134,7 @@ class SpaceMapScreen(GameArea):
                 2,
                 2,
                 border=2,
-                border_color=(255, 255, 255)
+                border_color=(0, 255, 0) if planet.squads[i].fraction == cls.main.fraction else (255, 0, 0)
             ) for i in range(len(planet.squads))}
             self.squads = {}
             self.cls = cls
@@ -140,7 +142,8 @@ class SpaceMapScreen(GameArea):
             super().__init__(resolution,
                              planet.x_rel,
                              planet.y_rel,
-                             planet.r_rel)
+                             planet.r_rel,
+                             border=3)
             size = random.randint(3, 8)
             self.img = f'planets\\{img_number}'
             self.img_hd = f'planets_high\\{img_number}'
@@ -148,13 +151,17 @@ class SpaceMapScreen(GameArea):
             self.set_text(planet.name, (0, 255, 0), align='left', text_pos='left' if self.x_rel > 50 else 'right')
             self.set_font(font_scale=40)
             self.stat = False
-            for squad in self.squads.values():
-                squad.set_color((255, 255, 255))
+            # for squad in self.squads.values():
+            #     squad.set_color((255, 255, 255))
             for box in self.stat_boxes:
                 box.set_text(text_color=(255, 255, 255), align='left')
 
-        def update(self, planet, res):
+        def update(self, planet, res, fraction):
             self.planet = planet
+            if self.planet.get_most_fraction() == fraction:
+                self.border_color = (0, 255, 0)
+            else:
+                self.border_color = (255, 0, 0)
             for squad in set(self.squads.keys()) - set(planet.squads):
                 del self.squads[squad]
             for squad in set(planet.squads) - set(self.squads.keys()):
@@ -165,8 +172,9 @@ class SpaceMapScreen(GameArea):
                     2,
                     2,
                     border=2,
-                    border_color=(255, 255, 255)
+                    border_color=(0, 255, 0) if squad.fraction == self.cls.main.fraction else (255, 0, 0)
                 )
+                self.squads[squad].fraction = squad.fraction
             if planet.status == 'BATTLE' and '!' != self.text[0]:
                 self.set_text('! ' + self.text + '! ')
 
@@ -215,11 +223,12 @@ class SpaceMapScreen(GameArea):
 
         def on_mouse_down(self, x, y, key):
             for squad in self.squads.values():
-                squad.on_mouse_down(x, y)
+                if squad.fraction == self.cls.main.fraction:
+                    squad.on_mouse_down(x, y)
 
     def update(self, main):
         for i, planet in enumerate(self.objects):
-            planet.update(main.game.space_map.planets[i], main.resolution)
+            planet.update(main.game.space_map.planets[i], main.resolution, main.fraction)
 
     def load(self, resolution, space_map: SpaceMap):
 
