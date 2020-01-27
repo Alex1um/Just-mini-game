@@ -47,6 +47,7 @@ class Battle:
         self.fractions = fractions
         self.ships = []
         self.bullets = []
+        self.set_tick(0.01)
 
         for squad in squads:
             for ship in squad.get_ships():
@@ -92,7 +93,7 @@ class Battle:
                         if ind != k:
                             dist = ((enemy['xs'] - ship['xs']) ** 2 + (enemy['ys'] - ship['ys']) ** 2) ** 0.5
                             if dist < ship['ship'].get_attack_range():
-                                coef = ship['ship'].get_attack_range() / dist
+                                coef = ship['ship'].get_attack_range() / dist if dist > 0 else -1
                                 aims[dist] = {'range': ship['ship'].get_attack_range(), 'damage': ship['ship'].get_damage(), 'xs': ship['xs'], 'ys': ship['ys'], 'xf': enemy['xs'] * coef, 'yf': enemy['ys'] * coef}
                     if aims:
                         aim = aims[min(aims)]

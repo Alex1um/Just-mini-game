@@ -60,8 +60,10 @@ class Client:
 
     def new_game(self):
         self.game = Game.generate(5, 19)
-        Squad(self.game.space_map.planets[0], self.game.fractions[0])
-        Squad(self.game.space_map.planets[1], self.game.fractions[1])
+        ship_destroyer = Ship('destroyer', 100, 50, 250, 1000, 1, 10)
+        ship_destroyer2 = Ship('destroyer2', 100, 50, 250, 1000, 1, 10)
+        Squad(self.game.space_map.planets[0], self.game.fractions[0]).set_ships([ship_destroyer])
+        Squad(self.game.space_map.planets[1], self.game.fractions[1]).set_ships([ship_destroyer2])
         self.switch_game_area(self.space_map_area, self.game.space_map)
 
     def run(self):

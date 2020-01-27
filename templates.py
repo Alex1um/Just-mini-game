@@ -1,7 +1,7 @@
 from engine import *
 import random
 import glob
-from core import SpaceMap, Planet
+from core import SpaceMap, Planet, Ship
 
 
 class MainMenu(GameArea):
@@ -244,8 +244,10 @@ class BattleScreen(GameArea):
     def update(self, main):
         self.main = main
         self.objects = []
-        battle = main.game.space_map.planets[self.planet_index].battle
-        for x, y in battle.bullets:
-            self.add_objects(RadialObject(main.resolution, x, y, 1, 1))
-        for ship in battle.ships:
-            pass
+        ships, bullets = main.game.space_map.planets[self.planet_index].battle.get_state()
+        for bullet in bullets:
+            b = RadialObject(main.resolution, bullet['ys'], bullet['yf'], 1, 1)
+            b.set_color((255, 0, 0))
+            self.add_objects(b)
+        for ship in ships:
+            self.add_objects(RadialObject(main.resolution, ship['xf'] // 100, ship['yf'] // 100, ship['size'], border_color=(255, 0, 0), border=2))
