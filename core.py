@@ -5,10 +5,16 @@ import time
 from typing import *
 import utils
 from time import time
+from threading import Thread
 
 SHIP_TYPES = ['destroyer', 'warp-ship', 'fat-man', 'soldier', 'long-range']
 FRACTIONS = ['RED', 'BLUE']
 SHIP_STATUS = ['PLANET', 'TRAVEL']
+
+def timer(delay, foo):
+    time.sleep(delay)
+    foo()
+
 
 class Fraction:
 
@@ -188,6 +194,11 @@ class Planet:
             self.battle = Battle(self.squads, self.fractions)
             self.status = 'BATTLE'
 
+    del squad(self, squad):
+        for i in range(len(self.squads)):
+            if squads[i] == squad1:
+                del squads[i]
+
     def get_state(self):
         return self.status
     
@@ -241,6 +252,7 @@ class Squad:
         self.status = 'PLANET'
         self.ships = []        # {TYPE_OF_SHIP: N_OF_SHIPS}
         self.fraction = fraction
+        self.planet.add_squad(self)
 
     def get_fraction(self):
         return self.fraction
@@ -268,11 +280,13 @@ class Squad:
         x2, y2 = self.destination.get_coords()
         S = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
         self.travel_time = S / speed
-        return self.planet, self.destination, self.travel_time
-
-    def finish_travel(self):
-        self.planet = self.destination
-        self.status = 'PLANET'        
+        def foo():
+            self.status = 'PLANET'
+            self.planet.del_squad(self)
+            self.planet = self.destination
+            self.planet.add_squad(self)
+        Thread(target=timer, args=(delay, foo)).start()
+        return self.planet, self.destination, self.travel_time        
 
 
 class Ship:
