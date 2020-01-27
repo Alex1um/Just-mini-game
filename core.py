@@ -1,7 +1,7 @@
 import random
 import glob
 import pickle
-import time
+from time import time, sleep
 from typing import *
 import utils
 import uuid
@@ -13,7 +13,7 @@ SHIP_STATUS = ['PLANET', 'TRAVEL']
 
 
 def timer(delay, foo):
-    time.sleep(delay)
+    sleep(delay)
     foo()
 
 
