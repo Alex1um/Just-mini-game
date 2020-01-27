@@ -161,7 +161,12 @@ class Planet:
         self.squads = []
         self.fractions = set()
 
+    def __eq__(self, other):
+        return self.name == other.name
+
     def add_squad(self, squad):
+        squad.planet = self
+        squad.status = 'PLANET'
         self.squads.append(squad)
         self.fractions.add(squad.get_fraction())
         if len(self.fractions) > 1:
@@ -169,9 +174,7 @@ class Planet:
             self.status = 'BATTLE'
 
     def del_squad(self, squad):
-        for i in range(len(self.squads)):
-            if self.squads[i] == squad:
-                self.squads.pop(i)
+        self.squads.remove(squad)
 
     def get_state(self):
         return self.status
@@ -231,10 +234,23 @@ class Planet:
 class Squad:
     def __init__(self, planet, fraction):
         self.planet = planet
+        self.id = str(uuid.uuid4())
         self.status = 'PLANET'
         self.ships = []        # {TYPE_OF_SHIP: N_OF_SHIPS}
         self.fraction = fraction
         self.planet.add_squad(self)
+
+    def __repr__(self):
+        return self.id
+
+    def __str__(self):
+        return self.id
+
+    def __eq__(self, other):
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
 
     def get_fraction(self):
         return self.fraction
@@ -253,24 +269,21 @@ class Squad:
 
     def start_travel(self, destination: Planet):
         self.status = 'TRAVEL'
-        self.destination = destination
         speed = float('inf')               # count
         for i in self.ships:
             speed = min(i.get_speed(), speed)
         self.travel_time = float('inf')
         x1, y1 = self.planet.get_coords()
-        x2, y2 = self.destination.get_coords()
+        x2, y2 = destination.get_coords()
         S = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
         self.travel_time = S / speed
 
-        def foo(self):
-            self.status = 'PLANET'
-            self.planet.del_squad(self)
-            self.planet = self.destination
-            self.planet.add_squad(self)
+        def travel(planet: Planet, destination: Planet, squad: Squad):
+            planet.del_squad(squad)
+            destination.add_squad(squad)
 
-        Thread(target=timer, args=(self.travel_time, lambda: foo(self))).start()
-        return self.planet, self.destination, self.travel_time
+        Thread(target=timer, args=(self.travel_time, lambda: travel(self.planet, destination, self))).start()
+        return self.planet, destination, self.travel_time
 
 
 class Ship:
@@ -280,9 +293,13 @@ class Ship:
         self.name = name
         self.damage = damage
         self.health = health
+        self.id = str(uuid.uuid4())
         self.speed = speed
         self.attack_range = attack_range
         self.reload = reload_time
+
+    def __eq__(self, other):
+        return self.id == other.id
 
     def get_reload(self):
         return self.reload
