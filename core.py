@@ -348,7 +348,7 @@ time1 = time()
 o = 0
 while time() - time1 < 1.2:
     p = 0'''
-    '''
+'''
     if (time() - time1) // 0.1 != o:
         o = (time() - time1) // 0.1
         for i in battle.get_state()[0]:

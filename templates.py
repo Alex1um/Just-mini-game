@@ -109,6 +109,7 @@ class SpaceMapScreen(GameArea):
         super().__init__()
         resolution = main_object.resolution
         self.background = Background(resolution, random.choice(glob.glob('galaxes\\*')))
+        self.main = main_object
 
     class APlanet(RadialObject):
 
@@ -166,11 +167,10 @@ class SpaceMapScreen(GameArea):
                     border=2,
                     border_color=(255, 255, 255)
                 )
-            if planet.get_battle():
+            if planet.get_status == 'BATTLE':
                 self.set_text('!' + self.text)
             elif '!' == self.text[0]:
                 self.set_text(self.text[1:])
-
 
         def draw(self, screen):
             super().draw(screen)
@@ -205,10 +205,13 @@ class SpaceMapScreen(GameArea):
 
         def on_mouse_up(self, x, y):
             for squad_game, squad in self.squads.items():
-                if squad.grabbed:
-                    for obj in self.cls.objects:
-                        if self is not obj and obj.check(squad.x, squad.y):
-                            print(squad_game.start_travel(obj.planet))
+                if self.planet.get_status == 'BATTLE':
+                    self.cls.main.switch_game_area(self.cls.main.battle_screen, self.cls.main.planets.index(self.planet))
+                else:
+                    if squad.grabbed:
+                        for obj in self.cls.objects:
+                            if self is not obj and obj.check(squad.x, squad.y):
+                                print(squad_game.start_travel(obj.planet))
                     squad.x, squad.y = squad.sx, squad.sy
                 squad.on_mouse_up(x, y)
 
@@ -232,14 +235,14 @@ class BattleScreen(GameArea):
 
     def __init__(self, main_object):
         super().__init__()
-        resolution = main_object.resolution
-        self.background = BattleScreen(resolution)
+        self.background = Background((1, 1), 'staff\\space.jpg')
         self.planet_index = None
 
     def load(self, resolution, planet_index):
         self.planet = planet_index
 
     def update(self, main):
+        self.main = main
         self.objects = []
         battle = main.game.space_map.planets[self.planet_index].battle
         for x, y in battle.bullets:

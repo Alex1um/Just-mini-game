@@ -22,6 +22,7 @@ class Client:
         self.settings = Settings(self)
         self.main_menu = MainMenu(self)
         self.space_map_area = SpaceMapScreen(self)
+        self.battle_screen = BattleScreen(self)
 
         self.switch_game_area(self.main_menu)
 
