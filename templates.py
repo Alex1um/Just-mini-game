@@ -167,7 +167,7 @@ class SpaceMapScreen(GameArea):
                     border=2,
                     border_color=(255, 255, 255)
                 )
-            if planet.get_status == 'BATTLE':
+            if planet.status == 'BATTLE':
                 self.set_text('!' + self.text)
             elif '!' == self.text[0]:
                 self.set_text(self.text[1:])
@@ -205,8 +205,8 @@ class SpaceMapScreen(GameArea):
 
         def on_mouse_up(self, x, y):
             for squad_game, squad in self.squads.items():
-                if self.planet.get_status == 'BATTLE':
-                    self.cls.main.switch_game_area(self.cls.main.battle_screen, self.cls.main.planets.index(self.planet))
+                if self.planet.status == 'BATTLE':
+                    self.cls.main.switch_game_area(self.cls.main.battle_screen, self.cls.main.game.space_map.planets.index(self.planet))
                 else:
                     if squad.grabbed:
                         for obj in self.cls.objects:
@@ -235,11 +235,11 @@ class BattleScreen(GameArea):
 
     def __init__(self, main_object):
         super().__init__()
-        self.background = Background((1, 1), 'staff\\space.jpg')
+        self.background = Background(main_object.resolution, 'staff\\space.jpg')
         self.planet_index = None
 
     def load(self, resolution, planet_index):
-        self.planet = planet_index
+        self.planet_index = planet_index
 
     def update(self, main):
         self.main = main

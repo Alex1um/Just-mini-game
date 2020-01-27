@@ -164,6 +164,15 @@ class Planet:
     def __eq__(self, other):
         return self.name == other.name
 
+    def __hash__(self):
+        return hash(self.name)
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
+
     def add_squad(self, squad):
         squad.planet = self
         squad.status = 'PLANET'
@@ -181,13 +190,6 @@ class Planet:
 
     def get_battle(self):
         return self.battle
-
-    def get_status(self):
-        stat = self.map[0].fractions
-        for city in self.map[1:]:
-            for k, v in city.fractions.items():
-                stat[k] += v
-        return stat
 
     def get_statistic(self):
         return self.fractions_impact
