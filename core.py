@@ -51,7 +51,18 @@ class Battle:
 
         for squad in squads:
             for ship in squad.get_ships():
-                self.ships.append({'fraction': squad.get_fraction(), 'ship': ship, 'health': ship.get_health(), 'xs': self.start_coords[0], 'ys': self.start_coords[1], 'xf': self.start_coords[0], 'yf': self.start_coords[1], 'status': 'FIXED', 'reload': time(), 'size': ship.get_size()})
+                self.ships.append(
+                    {'fraction': squad.get_fraction(),
+                     'ship': ship,
+                     'health': ship.get_health(),
+                     'xs': self.start_coords[0],
+                     'ys': self.start_coords[1],
+                     'xf': self.start_coords[0],
+                     'yf': self.start_coords[1],
+                     'status': 'FIXED',
+                     'reload': time(),
+                     'size': ship.get_size(),
+                     'max_health': ship.max_health})
                 
     def set_tick(self, tick):
         self.TICK = tick
@@ -60,12 +71,15 @@ class Battle:
         ctime = time()
         d = ctime - self.stime
         TICK = self.TICK
-        BULLET_SPEED = 500
+        BULLET_SPEED = 5
 
         def hit(x1, y1, x2, y2, x0, y0, r):
             a, b, c = y1 - y2, x2 - x1, x1 * y2 - x2 * y1
-            distance = abs(a * x0 + b * y0 + c) / (a**2 + b**2) ** 0.5
-            return r <= distance
+            if a and b:
+                distance = abs(a * x0 + b * y0 + c) / (a**2 + b**2) ** 0.5
+                return r <= distance
+            else:
+                return False
 
         for i in range(int(d//TICK)):
             for k, ship in enumerate(self.ships):
@@ -125,6 +139,7 @@ class Battle:
         return self.ships, self.bullets
 
     def change_pos(self, ship, nx, ny):
+        nx, ny = round(nx * 10000), round(ny * 10000)
         for k, i in enumerate(self.ships):
             if i['ship'] == ship:
                 i['xf'] = nx
@@ -280,6 +295,7 @@ class Squad:
         x2, y2 = destination.get_coords()
         S = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
         self.travel_time = S / speed
+        self.travel_time = 1
 
         def travel(planet: Planet, destination: Planet, squad: Squad):
             planet.del_squad(squad)
@@ -300,6 +316,7 @@ class Ship:
         self.speed = speed
         self.attack_range = attack_range
         self.reload = reload_time
+        self.max_health = health
 
     def __eq__(self, other):
         return self.id == other.id

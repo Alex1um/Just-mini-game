@@ -733,6 +733,46 @@ class MovableObject(Object):
             self.grabbed_y = y
 
 
+class StatusBar(Object):
+
+    def __init__(self,
+                 resolution,
+                 status=100,
+                 x_rel=0,
+                 y_rel=0,
+                 w_rel=0,
+                 h_rel=0,
+                 adopt_size=True,
+                 adopt_cords=True,
+                 border=None,
+                 border_color=(0, 0, 0),
+                 adopt_order=None,
+                 font_scale=100):
+        super().__init__(resolution,
+                         x_rel,
+                         y_rel,
+                         w_rel,
+                         h_rel,
+                         adopt_size,
+                         adopt_cords,
+                         border,
+                         border_color,
+                         adopt_order,
+                         font_scale)
+        status /= 100
+        self.bar = Object(resolution, x_rel, y_rel, w_rel * status, h_rel)
+        self.bar.set_color((120 * status, 100, 100), 'hsv')
+
+    def set_status(self, status):
+        status /= 100
+        self.bar.set_color((120 * status, 100, 100), 'hsv')
+        self.bar.resize(self.w_rel * status, self.h_rel)
+
+    def draw(self, screen):
+        super().draw(screen)
+        self.bar.draw(screen)
+
+
 class GameArea:
     """
     Class to control all objects

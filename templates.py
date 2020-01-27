@@ -167,10 +167,8 @@ class SpaceMapScreen(GameArea):
                     border=2,
                     border_color=(255, 255, 255)
                 )
-            if planet.status == 'BATTLE':
-                self.set_text('!' + self.text)
-            elif '!' == self.text[0]:
-                self.set_text(self.text[1:])
+            if planet.status == 'BATTLE' and '!' != self.text[0]:
+                self.set_text('! ' + self.text + '! ')
 
         def draw(self, screen):
             super().draw(screen)
@@ -244,10 +242,28 @@ class BattleScreen(GameArea):
     def update(self, main):
         self.main = main
         self.objects = []
-        ships, bullets = main.game.space_map.planets[self.planet_index].battle.get_state()
+        battle = main.game.space_map.planets[self.planet_index].battle
+        ships, bullets = battle.get_state()
+        # print(ships, bullets)
         for bullet in bullets:
-            b = RadialObject(main.resolution, bullet['ys'], bullet['yf'], 1, 1)
-            b.set_color((255, 0, 0))
-            self.add_objects(b)
+            self.add_objects(RadialObject(main.resolution,
+                             bullet['xs'],
+                             bullet['ys'],
+                             5,
+                             border=5,
+                             border_color=(255, 0, 0)))
         for ship in ships:
-            self.add_objects(RadialObject(main.resolution, ship['xf'] // 100, ship['yf'] // 100, ship['size'], border_color=(255, 0, 0), border=2))
+            s = RadialObject(
+                    main.resolution,
+                    ship['xs'] // 100,
+                    ship['ys'] // 100,
+                    ship['size'],
+                    border_color=(255, 0, 0),
+                    border=2)
+            s.on_mouse_down = lambda x, y: battle.change_pos(ship['ship'], x / self.main.resolution[0], y / self.main.resolution[1])
+            self.add_objects(s, StatusBar(main.resolution,
+                            round(ship['health'] / ship['max_health'] * 100),
+                             ship['xs'] // 100,
+                             ship['ys'] // 100 + ship['size'],
+                             ship['size'],
+                             1))
