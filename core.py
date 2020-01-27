@@ -71,7 +71,7 @@ class Battle:
         ctime = time()
         d = ctime - self.stime
         TICK = self.TICK
-        BULLET_SPEED = 5
+        BULLET_SPEED = 500
 
         def hit(x1, y1, x2, y2, x0, y0, r):
             a, b, c = y1 - y2, x2 - x1, x1 * y2 - x2 * y1

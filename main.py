@@ -60,6 +60,8 @@ class Client:
 
     def new_game(self):
         self.game = Game.generate(5, 19)
+        self.fraction = random.choice(self.game.fractions)
+        self.fraction = self.game.fractions[0]
         ship_destroyer = Ship('destroyer', 1, 50000, 250, 1000, 1, 10)
         ship_destroyer2 = Ship('destroyer2', 1, 50000, 250, 1000, 1, 10)
         Squad(self.game.space_map.planets[0], self.game.fractions[0]).set_ships([ship_destroyer])
@@ -75,9 +77,9 @@ class Client:
                 if e.type == pygame.MOUSEMOTION:
                     self.current_game_area.on_mouse_motion(*e.dict['pos'])
                 elif e.type == pygame.MOUSEBUTTONUP:
-                    self.current_game_area.on_mouse_up(*e.dict['pos'])
+                    self.current_game_area.on_mouse_up(*e.dict['pos'], e.dict['button'])
                 elif e.type == pygame.MOUSEBUTTONDOWN:
-                    self.current_game_area.on_mouse_down(*e.dict['pos'])
+                    self.current_game_area.on_mouse_down(*e.dict['pos'], e.dict['button'])
                 elif e.type == pygame.QUIT:
                     self.exit = True
                 elif e.type == pygame.KEYDOWN:

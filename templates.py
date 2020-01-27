@@ -201,19 +201,19 @@ class SpaceMapScreen(GameArea):
             for squad in self.squads.values():
                 squad.hover(x, y)
 
-        def on_mouse_up(self, x, y):
+        def on_mouse_up(self, x, y, key):
             for squad_game, squad in self.squads.items():
-                if self.planet.status == 'BATTLE':
+                if self.planet.status == 'BATTLE' and key == 3:
                     self.cls.main.switch_game_area(self.cls.main.battle_screen, self.cls.main.game.space_map.planets.index(self.planet))
                 else:
                     if squad.grabbed:
                         for obj in self.cls.objects:
                             if self is not obj and obj.check(squad.x, squad.y):
-                                print(squad_game.start_travel(obj.planet))
+                                print(squad_game.start_travel(obj.planet)) # Todo: add animation
                     squad.x, squad.y = squad.sx, squad.sy
                 squad.on_mouse_up(x, y)
 
-        def on_mouse_down(self, x, y):
+        def on_mouse_down(self, x, y, key):
             for squad in self.squads.values():
                 squad.on_mouse_down(x, y)
 
@@ -235,11 +235,10 @@ class BattleScreen(GameArea):
         super().__init__()
         self.background = Background(main_object.resolution, 'staff\\space.jpg')
         self.planet_index = None
+        self.visual = None
 
     def load(self, resolution, planet_index):
         self.planet_index = planet_index
-
-
 
     def update(self, main):
         self.main = main
@@ -248,10 +247,10 @@ class BattleScreen(GameArea):
         ships, bullets = battle.get_state()
         for bullet in bullets:
             self.add_objects(RadialObject(main.resolution,
-                             bullet['xs'],
-                             bullet['ys'],
-                             5,
-                             border=5,
+                             bullet['xs'] // 100,
+                             bullet['ys'] // 100,
+                             1,
+                             border=1,
                              border_color=(255, 0, 0)))
         for ship in ships:
             s = RadialObject(
@@ -259,9 +258,12 @@ class BattleScreen(GameArea):
                     ship['xs'] // 100,
                     ship['ys'] // 100,
                     ship['size'],
-                    border_color=(255, 0, 0),
-                    border=2)
-            s.on_mouse_down = lambda x, y: battle.change_pos(ship['ship'], x / self.main.resolution[0], y / self.main.resolution[1])
+                    border=2,
+                    border_color=(0, 255, 0) if ship['fraction'] == self.main.fraction else (255, 0, 0))
+            if self.main.fraction == ship['fraction']:
+                s.on_mouse_down = lambda x, y, key: battle.change_pos(ship['ship'],
+                                      x / self.main.resolution[0],
+                                      y / self.main.resolution[1])
             self.add_objects(s, StatusBar(main.resolution,
                             round(ship['health'] / ship['max_health'] * 100),
                              ship['xs'] // 100,

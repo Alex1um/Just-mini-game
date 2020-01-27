@@ -252,10 +252,10 @@ class Object(Sizible, Image):
     def on_key_up(self, key):
         pass
 
-    def on_mouse_up(self, x, y):
+    def on_mouse_up(self, x, y, key):
         pass
 
-    def on_mouse_down(self, x, y):
+    def on_mouse_down(self, x, y, key):
         pass
 
     def adopt(self, resolution: Tuple[int, int]):
@@ -518,7 +518,7 @@ class Button(Object):
     def connect_mouse_up(self, action):
         self.action_on_mouse_up = action
 
-    def on_mouse_down(self, x, y):
+    def on_mouse_down(self, x, y, key):
         """
         foo must invoke on click
         :param x:
@@ -542,7 +542,7 @@ class Button(Object):
             self.set_color(self.color_on_mouse_up)
             self._hovered = False
 
-    def on_mouse_up(self, x, y):
+    def on_mouse_up(self, x, y, key):
         """
         foo must invoke on click
         :param x:
@@ -851,13 +851,13 @@ class GameArea:
         """
         self.sounds[sound].play(loops, maxtime, fade_ms)
 
-    def on_mouse_up(self, x, y):
+    def on_mouse_up(self, x, y, key):
         for obj in self.objects:
-            obj.on_mouse_up(x, y)
+            obj.on_mouse_up(x, y, key)
 
-    def on_mouse_down(self, x, y):
+    def on_mouse_down(self, x, y, key):
         for obj in self.objects:
-            obj.on_mouse_down(x, y)
+            obj.on_mouse_down(x, y, key)
 
     def on_mouse_motion(self, x, y):
         for obj in self.objects:
