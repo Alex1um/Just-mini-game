@@ -316,6 +316,98 @@ while time() - time1 < 5:
                 print(round(time() - time1, 2), str(i['xs']) + ', ' + str(i['ys']))
 
 
+import socket
+from threading import Thread
+import struct
+import pickle
+
+
+class Server:
+
+    def __init__(self, port):
+        self.socket = socket.socket()
+        self.connections = []
+        if not port:
+            self.port ='48666'
+        self.socket.bind(("", int(port)))
+        self.socket.listen(10)
+        self.port = port
+        self.can_connect = True
+        self.game = False
+        Thread(target=self.sender, args=['225.0.0.250']).start()
+        Thread(target=self.receive_connections).start()
+        print('Система запущена успешно и готова принимать подключения')
+
+    def sender(self, group):
+        '''
+        For getting ip from network
+        :param group:
+        :return:
+        '''
+        data = self.port.encode('utf-8')
+        MYTTL = 1
+        addrinfo = socket.getaddrinfo(group, None)[0]
+        s = socket.socket(addrinfo[0], socket.SOCK_DGRAM)
+        ttl_bin = struct.pack('@i', MYTTL)
+        if addrinfo[0] == socket.AF_INET:  # IPv4
+            s.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl_bin)
+        while True:
+            s.sendto(data, (addrinfo[4][0], int(self.port)))
+            time.sleep(2)
+
+    def receive_connections(self):
+        while self.can_connect:
+            conn, adr = self.socket.accept()
+            try:
+                conn.settimeout(10000)
+                self.connections.append(Connection(conn, adr, self))
+                self.connections[-1].start()
+                print(f'Новое соединение: {adr[0]}:{adr[1]} - {time.strftime("%d.%m.%Y %H:%M:%S")}')
+                print('Текущие пользователи:', *self.connections)
+            except Exception as f:
+                print('receive_conns', f)
+            time.sleep(0.1)
+
+    def run(self):
+        while 1:
+            for connect in self.connections:
+                connect.send(pickle.dumps(self.game))
+
+
+class Connection:
+
+    def __init__(self, conn, adr, cls):
+        self.cls = cls
+        self.conn, self.adr = conn, adr
+        super().__init__()
+
+    def run(self):
+        while True:
+            try:
+                data = self.conn.recv(5).decode('utf-8')
+                snakes[self.snake].change_dirrection(data)
+            except Exception as f:
+                snakes.pop(self.snake)
+                for connection in self.cls.connections[self.snake:]:
+                    connection.snake -= 1
+                self.conn.close()
+                self.cls.connections.remove(self)
+                del self
+                print('run', f)
+                break
+
+    def send(self, s):
+        try:
+            self.conn.send(s)
+        except Exception as f:
+            print('send', f)
+
+    def sendall(self, *args):
+        try:
+            self.conn.sendall(b'\t'.join(args))
+        except Exception as f:
+            print('sendall', f)
+
 '''
 print(battle.get_state())
 
