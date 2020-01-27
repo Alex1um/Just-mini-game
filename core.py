@@ -79,32 +79,30 @@ class Battle:
             for ship in squad.get_ships():
                 self.ships.append({'fraction': squad.get_fraction(), 'ship': ship, 'xs': self.start_coords[0], 'ys': self.start_coords[1], 'xf': self.start_coords[0], 'yf': self.start_coords[1], 'status': 'FIXED'})
                 
-    
+    def set_tick(self, tick):
+        self.TICK = tick
+
     def get_state(self):
         ctime = time()
         d = ctime - self.stime
-        TICK = 0.5
+        TICK = self.TICK
         for i in range(int(d//TICK)):
             for k, ship in enumerate(self.ships):
                 if ship['status'] == 'TRAVEL':
-                    for i in range(int(ship['ship'].get_speed() * TICK)):
+                    max_distance = ship['ship'].get_speed() * TICK
+                    route = ((ship['xf'] - ship['xs']) ** 2 + (ship['yf'] - ship['ys']) ** 2) ** 0.5
+                    if route != 0:
+                        travel_progress = (max_distance / route)
+                    else:
+                        travel_progress = 1
 
-                        if ship['xf'] == ship['xs'] and ship['yf'] == ship['ys']:
-                            self.ships[k]['status'] = 'FIXED'
-                            break
+                    if travel_progress < 1:
+                        ship['xs'] += travel_progress * (ship['xf'] - ship['xs'])
+                        ship['ys'] += travel_progress * (ship['yf'] - ship['ys'])
+                    else:
+                        ship['xs'] = ship['xf']
+                        ship['ys'] = ship['yf']
 
-                        a = ship['xf'] - ship['xs']
-                        b = ship['yf'] - ship['ys']
-                        if abs(a) > abs(b):
-                            if a < 0:
-                                self.ships[k]['xs'] -= 1
-                            if a > 0:
-                                self.ships[k]['xs'] += 1
-                        else:
-                            if b < 0:
-                                self.ships[k]['ys'] -= 1
-                            if b > 0:
-                                self.ships[k]['ys'] += 1
                 aims = {}
                 for ind, enemy in enumerate(self.ships):
                     if ind != k:
@@ -312,7 +310,7 @@ class Game:
         space_map = SpaceMap.generate(planet_count, (5, 7), fractions, (1, 5))
         return cls(fractions, space_map)
 
-
+TICK = 0.01
 ship_destroyer = Ship('destroyer', 100, 50, 250, 10, 10)
 ship_destroyer2 = Ship('destroyer2', 100, 50, 250, 10, 10)
 ship_speeder = Ship('speeder', 100, 50, 250, 10, 10)
@@ -326,20 +324,22 @@ planet_earth.add_squad(squad1)
 planet_earth.add_squad(squad2)
 print(planet_earth.get_state())
 battle = planet_earth.get_battle()
-battle.change_pos(ship_destroyer2, 0, 500)
+battle.set_tick(TICK)
+battle.change_pos(ship_destroyer2, 800, 900)
 
 time1 = time()
 o = 0
-while time() - time1 < 1.5:
-    p = 1
-    '''
+while time() - time1 < 5:
     if (time() - time1) // 0.1 != o:
         o = (time() - time1) // 0.1
         for i in battle.get_state()[0]:
             if i['ship'] == ship_destroyer2:
-                print(time(), i)'''
-print(battle.get_state())
+                print(round(time() - time1, 2), str(i['xs']) + ', ' + str(i['ys']))
+
+
 '''
+print(battle.get_state())
+
 for i in battle.get_state()[0]:
             if i['ship'] == ship_destroyer2:
                 print(i['xs'], i['ys'])'''
