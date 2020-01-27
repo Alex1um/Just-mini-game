@@ -239,12 +239,13 @@ class BattleScreen(GameArea):
     def load(self, resolution, planet_index):
         self.planet_index = planet_index
 
+
+
     def update(self, main):
         self.main = main
         self.objects = []
         battle = main.game.space_map.planets[self.planet_index].battle
         ships, bullets = battle.get_state()
-        # print(ships, bullets)
         for bullet in bullets:
             self.add_objects(RadialObject(main.resolution,
                              bullet['xs'],
