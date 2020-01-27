@@ -168,10 +168,10 @@ class Planet:
             self.battle = Battle(self.squads, self.fractions)
             self.status = 'BATTLE'
 
-    def squad(self, squad):
+    def del_squad(self, squad):
         for i in range(len(self.squads)):
-            if squads[i] == squad1:
-                del squads[i]
+            if self.squads[i] == squad:
+                self.squads.pop(i)
 
     def get_state(self):
         return self.status
@@ -262,12 +262,14 @@ class Squad:
         x2, y2 = self.destination.get_coords()
         S = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
         self.travel_time = S / speed
-        def foo():
+
+        def foo(self):
             self.status = 'PLANET'
             self.planet.del_squad(self)
             self.planet = self.destination
             self.planet.add_squad(self)
-        Thread(target=timer, args=(delay, foo)).start()
+
+        Thread(target=timer, args=(self.travel_time, lambda: foo(self))).start()
         return self.planet, self.destination, self.travel_time
 
 
