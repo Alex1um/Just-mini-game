@@ -283,6 +283,27 @@ class Game:
         self.fractions = fractions
         self.space_map = space_map
 
+    def find_game_object(self, obj: Union[Planet, Squad, Ship]):
+        if isinstance(obj, Planet):
+            for planet in self.space_map.planets:
+                if obj == planet:
+                    return obj
+        elif isinstance(obj, Squad):
+            for planet in self.space_map.planets:
+                for squad in planet.squads:
+                    if squad == obj:
+                        return squad
+        elif isinstance(obj, Ship):
+            for planet in self.space_map.planets:
+                for squad in planet.squads:
+                    for ship in squad.ships:
+                        if ship == obj:
+                            return ship
+        return obj
+
+    def invoke(self, obj: Union[Planet, Squad, Ship]):
+        game_object = self.find_game_object(obj)
+
     @classmethod
     def generate(cls, number_of_fraction, planet_count):
         fractions = [Fraction(name) for name in {'red', 'green', 'blue', 'black', 'white'}]
