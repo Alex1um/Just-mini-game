@@ -194,7 +194,7 @@ class Planet:
             self.battle = Battle(self.squads, self.fractions)
             self.status = 'BATTLE'
 
-    del squad(self, squad):
+    def squad(self, squad):
         for i in range(len(self.squads)):
             if squads[i] == squad1:
                 del squads[i]
@@ -382,7 +382,7 @@ time1 = time()
 o = 0
 while time() - time1 < 1.2:
     p = 0'''
-    '''
+'''
     if (time() - time1) // 0.1 != o:
         o = (time() - time1) // 0.1
         for i in battle.get_state()[0]:
