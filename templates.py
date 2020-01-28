@@ -2,6 +2,7 @@ from engine import *
 import random
 import glob
 from core import SpaceMap, Planet, Ship
+import math
 
 
 class MainMenu(GameArea):
@@ -231,10 +232,9 @@ class SpaceMapScreen(GameArea):
             planet.update(main.game.space_map.planets[i], main.resolution, main.fraction)
 
     def load(self, resolution, space_map: SpaceMap):
-
-        images = random.choices(glob.glob('planets_high\\*.png'), k=len(space_map.planets))
+        images = random.sample(glob.glob('planets\\*.png'), k=len(space_map.planets))
         for i, planet in enumerate(space_map.planets):
-            self.add_objects(self.APlanet(resolution, planet, images[i][12:], self))
+            self.add_objects(self.APlanet(resolution, planet, images[i][8:], self))
         super().load(resolution)
 
 
@@ -273,6 +273,21 @@ class BattleScreen(GameArea):
                 s.on_mouse_down = lambda x, y, key: battle.change_pos(ship['ship'],
                                       x / self.main.resolution[0],
                                       y / self.main.resolution[1])
+            diffx = ship['xf'] - ship['xs']
+            diffy = ship['yf'] - ship['ys']
+            if diffy != 0:
+                deg = math.degrees(math.atan(diffx / diffy))
+                if diffy > 0 and diffx > 0:
+                    deg += 180
+                elif diffy < 0 and diffx > 0:
+                    deg += 30
+                elif diffx < 0 and diffy > 0:
+                    deg += 150
+            else:
+                deg=00
+            s.set_image('space_ships\\' + ship['img'],
+                        size_mode='%obj',
+                        rotation=deg)
             self.add_objects(s, StatusBar(main.resolution,
                             round(ship['health'] / ship['max_health'] * 100),
                              ship['xs'] // 100,

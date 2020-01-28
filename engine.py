@@ -113,6 +113,7 @@ class Image:
         self.image_height = height
         self.image_mode = mode
         self.image_enabled = True
+        self.image_rotation = None
 
     def add_images(self, *images: str):
         """
@@ -128,7 +129,8 @@ class Image:
                   width: int = 100,
                   height: int = 100,
                   size_mode: Union[percent_obj, percent_img, 'pixels'] = '%img',
-                  index=0):
+                  index=0,
+                  rotation=None):
         """
         setting image or image params
         :param image_name: name of new image
@@ -138,6 +140,8 @@ class Image:
         :param index: index of image
         :return:
         """
+        if rotation:
+            self.image_rotation = rotation
         if image_name:
             if len(self._image) < index:
                 self._image[index] = pygame.image.load(image_name)
@@ -164,15 +168,18 @@ class Image:
             else:
                 self._frame += 1
         if self._image:
+            img = self._image[self.image_index]
+            if self.image_rotation:
+                img = pygame.transform.rotate(img, self.image_rotation)
             if self.image_mode == '%obj':
-                return pygame.transform.scale(self._image[self.image_index],
+                return pygame.transform.scale(img,
                                                     (w_abs * self.image_width // 100,
                                                      h_abs * self.image_height // 100))
             elif self.image_mode == 'px':
-                return pygame.transform.scale(self._image[self.image_index], (self.image_width, self.image_height))
+                return pygame.transform.scale(img, (self.image_width, self.image_height))
             elif self.image_mode == '%img':
-                w, h = self._image[self.image_index].get_width(), self._image[self.image_index].get_height()
-                return pygame.transform.scale(self._image[self.image_index],
+                w, h = img.get_width(), img.get_height()
+                return pygame.transform.scale(img,
                                                     (w * self.image_width // 100,
                                                      h * self.image_height // 100))
         return self._image[self.image_index]

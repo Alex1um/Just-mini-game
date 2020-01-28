@@ -62,7 +62,8 @@ class Battle:
                      'status': 'FIXED',
                      'reload': time(),
                      'size': ship.get_size(),
-                     'max_health': ship.max_health})
+                     'max_health': ship.max_health,
+                     'img': ship.img})
                 
     def set_tick(self, tick):
         self.TICK = tick
@@ -307,8 +308,9 @@ class Squad:
 
 class Ship:
 
-    def __init__(self, name, damage, health, speed, attack_range, reload_time, size):
+    def __init__(self, name, damage, health, speed, attack_range, reload_time, size, img):
         self.size = size
+        self.img = img
         self.name = name
         self.damage = damage
         self.health = health
