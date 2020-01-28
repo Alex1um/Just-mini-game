@@ -46,32 +46,43 @@ class Battle:
         self.start_coords = [500, 500]
         self.fractions = fractions
         self.ships = []
+        self.status = 'PEACE'
         self.bullets = []
         self.set_tick(0.01)
+        Thread(target=self.get_state).start()
 
-        for squad in squads:
-            for ship in squad.get_ships():
-                self.ships.append(
-                    {'fraction': squad.get_fraction(),
-                     'ship': ship,
-                     'health': ship.get_health(),
-                     'xs': self.start_coords[0],
-                     'ys': self.start_coords[1],
-                     'xf': self.start_coords[0],
-                     'yf': self.start_coords[1],
-                     'status': 'FIXED',
-                     'reload': time(),
-                     'size': ship.get_size(),
-                     'max_health': ship.max_health,
-                     'img': ship.img})
-                
+    def update_squads(self):
+        self.ships = []
+        for squad in self.squads:
+            self.add_squad(squad)
+
+    def parse_ship(self, ship, fraction):
+        return {'fraction': fraction,
+                'ship': ship,
+                'health': ship.get_health(),
+                'xs': self.start_coords[0],
+                'ys': self.start_coords[1],
+                'xf': self.start_coords[0],
+                'yf': self.start_coords[1],
+                'status': 'FIXED',
+                'reload': time(),
+                'size': ship.get_size(),
+                'max_health': ship.max_health,
+                'img': ship.img}
+
     def set_tick(self, tick):
         self.TICK = tick
 
+    def add_squad(self, squad):
+        for ship in squad.ships:
+            self.ships.append(self.parse_ship(ship, squad.fraction))
+        if not self.win():
+            self.status = 'BATTLE'
+
+    def win(self):
+        return len(set(ship['fraction'] for ship in self.ships)) == 1
+
     def get_state(self):
-        ctime = time()
-        d = ctime - self.stime
-        TICK = self.TICK
         BULLET_SPEED = 500
 
         def hit(x1, y1, x2, y2, x0, y0, r):
@@ -82,11 +93,10 @@ class Battle:
             else:
                 return False
 
-        for i in range(int(d//TICK)):
+        while 1:
             for k, ship in enumerate(self.ships):
-
                 if ship['status'] == 'TRAVEL':
-                    max_distance = ship['ship'].get_speed() * TICK
+                    max_distance = ship['ship'].get_speed() * self.TICK
                     route = ((ship['xf'] - ship['xs']) ** 2 + (ship['yf'] - ship['ys']) ** 2) ** 0.5
                     if route != 0:
                         travel_progress = (max_distance / route)
@@ -120,7 +130,7 @@ class Battle:
                         self.ships[q]['health'] -= bullet['damage']
                 if bullet['xs'] == bullet['xf'] and bullet['ys'] == bullet['yf']:
                     del self.bullets[c]
-                max_distance = BULLET_SPEED * TICK
+                max_distance = BULLET_SPEED * self.TICK
                 route = ((bullet['xf'] - bullet['xs']) ** 2 + (bullet['yf'] - bullet['ys']) ** 2) ** 0.5
                 max_distance = min(bullet['range'], max_distance)
                     
@@ -136,8 +146,12 @@ class Battle:
                 else:
                     bullet['xs'] = bullet['xf']
                     bullet['ys'] = bullet['yf']
-        self.stime = ctime
-        return self.ships, self.bullets
+            for ship in self.ships:
+                if ship['health'] <= 0:
+                    self.ships.remove(ship)
+            sleep(self.TICK)
+            if self.win() and self.status == 'BATTLE':
+                self.status = 'PEACE'
 
     def change_pos(self, ship, nx, ny):
         nx, ny = round(nx * 10000), round(ny * 10000)
@@ -147,10 +161,6 @@ class Battle:
                 i['yf'] = ny
                 if i['xs'] != nx or i['yf'] != ny:
                     self.ships[k]['status'] = 'TRAVEL'
-
-    def add_squad(self, squad):
-        for ship in squad.get_ships():
-            self.ships.append({'fraction': squad.get_fraction(), 'ship': ship, 'xs': self.start_coords[0], 'ys': self.start_coords[1], 'xf': self.start_coords[0], 'yf': self.start_coords[1], 'status': 'FIXED'})
 
     def start_battle(self):
         self.stime = time()
@@ -190,6 +200,7 @@ class Planet:
                 Squad(self, self.get_most_fraction()).set_ships([self.produce_ship])
             else:
                 self.squads[0].ships.append(self.produce_ship)
+            self.battle.update_squads()
 
     def __eq__(self, other):
         return self.name == other.name
@@ -205,12 +216,18 @@ class Planet:
 
     def add_squad(self, squad):
         squad.planet = self
-        squad.status = 'PLANET'
+        squad.status = self.status
         self.squads.append(squad)
         self.fractions.add(squad.get_fraction())
-        if len(self.fractions) > 1:
+        if self.battle:
+            self.battle.add_squad(squad)
+            self.battle.update_squads()
+        else:
             self.battle = Battle(self.squads, self.fractions)
+        if len(self.fractions) > 1:
             self.status = 'BATTLE'
+            for squad in self.squads:
+                squad.status = 'BATTLE'
 
     def del_squad(self, squad):
         self.squads.remove(squad)
@@ -305,23 +322,24 @@ class Squad:
         return self.status
 
     def start_travel(self, destination: Planet):
-        self.planet.del_squad(self)
-        self.status = 'TRAVEL'
-        speed = float('inf')               # count
-        for i in self.ships:
-            speed = min(i.get_speed(), speed)
-        self.travel_time = float('inf')
-        x1, y1 = self.planet.get_coords()
-        x2, y2 = destination.get_coords()
-        S = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
-        self.travel_time = S / speed
-        self.travel_time = 1
+        if self.status != 'BATTLE':
+            self.planet.del_squad(self)
+            self.status = 'TRAVEL'
+            speed = float('inf')               # count
+            for i in self.ships:
+                speed = min(i.get_speed(), speed)
+            self.travel_time = float('inf')
+            x1, y1 = self.planet.get_coords()
+            x2, y2 = destination.get_coords()
+            S = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+            self.travel_time = S / speed
+            self.travel_time = 1
 
-        def travel(planet: Planet, destination: Planet, squad: Squad):
-            destination.add_squad(squad)
+            def travel(planet: Planet, destination: Planet, squad: Squad):
+                destination.add_squad(squad)
 
-        Thread(target=timer, args=(self.travel_time, lambda: travel(self.planet, destination, self))).start()
-        return self.planet, destination, self.travel_time
+            Thread(target=timer, args=(self.travel_time, lambda: travel(self.planet, destination, self))).start()
+            return self.planet, destination, self.travel_time
 
 
 class Ship:

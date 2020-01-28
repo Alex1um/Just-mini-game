@@ -221,7 +221,7 @@ class SpaceMapScreen(GameArea):
 
         def on_mouse_up(self, x, y, key):
             for squad_game, squad in self.squads.items():
-                if self.planet.status == 'BATTLE' and key == 3:
+                if key == 3:
                     self.cls.main.switch_game_area(self.cls.main.battle_screen, self.cls.main.game.space_map.planets.index(self.planet))
                 else:
                     if squad.grabbed:
@@ -262,7 +262,7 @@ class BattleScreen(GameArea):
         self.main = main
         self.objects = []
         battle = main.game.space_map.planets[self.planet_index].battle
-        ships, bullets = battle.get_state()
+        ships, bullets = battle.ships, battle.bullets
         for bullet in bullets:
             self.add_objects(RadialObject(main.resolution,
                              bullet['xs'] // 100,
