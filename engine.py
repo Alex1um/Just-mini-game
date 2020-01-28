@@ -766,11 +766,15 @@ class StatusBar(Object):
                          border_color,
                          adopt_order,
                          font_scale)
+        if status < 0:
+            status = 0
         status /= 100
         self.bar = Object(resolution, x_rel, y_rel, w_rel * status, h_rel)
         self.bar.set_color((120 * status, 100, 100), 'hsv')
 
     def set_status(self, status):
+        if status < 0:
+            status = 0
         status /= 100
         self.bar.set_color((120 * status, 100, 100), 'hsv')
         self.bar.resize(self.w_rel * status, self.h_rel)

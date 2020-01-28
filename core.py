@@ -47,7 +47,7 @@ class Battle:
         self.fractions = fractions
         self.ships = []
         self.bullets = []
-        self.set_tick(0.01)
+        self.set_tick(0.1)
 
         for squad in squads:
             for ship in squad.get_ships():
@@ -244,10 +244,12 @@ class Planet:
     def get_most_fraction(self):
         return max(self.get_statistic().items(), key=lambda x: x[1])[0]
 
-    def change_fraction_imact(self, fraction: Fraction, max_percent=10):
-        city_changing_impact = utils.break_number_sum(random.uniform(0, max_percent), len(self.map))
-        for i in range(len(self.map)):
-            self.map[i].change_fraction_impact(fraction, city_changing_impact[i])
+    def change_fraction_imact(self, fraction: Fraction, max_percent=50):
+        self.fractions_impact[fraction] += max_percent
+        changes = utils.break_number_sum(max_percent, len(self.fractions) - 1)
+        for i, fract in enumerate(self.fractions):
+            if fract != fraction:
+                self.fractions_impact[fract] -= changes[i]
 
     @classmethod
     def generate(cls,
