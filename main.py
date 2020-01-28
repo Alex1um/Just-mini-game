@@ -66,6 +66,8 @@ class Client:
         ship_destroyer2 = Ship('destroyer2', 1, 50000, 250, 1000, 1, 10, 'small_ships.png')
         Squad(self.game.space_map.planets[0], self.game.fractions[0]).set_ships([ship_destroyer])
         Squad(self.game.space_map.planets[1], self.game.fractions[1]).set_ships([ship_destroyer2])
+        Squad(self.game.space_map.planets[2], self.game.fractions[1]).set_ships([ship_destroyer, ship_destroyer])
+        Squad(self.game.space_map.planets[3], self.game.fractions[1]).set_ships([ship_destroyer, ship_destroyer])
         self.switch_game_area(self.space_map_area, self.game.space_map)
 
     def run(self):

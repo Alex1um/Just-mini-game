@@ -111,6 +111,8 @@ class SpaceMapScreen(GameArea):
         resolution = main_object.resolution
         self.background = Background(resolution, random.choice(glob.glob('galaxes\\*')))
         self.main = main_object
+        self.images = glob.glob('planets\\*.png')
+        random.shuffle(self.images)
 
     class APlanet(RadialObject):
 
@@ -169,11 +171,12 @@ class SpaceMapScreen(GameArea):
                 self.border_color = (255, 0, 0)
             for squad in set(self.squads.keys()) - set(planet.squads):
                 del self.squads[squad]
+            squad_number = len(planet.squads) - 1
             for squad in set(planet.squads) - set(self.squads.keys()):
                 sq = MovableObject(
                     res,
-                    planet.x_rel,
-                    planet.y_rel,
+                    planet.x_rel + squad_number % 3 * 2,
+                    planet.y_rel + squad_number // 3 * 2,
                     2,
                     2,
                     border=2,
@@ -238,9 +241,9 @@ class SpaceMapScreen(GameArea):
             planet.update(main.game.space_map.planets[i], main.resolution, main.fraction)
 
     def load(self, resolution, space_map: SpaceMap):
-        images = random.sample(glob.glob('planets\\*.png'), k=len(space_map.planets))
+        self.objects = []
         for i, planet in enumerate(space_map.planets):
-            self.add_objects(self.APlanet(resolution, planet, images[i][8:], self))
+            self.add_objects(self.APlanet(resolution, planet, self.images[i][8:], self))
         super().load(resolution)
 
 
@@ -300,3 +303,7 @@ class BattleScreen(GameArea):
                              ship['ys'] // 100 + ship['size'],
                              ship['size'],
                              1))
+
+    def on_key_down(self, key):
+        if key == 'escape':
+            self.main.switch_game_area(self.main.space_map_area, self.main.game.space_map)
