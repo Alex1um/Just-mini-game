@@ -262,13 +262,14 @@ class BattleScreen(GameArea):
         self.main = main
         self.objects = []
         battle = main.game.space_map.planets[self.planet_index].battle
-        ships, bullets, win = battle.get_state()
+        ships, bullets, win, f = battle.get_state()
+        print(ships, win, f)
         print(bullets)
-        if not win:
-            print('win!')
-            self.main.switch_game_area(self.main.space_map_area,
-                                       self.main.game.space_map)
-            return
+        # if not win:
+        #     print('win!')
+        #     self.main.switch_game_area(self.main.space_map_area,
+        #                                self.main.game.space_map)
+        #     return
         for bullet in bullets:
             self.add_objects(RadialObject(main.resolution,
                              bullet['xs'] // 100,
@@ -279,12 +280,13 @@ class BattleScreen(GameArea):
         for ship in ships:
             s = RadialObject(
                     main.resolution,
-                    ship['xs'] // 100,
-                    ship['ys'] // 100,
+                    ship['xs'] // 100 - ship['size'] // 2,
+                    ship['ys'] // 100 - ship['size'] // 2,
                     ship['size'],
                     border=2,
                     border_color=(0, 255, 0) if ship['fraction'] == self.main.fraction else (255, 0, 0))
             if self.main.fraction == ship['fraction']:
+                print(ship['fraction'])
                 s.on_mouse_down = lambda x, y, key: battle.change_pos(ship['ship'],
                                       x / self.main.resolution[0],
                                       y / self.main.resolution[1])
@@ -299,7 +301,7 @@ class BattleScreen(GameArea):
                 elif diffx < 0 and diffy > 0:
                     deg += 150
             else:
-                deg=00
+                deg = 0
             s.set_image('space_ships\\' + ship['img'],
                         size_mode='%obj',
                         rotation=deg)

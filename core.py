@@ -72,7 +72,7 @@ class Battle:
         ctime = time()
         d = ctime - self.stime
         TICK = self.TICK
-        BULLET_SPEED = 5
+        BULLET_SPEED = 500
 
         def hit(x1, y1, x2, y2, x0, y0, r):
             a, b, c = y1 - y2, x2 - x1, x1 * y2 - x2 * y1
@@ -113,7 +113,7 @@ class Battle:
                             if dist < ship['ship'].get_attack_range():
                                 #coef = ship['ship'].get_attack_range() / dist if dist > 0 else 1
                                 coef = 1
-                                aims[dist] = {'killer': ship['ship'], 'range': ship['ship'].get_attack_range(), 'damage': ship['ship'].get_damage(), 'xs': ship['xs'] + x1 + 25 'ys': ship['ys'] + y1 + 25, 'xf': enemy['xs'] * coef, 'yf': enemy['ys'] * coef}
+                                aims[dist] = {'killer': ship['ship'], 'range': ship['ship'].get_attack_range(), 'damage': ship['ship'].get_damage(), 'xs': ship['xs'], 'ys': ship['ys'], 'xf': enemy['xs'] * coef, 'yf': enemy['ys'] * coef}
                     if aims:
                         aim = aims[min(aims)]
                         self.bullets.append(aim)
@@ -124,7 +124,7 @@ class Battle:
                     max_distance = BULLET_SPEED * TICK
                     x2 = bullet['xf'] * route/max_distance
                     y2 = bullet['yf'] * route/max_distance
-                    if hit(bullet['xs'], bullet['ys'], x2, y2, w['xs'], w['ys'], w['size']) and bullet['killer'] != w:
+                    if hit(bullet['xs'], bullet['ys'], x2, y2, w['xs'], w['ys'], w['size']) and bullet['killer'] != w['ship']:
                         self.ships[q]['health'] -= bullet['damage']
                         del self.bullets[c]
                         break
@@ -148,9 +148,9 @@ class Battle:
                     bullet['ys'] = bullet['yf']
         self.stime = ctime
         if len(fractions) < 2:
-            return self.ships, self.bullets, False
+            return self.ships, self.bullets, False, fractions
         else:
-            return self.ships, self.bullets, True
+            return self.ships, self.bullets, True, fractions
 
     def change_pos(self, ship, nx, ny):
         nx, ny = round(nx * 10000), round(ny * 10000)
@@ -280,6 +280,7 @@ class Planet:
         most_fraction_index = fractions.index(most_fraction)
         produce_ship = random.choice(SHIPS)
         produce_timer = produce_ship.size
+        produce_timer = 3
         for i, fraction in enumerate(fractions[:most_fraction_index] + fractions[most_fraction_index + 1:]):
             impact[fraction] = imp[i]
         return cls(x_relative, y_relative, diameter, orbit, name, impact, produce_ship, produce_timer)
@@ -421,9 +422,9 @@ class Game:
         return cls(fractions, space_map)
 
 
-ship_destroyer = Ship('destroyer', 50, 5000, 250, 100000, 1, 10, 'Communicationship_blue.png')
-ship_destroyer2 = Ship('destroyer2', 50, 5000, 250, 100000, 1, 10, 'mothership_try.png')
-ship_speeder = Ship('speeder', 10, 500, 250, 10, 1, 3, 'alienship_new_red_try.png')
+ship_destroyer = Ship('destroyer', 50, 500, 250, 100000, 3, 10, 'Communicationship_blue.png')
+ship_destroyer2 = Ship('destroyer2', 50, 500, 250, 100000, 3, 10, 'mothership_try.png')
+ship_speeder = Ship('speeder', 50, 500, 250, 100000, 3, 10, 'alienship_new_red_try.png')
 SHIPS = (ship_destroyer, ship_destroyer2, ship_speeder)
 # planet_earth = Planet(60, 20, 5, [], 3, 'earth')
 # planet_mars = Planet(30, 60, 5, [], 3, 'mars')
