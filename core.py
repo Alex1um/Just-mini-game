@@ -112,8 +112,9 @@ class Battle:
                             dist = ((enemy['xs'] - ship['xs']) ** 2 + (enemy['ys'] - ship['ys']) ** 2) ** 0.5
                             if dist < ship['ship'].get_attack_range():
                                 coef = ship['ship'].get_attack_range() / dist if dist > 0 else 1
-                                aims[dist] = {'range': ship['ship'].get_attack_range(), 'damage': ship['ship'].get_damage(), 'xs': ship['xs'], 'ys': ship['ys'], 'xf': enemy['xs'] * coef, 'yf': enemy['ys'] * coef}
-                    if aims:
+                                x1 = (enemy['xs'] - ship['xs']) * (ship['ship'].get_size / dist)
+                                y1 = (enemy['ys'] - ship['ys']) * (ship['ship'].get_size / dist)
+                                aims[dist] = {'range': ship['ship'].get_attack_range(), 'damage': ship['ship'].get_damage(), 'xs': ship['xs'] + x1, 'ys': ship['ys'] + y1, 'xf': enemy['xs'] * coef, 'yf': enemy['ys'] * coef}                    if aims:
                         aim = aims[min(aims)]
                         self.bullets.append(aim)
 
@@ -220,7 +221,6 @@ class Planet:
         self.fractions.add(squad.get_fraction())
         if len(self.fractions) > 1:
             self.battle = Battle(self.squads, self.fractions)
-            self.squads = []
             self.status = 'BATTLE'
 
     def del_squad(self, squad):
