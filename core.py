@@ -81,10 +81,13 @@ class Battle:
                 return r <= distance
             else:
                 return False
-
+        fractions = set()
         for i in range(int(d//TICK)):
             for k, ship in enumerate(self.ships):
-
+                fractions.add(ship['fraction'])
+                if ship['health'] <= 0:
+                    del self.ships[k]
+                    continue
                 if ship['status'] == 'TRAVEL':
                     max_distance = ship['ship'].get_speed() * TICK
                     route = ((ship['xf'] - ship['xs']) ** 2 + (ship['yf'] - ship['ys']) ** 2) ** 0.5
@@ -118,6 +121,8 @@ class Battle:
                 for q, w in enumerate(self.ships):
                     if hit(bullet['xs'], bullet['ys'], bullet['xf'], bullet['yf'], w['xs'], w['ys'], w['size']):
                         self.ships[q]['health'] -= bullet['damage']
+                        del self.bullets[c]
+                        break
                 if bullet['xs'] == bullet['xf'] and bullet['ys'] == bullet['yf']:
                     del self.bullets[c]
                 max_distance = BULLET_SPEED * TICK
@@ -137,7 +142,10 @@ class Battle:
                     bullet['xs'] = bullet['xf']
                     bullet['ys'] = bullet['yf']
         self.stime = ctime
-        return self.ships, self.bullets
+        if len(fractions) < 2:
+            return self.ships, self.bullets, False
+        else:
+            return self.ships, self.bullets, True
 
     def change_pos(self, ship, nx, ny):
         nx, ny = round(nx * 10000), round(ny * 10000)
@@ -217,6 +225,9 @@ class Planet:
 
     def get_state(self):
         return self.status
+
+    def finish_battle(self):
+        self.status = 'PEACE'
 
     def get_battle(self):
         return self.battle
