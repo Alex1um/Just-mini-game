@@ -114,11 +114,11 @@ class Battle:
                                 coef = ship['ship'].get_attack_range() / dist if dist > 0 else 1
                                 x1 = (enemy['xs'] - ship['xs']) * (ship['ship'].get_size / dist)
                                 y1 = (enemy['ys'] - ship['ys']) * (ship['ship'].get_size / dist)
-                                aims[dist] = {'range': ship['ship'].get_attack_range(), 'damage': ship['ship'].get_damage(), 'xs': ship['xs'] + x1, 'ys': ship['ys'] + y1, 'xf': enemy['xs'] * coef, 'yf': enemy['ys'] * coef}                    if aims:
+                                aims[dist] = {'range': ship['ship'].get_attack_range(), 'damage': ship['ship'].get_damage(), 'xs': ship['xs'] + x1 + 25 'ys': ship['ys'] + y1 + 25, 'xf': enemy['xs'] * coef, 'yf': enemy['ys'] * coef}
+                    if aims:
                         aim = aims[min(aims)]
                         self.bullets.append(aim)
-
-            for c, bullet in enumerate(self.bullets):
+           ''' for c, bullet in enumerate(self.bullets):
                 for q, w in enumerate(self.ships):
                     if hit(bullet['xs'], bullet['ys'], bullet['xf'], bullet['yf'], w['xs'], w['ys'], w['size']):
                         self.ships[q]['health'] -= bullet['damage']
@@ -141,7 +141,7 @@ class Battle:
                     bullet['ys'] += travel_progress * (bullet['yf'] - bullet['ys'])
                 else:
                     bullet['xs'] = bullet['xf']
-                    bullet['ys'] = bullet['yf']
+                    bullet['ys'] = bullet['yf']'''
         self.stime = ctime
         if len(fractions) < 2:
             return self.ships, self.bullets, False
@@ -417,9 +417,9 @@ class Game:
         return cls(fractions, space_map)
 
 
-ship_destroyer = Ship('destroyer', 5, 5000, 250, 100000, 1, 10, 'Communicationship_blue.png')
-ship_destroyer2 = Ship('destroyer2', 5, 5000, 250, 100000, 1, 10, 'mothership_try.png')
-ship_speeder = Ship('speeder', 1, 500, 2500, 10, 1, 3, 'alienship_new_red_try.png')
+ship_destroyer = Ship('destroyer', 50, 5000, 250, 100000, 1, 10, 'Communicationship_blue.png')
+ship_destroyer2 = Ship('destroyer2', 50, 5000, 250, 100000, 1, 10, 'mothership_try.png')
+ship_speeder = Ship('speeder', 10, 500, 250, 10, 1, 3, 'alienship_new_red_try.png')
 SHIPS = (ship_destroyer, ship_destroyer2, ship_speeder)
 # planet_earth = Planet(60, 20, 5, [], 3, 'earth')
 # planet_mars = Planet(30, 60, 5, [], 3, 'mars')
