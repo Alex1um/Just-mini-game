@@ -197,7 +197,9 @@ class Planet:
             if not self.squads:
                 Squad(self, self.get_most_fraction()).set_ships([self.produce_ship])
             else:
-                self.squads[0].ships.append(self.produce_ship)
+                for i in range(len(self.squads)):
+                    if len(self.squads[i].ships) <= 3:
+                        self.squads[i].ships.append(self.produce_ship)
 
     def __eq__(self, other):
         return self.name == other.name
