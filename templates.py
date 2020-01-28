@@ -263,7 +263,9 @@ class BattleScreen(GameArea):
         self.objects = []
         battle = main.game.space_map.planets[self.planet_index].battle
         ships, bullets, win = battle.get_state()
+        print(bullets)
         if not win:
+            print('win!')
             self.main.switch_game_area(self.main.space_map_area,
                                        self.main.game.space_map)
             return

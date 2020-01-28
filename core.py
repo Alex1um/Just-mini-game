@@ -55,10 +55,10 @@ class Battle:
                     {'fraction': squad.get_fraction(),
                      'ship': ship,
                      'health': ship.get_health(),
-                     'xs': self.start_coords[0],
-                     'ys': self.start_coords[1],
-                     'xf': self.start_coords[0],
-                     'yf': self.start_coords[1],
+                     'xs': random.randint(0, 8000),
+                     'ys': random.randint(0, 8000),
+                     'xf': random.randint(0, 8000),
+                     'yf': random.randint(0, 8000),
                      'status': 'FIXED',
                      'reload': time(),
                      'size': ship.get_size(),
@@ -72,7 +72,7 @@ class Battle:
         ctime = time()
         d = ctime - self.stime
         TICK = self.TICK
-        BULLET_SPEED = 500
+        BULLET_SPEED = 5
 
         def hit(x1, y1, x2, y2, x0, y0, r):
             a, b, c = y1 - y2, x2 - x1, x1 * y2 - x2 * y1
@@ -414,9 +414,9 @@ class Game:
         return cls(fractions, space_map)
 
 
-ship_destroyer = Ship('destroyer', 100, 50, 250, 1000, 1, 10, 'Communicationship_blue.png')
-ship_destroyer2 = Ship('destroyer2', 100, 50, 250, 1000, 1, 10, 'mothership_try.png')
-ship_speeder = Ship('speeder', 100, 50, 250, 10, 10, 3, 'alienship_new_red_try.png')
+ship_destroyer = Ship('destroyer', 50, 5000, 250, 100000, 1, 10, 'Communicationship_blue.png')
+ship_destroyer2 = Ship('destroyer2', 50, 5000, 250, 100000, 1, 10, 'mothership_try.png')
+ship_speeder = Ship('speeder', 10, 500, 250, 10, 1, 3, 'alienship_new_red_try.png')
 SHIPS = (ship_destroyer, ship_destroyer2, ship_speeder)
 # planet_earth = Planet(60, 20, 5, [], 3, 'earth')
 # planet_mars = Planet(30, 60, 5, [], 3, 'mars')
