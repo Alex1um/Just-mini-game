@@ -167,7 +167,9 @@ class Planet:
                  r_rel,
                  orbit,
                  name,
-                 fractions_impact):
+                 fractions_impact,
+                 produce_ship,
+                 produce_timer):
         self.x_rel, self.y_rel = x_rel, y_rel
         self.fractions_impact = fractions_impact
         self.orbit = orbit
@@ -177,6 +179,17 @@ class Planet:
         self.status = 'PEACE'
         self.squads = []
         self.fractions = set()
+        self.produce_ship = produce_ship
+        self.produce_timer = produce_timer
+        Thread(target=self.produce).start()
+
+    def produce(self):
+        while 1:
+            sleep(self.produce_timer)
+            if not self.squads:
+                Squad(self, self.get_most_fraction()).set_ships([self.produce_ship])
+            else:
+                self.squads[0].ships.append(self.produce_ship)
 
     def __eq__(self, other):
         return self.name == other.name
@@ -245,9 +258,11 @@ class Planet:
         impact[most_fraction] = random.uniform(0.5, 1)
         imp = utils.break_number_sum(1 - impact[most_fraction], len(fractions) - 1)
         most_fraction_index = fractions.index(most_fraction)
+        produce_ship = random.choice(SHIPS)
+        produce_timer = produce_ship.size
         for i, fraction in enumerate(fractions[:most_fraction_index] + fractions[most_fraction_index + 1:]):
             impact[fraction] = imp[i]
-        return cls(x_relative, y_relative, diameter, orbit, name, impact)
+        return cls(x_relative, y_relative, diameter, orbit, name, impact, produce_ship, produce_timer)
 
 
 class Squad:
@@ -258,6 +273,9 @@ class Squad:
         self.ships = []        # {TYPE_OF_SHIP: N_OF_SHIPS}
         self.fraction = fraction
         self.planet.add_squad(self)
+
+    def merge(self, other):
+        self.ships.extend(other.ships)
 
     def __repr__(self):
         return self.id
@@ -287,6 +305,7 @@ class Squad:
         return self.status
 
     def start_travel(self, destination: Planet):
+        self.planet.del_squad(self)
         self.status = 'TRAVEL'
         speed = float('inf')               # count
         for i in self.ships:
@@ -299,7 +318,6 @@ class Squad:
         self.travel_time = 1
 
         def travel(planet: Planet, destination: Planet, squad: Squad):
-            planet.del_squad(squad)
             destination.add_squad(squad)
 
         Thread(target=timer, args=(self.travel_time, lambda: travel(self.planet, destination, self))).start()
@@ -382,56 +400,57 @@ class Game:
         space_map = SpaceMap.generate(planet_count, (5, 7), fractions)
         return cls(fractions, space_map)
 
-'''TICK = 0.01
-ship_destroyer = Ship('destroyer', 100, 50, 250, 1000, 1, 10)
-ship_destroyer2 = Ship('destroyer2', 100, 50, 250, 1000, 1, 10)
-ship_speeder = Ship('speeder', 100, 50, 250, 10, 10, 10)
-planet_earth = Planet(60, 20, 5, [], 3, 'earth')
-planet_mars = Planet(30, 60, 5, [], 3, 'mars')
-squad1 = Squad(planet_earth, 'BLUE')
-squad1.set_ships([ship_destroyer2])
-squad2 = Squad(planet_earth, 'BLACK')
-squad2.set_ships([ship_destroyer])
-planet_earth.add_squad(squad1)
-planet_earth.add_squad(squad2)
-print(planet_earth.get_state())
-battle = planet_earth.get_battle()
-battle.set_tick(TICK)
-battle.change_pos(ship_destroyer2, 800, 900)
 
-time1 = time()
-o = 0
-while time() - time1 < 1.2:
-    p = 0'''
-'''
-    if (time() - time1) // 0.1 != o:
-        o = (time() - time1) // 0.1
-        for i in battle.get_state()[0]:
-            if i['ship'] == ship_destroyer2:
-                print(round(time() - time1, 2), str(i['xs']) + ', ' + str(i['ys']))'''
-'''print(battle.get_state())'''
-
-
-'''
-print(battle.get_state())
-
-for i in battle.get_state()[0]:
-            if i['ship'] == ship_destroyer2:
-                print(i['xs'], i['ys'])'''
-
-'''
-print(squad1.get_status())
-print(squad1.get_planet().get_name())
-res = squad1.start_travel(planet_mars)
-print(res[0].get_name())
-print(res[1].get_name())
-print(res[2])
-print(squad1.get_status())
-squad1.finish_travel()
-print(squad1.get_planet().get_name())
-
-print(ship_destroyer.get_name())
-print(ship_destroyer.get_damage())
-print(ship_destroyer.get_health())
-print(ship_destroyer.get_speed())
-print(ship_destroyer.get_attack_range())'''
+ship_destroyer = Ship('destroyer', 100, 50, 250, 1000, 1, 10, 'Communicationship_blue.png')
+ship_destroyer2 = Ship('destroyer2', 100, 50, 250, 1000, 1, 10, 'mothership_try.png')
+ship_speeder = Ship('speeder', 100, 50, 250, 10, 10, 3, 'alienship_new_red_try.png')
+SHIPS = (ship_destroyer, ship_destroyer2, ship_speeder)
+# planet_earth = Planet(60, 20, 5, [], 3, 'earth')
+# planet_mars = Planet(30, 60, 5, [], 3, 'mars')
+# squad1 = Squad(planet_earth, 'BLUE')
+# squad1.set_ships([ship_destroyer2])
+# squad2 = Squad(planet_earth, 'BLACK')
+# squad2.set_ships([ship_destroyer])
+# planet_earth.add_squad(squad1)
+# planet_earth.add_squad(squad2)
+# print(planet_earth.get_state())
+# battle = planet_earth.get_battle()
+# battle.set_tick(TICK)
+# battle.change_pos(ship_destroyer2, 800, 900)
+#
+# time1 = time()
+# o = 0
+# while time() - time1 < 1.2:
+#     p = 0'''
+# '''
+#     if (time() - time1) // 0.1 != o:
+#         o = (time() - time1) // 0.1
+#         for i in battle.get_state()[0]:
+#             if i['ship'] == ship_destroyer2:
+#                 print(round(time() - time1, 2), str(i['xs']) + ', ' + str(i['ys']))'''
+# '''print(battle.get_state())'''
+#
+#
+# '''
+# print(battle.get_state())
+#
+# for i in battle.get_state()[0]:
+#             if i['ship'] == ship_destroyer2:
+#                 print(i['xs'], i['ys'])'''
+#
+# '''
+# print(squad1.get_status())
+# print(squad1.get_planet().get_name())
+# res = squad1.start_travel(planet_mars)
+# print(res[0].get_name())
+# print(res[1].get_name())
+# print(res[2])
+# print(squad1.get_status())
+# squad1.finish_travel()
+# print(squad1.get_planet().get_name())
+#
+# print(ship_destroyer.get_name())
+# print(ship_destroyer.get_damage())
+# print(ship_destroyer.get_health())
+# print(ship_destroyer.get_speed())
+# print(ship_destroyer.get_attack_range())'''
