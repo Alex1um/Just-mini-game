@@ -128,15 +128,19 @@ class SpaceMapScreen(GameArea):
             )]
             for i in range(len(planet.fractions_impact)):
                 self.stat_boxes[i].set_color((100, 100, 255), fmt='hsva')
-            self.squads = {planet.squads[i]: MovableObject(
+            self.squads = {}
+            for squad in planet.squads:
+                sq = MovableObject(
                 resolution,
                 planet.x_rel,
                 planet.y_rel,
                 2,
                 2,
                 border=2,
-                border_color=(0, 255, 0) if planet.squads[i].fraction == cls.main.fraction else (255, 0, 0)
-            ) for i in range(len(planet.squads))}
+                border_color=(0, 255, 0) if squad.fraction == cls.main.fraction else (255, 0, 0)
+                )
+                sq.set_image('space_ships\\' + squad.ships[0].img)
+                self.squads[squad] = sq
             self.squads = {}
             self.cls = cls
             self.planet = planet
@@ -166,7 +170,7 @@ class SpaceMapScreen(GameArea):
             for squad in set(self.squads.keys()) - set(planet.squads):
                 del self.squads[squad]
             for squad in set(planet.squads) - set(self.squads.keys()):
-                self.squads[squad] = MovableObject(
+                sq = MovableObject(
                     res,
                     planet.x_rel,
                     planet.y_rel,
@@ -175,6 +179,8 @@ class SpaceMapScreen(GameArea):
                     border=2,
                     border_color=(0, 255, 0) if squad.fraction == self.cls.main.fraction else (255, 0, 0)
                 )
+                sq.set_image('space_ships\\' + squad.ships[0].img, size_mode='%obj')
+                self.squads[squad] = sq
                 self.squads[squad].fraction = squad.fraction
             if planet.status == 'BATTLE' and '!' != self.text[0]:
                 self.set_text('! ' + self.text + '! ')
