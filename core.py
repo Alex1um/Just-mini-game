@@ -120,7 +120,11 @@ class Battle:
 
             for c, bullet in enumerate(self.bullets):
                 for q, w in enumerate(self.ships):
-                    if hit(bullet['xs'], bullet['ys'], bullet['xf'], bullet['yf'], w['xs'], w['ys'], w['size']) and bullet['killer'] != w:
+                    route = ((bullet['xf'] - bullet['xs']) ** 2 + (bullet['yf'] - bullet['ys']) ** 2) ** 0.5
+                    max_distance = BULLET_SPEED * TICK
+                    x2 = bullet['xf'] * route/max_distance
+                    y2 = bullet['yf'] * route/max_distance
+                    if hit(bullet['xs'], bullet['ys'], x2, y2, w['xs'], w['ys'], w['size']) and bullet['killer'] != w:
                         self.ships[q]['health'] -= bullet['damage']
                         del self.bullets[c]
                         break
