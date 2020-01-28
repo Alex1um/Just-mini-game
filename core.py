@@ -112,13 +112,14 @@ class Battle:
                             dist = ((enemy['xs'] - ship['xs']) ** 2 + (enemy['ys'] - ship['ys']) ** 2) ** 0.5
                             if dist < ship['ship'].get_attack_range():
                                 coef = ship['ship'].get_attack_range() / dist if dist > 0 else 1
-                                aims[dist] = {'range': ship['ship'].get_attack_range(), 'damage': ship['ship'].get_damage(), 'xs': ship['xs'], 'ys': ship['ys'], 'xf': enemy['xs'] * coef, 'yf': enemy['ys'] * coef}
+                                aims[dist] = {'killer': ship['ship'], 'range': ship['ship'].get_attack_range(), 'damage': ship['ship'].get_damage(), 'xs': ship['xs'] + x1 + 25 'ys': ship['ys'] + y1 + 25, 'xf': enemy['xs'] * coef, 'yf': enemy['ys'] * coef}
                     if aims:
                         aim = aims[min(aims)]
                         self.bullets.append(aim)
-           ''' for c, bullet in enumerate(self.bullets):
+
+            for c, bullet in enumerate(self.bullets):
                 for q, w in enumerate(self.ships):
-                    if hit(bullet['xs'], bullet['ys'], bullet['xf'], bullet['yf'], w['xs'], w['ys'], w['size']):
+                    if hit(bullet['xs'], bullet['ys'], bullet['xf'], bullet['yf'], w['xs'], w['ys'], w['size']) and bullet['killer'] != w:
                         self.ships[q]['health'] -= bullet['damage']
                         del self.bullets[c]
                         break
@@ -139,7 +140,7 @@ class Battle:
                     bullet['ys'] += travel_progress * (bullet['yf'] - bullet['ys'])
                 else:
                     bullet['xs'] = bullet['xf']
-                    bullet['ys'] = bullet['yf']'''
+                    bullet['ys'] = bullet['yf']
         self.stime = ctime
         if len(fractions) < 2:
             return self.ships, self.bullets, False
