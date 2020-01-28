@@ -220,6 +220,7 @@ class Planet:
         self.fractions.add(squad.get_fraction())
         if len(self.fractions) > 1:
             self.battle = Battle(self.squads, self.fractions)
+            self.squads = []
             self.status = 'BATTLE'
 
     def del_squad(self, squad):
