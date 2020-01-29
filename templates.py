@@ -291,9 +291,7 @@ class BattleScreen(GameArea):
             diffy = ship['yf'] - ship['ys']
             if diffy != 0:
                 deg = math.degrees(math.atan(diffx / diffy))
-                if diffy > 0 and diffx > 0:
-                    deg += 180
-                elif diffx < 0 and diffy > 0:
+                if diffy > 0:
                     deg += 180
             else:
                 deg = 0
