@@ -293,10 +293,8 @@ class BattleScreen(GameArea):
                 deg = math.degrees(math.atan(diffx / diffy))
                 if diffy > 0 and diffx > 0:
                     deg += 180
-                elif diffy < 0 and diffx > 0:
-                    deg += 30
                 elif diffx < 0 and diffy > 0:
-                    deg += 150
+                    deg += 180
             else:
                 deg = 0
             s.set_image('space_ships\\' + ship['img'],

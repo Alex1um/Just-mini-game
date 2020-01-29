@@ -472,9 +472,9 @@ class Game:
         return cls(fractions, space_map)
 
 
-ship_destroyer = lambda: Ship('destroyer', 10, 50000, 250, 100000, 1, 10, 'Communicationship_blue.png')
-ship_destroyer2 = lambda: Ship('destroyer2', 10, 50000, 250, 100000, 1, 10, 'mothership_try.png')
-ship_speeder = lambda: Ship('speeder', 10, 50000, 250, 10, 1000000, 3, 'alienship_new_red_try.png')
+ship_destroyer = lambda: Ship('destroyer', 10, 50000, 1000, 100000, 1, 10, 'Communicationship_blue.png')
+ship_destroyer2 = lambda: Ship('destroyer2', 10, 50000, 1000, 100000, 1, 10, 'mothership_try.png')
+ship_speeder = lambda: Ship('speeder', 10, 50000, 1000, 10, 1000000, 5, 'alienship_new_red_try.png')
 SHIPS = (ship_destroyer, ship_destroyer2, ship_speeder)
 # planet_earth = Planet(60, 20, 5, [], 3, 'earth')
 # planet_mars = Planet(30, 60, 5, [], 3, 'mars')
