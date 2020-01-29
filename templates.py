@@ -141,7 +141,9 @@ class SpaceMapScreen(GameArea):
                 border=2,
                 border_color=(0, 255, 0) if squad.fraction == cls.main.fraction else (255, 0, 0)
                 )
-                sq.set_image('space_ships\\' + squad.ships[0].img)
+                for sh in squad.ships:
+                    sq.set_image('space_ships\\' + sh.img)
+                    break
                 self.squads[squad] = sq
             self.squads = {}
             self.cls = cls
@@ -183,7 +185,9 @@ class SpaceMapScreen(GameArea):
                     border=2,
                     border_color=(0, 255, 0) if squad.fraction == self.cls.main.fraction else (255, 0, 0)
                 )
-                sq.set_image('space_ships\\' + squad.ships[0].img, size_mode='%obj')
+                for sh in squad.ships:
+                    sq.set_image('space_ships\\' + sh.img, size_mode='%obj')
+                    break
                 self.squads[squad] = sq
                 self.squads[squad].fraction = squad.fraction
             if planet.status == 'BATTLE' and '!' != self.text[0]:
@@ -222,7 +226,7 @@ class SpaceMapScreen(GameArea):
 
         def on_mouse_up(self, x, y, key):
             for squad_game, squad in self.squads.items():
-                if key == 3:
+                if self.check(x, y) and key == 3:
                     self.cls.main.switch_game_area(self.cls.main.battle_screen, self.cls.main.game.space_map.planets.index(self.planet))
                 else:
                     if squad.grabbed:

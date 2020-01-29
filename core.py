@@ -119,8 +119,8 @@ class Planet:
 
     def change_fraction_imact(self, fraction: Fraction, max_percent=50):
         self.fractions_impact[fraction] += max_percent
-        changes = utils.break_number_sum(max_percent, len(self.fractions) - 1)
-        for i, fract in enumerate(self.fractions):
+        changes = utils.break_number_sum(max_percent, len(self.fractions_impact) - 1)
+        for i, fract in enumerate(self.fractions_impact.keys()):
             if fract != fraction:
                 self.fractions_impact[fract] -= changes[i]
 
@@ -144,7 +144,7 @@ class Planet:
         imp = utils.break_number_sum(1 - impact[most_fraction], len(fractions) - 1)
         most_fraction_index = fractions.index(most_fraction)
         produce_ship = random.choice(SHIPS)
-        produce_timer = 5
+        produce_timer = 1
         for i, fraction in enumerate(fractions[:most_fraction_index] + fractions[most_fraction_index + 1:]):
             impact[fraction] = imp[i]
         return cls(x_relative, y_relative, diameter, name, impact, produce_ship, produce_timer)
@@ -176,7 +176,7 @@ class Squad:
     def get_fraction(self):
         return self.fraction
 
-    def set_ships(self, ships: list):
+    def set_ships(self, ships: set):
         self.ships = ships
 
     def get_planet(self):
@@ -227,7 +227,7 @@ class Battle:
             while i < len(self.planet.squads):
                 new_ships = set(self.planet.squads[i].ships) & ships
                 if new_ships:
-                    self.planet.squads[i].set_ships(list(new_ships))
+                    self.planet.squads[i].set_ships(new_ships)
                     i += 1
                 else:
                     del self.planet.squads[i]
@@ -245,10 +245,10 @@ class Battle:
         return {'fraction': fraction,
                 'ship': ship,
                 'health': ship.get_health(),
-                'xs': random.randint(0, self.size[0]),
-                'ys': random.randint(0, self.size[1]),
-                'xf': random.randint(0, self.size[0]),
-                'yf': random.randint(0, self.size[1]),
+                'xs': random.randint(100, self.size[0]),
+                'ys': random.randint(100, self.size[1]),
+                'xf': random.randint(100, self.size[0]),
+                'yf': random.randint(100, self.size[1]),
                 'status': 'FIXED',
                 'reload': time(),
                 'size': ship.get_size(),
@@ -472,9 +472,9 @@ class Game:
         return cls(fractions, space_map)
 
 
-ship_destroyer = lambda: Ship('destroyer', 100, 50, 250, 1000, 1, 10, 'Communicationship_blue.png')
-ship_destroyer2 = lambda: Ship('destroyer2', 100, 50, 250, 1000, 1, 10, 'mothership_try.png')
-ship_speeder = lambda: Ship('speeder', 100, 50, 250, 10, 10, 3, 'alienship_new_red_try.png')
+ship_destroyer = lambda: Ship('destroyer', 10, 50000, 250, 1000, 1, 10, 'Communicationship_blue.png')
+ship_destroyer2 = lambda: Ship('destroyer2', 10, 50000, 250, 1000, 1, 10, 'mothership_try.png')
+ship_speeder = lambda: Ship('speeder', 10, 50000, 250, 10, 10, 3, 'alienship_new_red_try.png')
 SHIPS = (ship_destroyer, ship_destroyer2, ship_speeder)
 # planet_earth = Planet(60, 20, 5, [], 3, 'earth')
 # planet_mars = Planet(30, 60, 5, [], 3, 'mars')
