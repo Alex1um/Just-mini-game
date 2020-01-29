@@ -234,11 +234,11 @@ class SpaceMapScreen(GameArea):
                             if self is not obj and obj.check(squad.x, squad.y):
                                 print(squad_game.start_travel(obj.planet))  # Todo: add animation
                     squad.x, squad.y = squad.sx, squad.sy
-                squad.on_mouse_up(x, y)
+                squad.on_mouse_up(x, y, key)
 
         def on_mouse_down(self, x, y, key):
             for squad in self.squads.values():
-                squad.on_mouse_down(x, y)
+                squad.on_mouse_down(x, y, key)
 
     def update(self, main):
         for i, planet in enumerate(self.objects):
