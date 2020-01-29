@@ -275,10 +275,11 @@ class BattleScreen(GameArea):
                              border=1,
                              border_color=(255, 0, 0)))
         for ship in ships:
+            xr, yr = ship['xs'] // 100 - ship['size'] // 2, ship['ys'] // 100 - ship['size'] // 2
             s = RadialObject(
                     main.resolution,
-                    ship['xs'] // 100 - ship['size'] // 2,
-                    ship['ys'] // 100 - ship['size'] // 2,
+                    xr,
+                    yr,
                     ship['size'],
                     border=2,
                     border_color=(0, 255, 0) if ship['fraction'] == self.main.fraction else (255, 0, 0))
@@ -303,8 +304,8 @@ class BattleScreen(GameArea):
                         rotation=deg)
             self.add_objects(s, StatusBar(main.resolution,
                             round(ship['health'] / ship['max_health'] * 100),
-                             ship['xs'] // 100,
-                             ship['ys'] // 100 + ship['size'],
+                             xr,
+                             yr + ship['size'],
                              ship['size'],
                              1))
 
