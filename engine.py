@@ -669,7 +669,7 @@ class TextEdit(Object):
         self.delay = 1000
         self.text_condition: Callable = lambda *args: True
 
-    def on_mouse_up(self, x, y):
+    def on_mouse_up(self, x, y, key):
         if self.check(x, y):
             self.high = True
             self.set_color(self.color_filling)
@@ -689,8 +689,8 @@ class TextEdit(Object):
     def draw(self, screen):
         super().draw(screen)
 
-    def text_render(self):
-        return self.font.render(self.text + '|' if self.high else self.text, False, self.text_color)
+    def text_render(self, aa=False):
+        return self.font.render(self.text + '|' if self.high else self.text, aa, self.text_color)
 
 
 class MovableObject(Object):

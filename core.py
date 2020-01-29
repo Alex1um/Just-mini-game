@@ -401,7 +401,8 @@ class Ship:
         self.max_health = health
 
     def __eq__(self, other):
-        return self.id == other.id
+        if other:
+            return self.id == other.id
 
     def __hash__(self):
         return hash(self.id)

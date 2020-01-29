@@ -139,8 +139,8 @@ class SpaceMapScreen(GameArea):
                 2,
                 2,
                 border=2,
-                border_color=(0, 255, 0) if squad.fraction == cls.main.fraction else (255, 0, 0)
-                )
+                border_color=(0, 255, 0) if squad.fraction == cls.main.fraction else (255, 0, 0),
+                adopt_order=1)
                 for sh in squad.ships:
                     sq.set_image('space_ships\\' + sh.img)
                     break
@@ -255,18 +255,60 @@ class BattleScreen(GameArea):
 
     def __init__(self, main_object):
         super().__init__()
-        self.background = Background(main_object.resolution, 'staff\\space.jpg')
+        self.background = Background(main_object.resolution, 'staff\\space.jpg', mode='%obj')
         self.planet_index = None
-        self.visual = None
+        self.visual = set()
 
     def load(self, resolution, planet_index):
         self.planet_index = planet_index
 
+    class AShip(RadialObject):
+
+        def __init__(self, cls, ship, xr, yr):
+            self.cls = cls
+            self.ship = ship['ship']
+            self.fraction = ship['fraction']
+            super().__init__(cls.main.resolution,
+                             xr,
+                             yr,
+                             ship['size'],
+                             border=2)
+            if self.ship in cls.visual:
+                self.border_color = (0, 0, 255)
+            elif ship['fraction'] == cls.main.fraction:
+                self.border_color = (0, 255, 0)
+            else:
+                self.border_color = (255, 0, 0)
+            diffx = ship['xf'] - ship['xs']
+            diffy = ship['yf'] - ship['ys']
+            if diffy != 0:
+                deg = math.degrees(math.atan(diffx / diffy))
+                if diffy > 0:
+                    deg += 180
+            else:
+                deg = 0
+            self.set_image('space_ships\\' + ship['img'],
+                        size_mode='%obj',
+                        rotation=deg)
+
+        def on_mouse_down(self, x, y, key):
+            if self.ship in self.cls.visual:
+                if key == 3:
+                    self.cls.battle.change_pos(
+                        self.ship,
+                        x / self.cls.main.resolution[0],
+                        y / self.cls.main.resolution[1])
+                else:
+                    self.cls.visual = set()
+            elif self.check(x, y) and key == 1 and self.fraction == self.cls.main.fraction:
+                self.cls.visual.add(self.ship)
+
     def update(self, main):
+        self.background.adopt(main.resolution)
         self.main = main
         self.objects = []
-        battle = main.game.space_map.planets[self.planet_index].battle
-        ships, bullets = battle.ships, battle.bullets
+        self.battle = main.game.space_map.planets[self.planet_index].battle
+        ships, bullets = self.battle.ships, self.battle.bullets
         for bullet in bullets:
             self.add_objects(RadialObject(main.resolution,
                              bullet['xs'] // 100,
@@ -276,34 +318,13 @@ class BattleScreen(GameArea):
                              border_color=(255, 0, 0)))
         for ship in ships:
             xr, yr = ship['xs'] // 100 - ship['size'] // 2, ship['ys'] // 100 - ship['size'] // 2
-            s = RadialObject(
-                    main.resolution,
-                    xr,
-                    yr,
-                    ship['size'],
-                    border=2,
-                    border_color=(0, 255, 0) if ship['fraction'] == self.main.fraction else (255, 0, 0))
-            if self.main.fraction == ship['fraction']:
-                s.on_mouse_down = lambda x, y, key: battle.change_pos(ship['ship'],
-                                      x / self.main.resolution[0],
-                                      y / self.main.resolution[1])
-            diffx = ship['xf'] - ship['xs']
-            diffy = ship['yf'] - ship['ys']
-            if diffy != 0:
-                deg = math.degrees(math.atan(diffx / diffy))
-                if diffy > 0:
-                    deg += 180
-            else:
-                deg = 0
-            s.set_image('space_ships\\' + ship['img'],
-                        size_mode='%obj',
-                        rotation=deg)
-            self.add_objects(s, StatusBar(main.resolution,
+            self.add_objects(StatusBar(main.resolution,
                             round(ship['health'] / ship['max_health'] * 100),
                              xr,
                              yr + ship['size'],
                              ship['size'],
-                             1))
+                             1),
+                             self.AShip(self, ship, xr, yr))
 
     def on_key_down(self, key):
         if key == 'escape':

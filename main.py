@@ -19,6 +19,11 @@ class Client:
 
         self.exit = False
 
+        self.pressed_keys = {'shift': False,
+                             'ctrl': False,
+                             'alt': False}
+        self.pressed_keys_set = {'shift', 'ctrl', 'alt'}
+
         self.settings = Settings(self)
         self.main_menu = MainMenu(self)
         self.space_map_area = SpaceMapScreen(self)
@@ -51,6 +56,7 @@ class Client:
         pygame.display.init()
         self.screen = pygame.display.set_mode(self.resolution, flags, bits)
         # screen.blit(tmp, (0, 0))
+        self.current_game_area.change_resolution(self.resolution)
         pygame.display.set_caption(*caption)
         pygame.key.set_mods(0)  # HACK: work-a-round for a SDL bug??
         pygame.mouse.set_cursor(*cursor)  # Duoas 16-04-2007
@@ -62,12 +68,6 @@ class Client:
         self.game = Game.generate(5, 19)
         self.fraction = random.choice(self.game.fractions)
         self.fraction = self.game.fractions[1]
-        # ship_destroyer = Ship('destroyer', 1, 50000, 250, 1000, 1, 10, 'ship0.png')
-        # ship_destroyer2 = Ship('destroyer2', 1, 50000, 250, 1000, 1, 10, 'small_ships.png')
-        # Squad(self.game.space_map.planets[0], self.game.fractions[0]).set_ships([ship_destroyer])
-        # Squad(self.game.space_map.planets[1], self.game.fractions[1]).set_ships([ship_destroyer2])
-        # Squad(self.game.space_map.planets[2], self.game.fractions[1]).set_ships([ship_destroyer, ship_destroyer])
-        # Squad(self.game.space_map.planets[3], self.game.fractions[1]).set_ships([ship_destroyer, ship_destroyer])
         self.switch_game_area(self.space_map_area, self.game.space_map)
 
     def run(self):
@@ -85,7 +85,14 @@ class Client:
                 elif e.type == pygame.QUIT:
                     self.exit = True
                 elif e.type == pygame.KEYDOWN:
-                    self.current_game_area.on_key_down(pygame.key.name(e.key))
+                    key_name = pygame.key.name(e.key)
+                    if key_name in self.pressed_keys_set:
+                        self.pressed_keys[key_name] = True
+                    self.current_game_area.on_key_down(key_name)
+                elif e.type == pygame.KEYUP:
+                    key_name = pygame.key.name(e.key)
+                    if key_name in self.pressed_keys_set:
+                        self.pressed_keys[key_name] = False
             self.current_game_area.update(self)
             self.current_game_area.render(self.screen)
             pygame.display.flip()
