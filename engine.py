@@ -766,6 +766,8 @@ class StatusBar(Object):
                          border_color,
                          adopt_order,
                          font_scale)
+        if status < 0:
+            status = 0
         status /= 100
         if status < 0:
             status = 0
