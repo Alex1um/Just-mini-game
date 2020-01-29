@@ -64,15 +64,15 @@ class Sizible:
 
     def adopt(self, resolution):
         if self.adopt_cords:
-            self.x = self.x_rel * resolution[0] // 100
-            self.y = self.y_rel * resolution[1] // 100
+            self.x = round(self.x_rel * resolution[0] / 100)
+            self.y = round(self.y_rel * resolution[1] / 100)
         if self.adopt_size:
             if self.adopt_order is not None:
                 resolution = (
                     resolution[self.adopt_order],
                     resolution[self.adopt_order])
-            self.w = self.w_rel * resolution[0] // 100
-            self.h = self.h_rel * resolution[1] // 100
+            self.w = round(self.w_rel * resolution[0] / 100)
+            self.h = round(self.h_rel * resolution[1] / 100)
 
     def resize(self, w_rel=None, h_rel=None, adopt_size=None, resolution=None):
         """
@@ -189,8 +189,13 @@ class Image:
                 img = pygame.transform.rotate(img, self.image_rotation)
             if self.image_mode == '%obj':
                 return pygame.transform.scale(img,
-                                              (w_abs * self.image_width // 100,
-                                               h_abs * self.image_height // 100
+                                              (
+                                                  round(
+                                                      w_abs * self.image_width
+                                                      / 100),
+                                               round(
+                                                   h_abs * self.image_height
+                                                   / 100)
                                                ))
             elif self.image_mode == 'px':
                 return pygame.transform.scale(img,
@@ -200,8 +205,10 @@ class Image:
             elif self.image_mode == '%img':
                 w, h = img.get_width(), img.get_height()
                 return pygame.transform.scale(img,
-                                              (w * self.image_width // 100,
-                                               h * self.image_height // 100
+                                              (round(w * self.image_width
+                                                     / 100),
+                                               round(h * self.image_height
+                                                     / 100)
                                                ))
         return self._image[self.image_index]
 
@@ -305,7 +312,8 @@ class Object(Sizible, Image):
         if self.adopt_size:
             self.font = pygame.font.SysFont(
                 DEFAULTFONT,
-                round(min(self.w, self.h) * 0.75) * self.font_scale // 100)
+                round(
+                    min(self.w, self.h) * 0.75) * round(self.font_scale / 100))
             if self.text is not None:
                 self._text = self.text_render()
 
@@ -479,7 +487,7 @@ class RadialObject(Object):
                  border_color=(0, 0, 0),
                  font_scale=100):
         self.r_rel = r_rel // 2 + 0.5
-        self.r = r_rel * resolution[adopt_order] // 100
+        self.r = round(r_rel * resolution[adopt_order] / 100)
         super().__init__(resolution,
                          x_rel,
                          y_rel,
@@ -496,7 +504,7 @@ class RadialObject(Object):
     def adopt(self, resolution: Tuple[int, int]):
         super().adopt(resolution)
         self.xc, self.yc = self.x + self.r, self.y + self.r
-        self.r = self.r_rel * resolution[self.adopt_order] // 100
+        self.r = round(self.r_rel * resolution[self.adopt_order] / 100)
 
     def check(self, x, y):
         """
@@ -645,8 +653,8 @@ class Background(Image):
         self.image_mode = mode
 
     def adopt(self, resolution):
-        self.w = resolution[0] * self.w_rel // 100
-        self.h = resolution[1] * self.h_rel // 100
+        self.w = round(resolution[0] * self.w_rel / 100)
+        self.h = round(resolution[1] * self.h_rel / 100)
 
     def get_rect(self):
         return self.x, self.y, self.w, self.h

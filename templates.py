@@ -118,7 +118,8 @@ class SpaceMapScreen(GameArea):
 
         def __init__(self, resolution, planet: Planet, img_number, cls):
             # todo write ships
-            y = planet.y_rel + planet.r_rel if planet.y_rel < 50 else planet.y_rel - len(planet.fractions_impact) * 2
+            y = (planet.y_rel + planet.r_rel) if planet.y_rel < 50 else (
+                        planet.y_rel - len(planet.fractions_impact) * 2)
             self.stat_boxes = [Object(resolution,
                                       planet.x_rel,
                                       y + i,
@@ -152,7 +153,9 @@ class SpaceMapScreen(GameArea):
                              planet.x_rel,
                              planet.y_rel,
                              planet.r_rel,
-                             border=3)
+                             border=3,
+                             adopt_order=1)
+
             size = random.randint(3, 8)
             self.img = f'planets\\{img_number}'
             self.img_hd = f'planets_high\\{img_number}'
@@ -183,7 +186,8 @@ class SpaceMapScreen(GameArea):
                     2,
                     2,
                     border=2,
-                    border_color=(0, 255, 0) if squad.fraction == self.cls.main.fraction else (255, 0, 0)
+                    border_color=(0, 255, 0) if squad.fraction == self.cls.main.fraction else (255, 0, 0),
+                    adopt_order=1
                 )
                 for sh in squad.ships:
                     sq.set_image('space_ships\\' + sh.img, size_mode='%obj')

@@ -128,7 +128,7 @@ class Planet:
 
     @classmethod
     def generate(cls,
-                 diameter: int,
+                 radius: int,
                  name: str,
                  fractions: Union[Tuple[Fraction], List[Fraction]],
                  most_fraction: Fraction):
@@ -139,8 +139,8 @@ class Planet:
         img = f'planet_{sprite_num}.png'
         hd_img = f'planets_high\\planet{sprite_num}.png'
         '''
-        x_relative = random.randint(0, 100 - diameter)
-        y_relative = random.randint(0, 100 - diameter)
+        x_relative = random.randint(0, 100 - radius * 2)
+        y_relative = random.randint(0, 100 - radius * 2)
         impact = {}
         impact[most_fraction] = random.uniform(0.5, 1)
         imp = utils.break_number_sum(1 - impact[most_fraction], len(fractions) - 1)
@@ -149,7 +149,7 @@ class Planet:
         produce_timer = 1
         for i, fraction in enumerate(fractions[:most_fraction_index] + fractions[most_fraction_index + 1:]):
             impact[fraction] = imp[i]
-        return cls(x_relative, y_relative, diameter, name, impact, produce_ship, produce_timer)
+        return cls(x_relative, y_relative, radius, name, impact, produce_ship, produce_timer)
 
 
 class Squad:
