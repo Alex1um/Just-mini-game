@@ -68,7 +68,9 @@ class Planet:
                 sq.set_ships([self.produce_ship()])
                 self.add_squad(sq)
             else:
-                self.squads[0].ships.add(self.produce_ship())
+                for i in range(len(self.squads)):
+                    if len(self.squads[i].ships) <= 3:
+                        self.squads[i].ships.add(self.produce_ship())
             self.battle.update_squads()
 
     def __eq__(self, other):

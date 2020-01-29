@@ -19,10 +19,10 @@ class Client:
 
         self.exit = False
 
-        self.pressed_keys = {'shift': False,
-                             'ctrl': False,
-                             'alt': False}
-        self.pressed_keys_set = {'shift', 'ctrl', 'alt'}
+        self.pressed_keys = {'left shift': False,
+                             'left ctrl': False,
+                             'left alt': False}
+        self.pressed_keys_set = {'left shift', 'left ctrl', 'left alt'}
 
         self.settings = Settings(self)
         self.main_menu = MainMenu(self)

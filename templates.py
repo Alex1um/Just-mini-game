@@ -298,9 +298,11 @@ class BattleScreen(GameArea):
                         self.ship,
                         x / self.cls.main.resolution[0],
                         y / self.cls.main.resolution[1])
-                else:
+                elif not self.cls.main.pressed_keys['left shift']:
                     self.cls.visual = set()
             elif self.check(x, y) and key == 1 and self.fraction == self.cls.main.fraction:
+                if len(self.cls.visual) > 0 and not self.cls.main.pressed_keys['left shift']:
+                    self.cls.visual = set()
                 self.cls.visual.add(self.ship)
 
     def update(self, main):
