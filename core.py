@@ -39,167 +39,36 @@ class Fraction:
         return self.name
 
 
-class Battle:
-    def __init__(self, squads, fractions):
-        self.stime = time()
-        self.squads = squads
-        self.start_coords = [500, 500]
-        self.fractions = fractions
-        self.ships = []
-        self.status = 'PEACE'
-        self.bullets = []
-        self.set_tick(0.01)
-        Thread(target=self.get_state).start()
-
-    def update_squads(self):
-        self.ships = []
-        for squad in self.squads:
-            self.add_squad(squad)
-
-    def parse_ship(self, ship, fraction):
-        return {'fraction': fraction,
-                'ship': ship,
-                'health': ship.get_health(),
-                'xs': self.start_coords[0],
-                'ys': self.start_coords[1],
-                'xf': self.start_coords[0],
-                'yf': self.start_coords[1],
-                'status': 'FIXED',
-                'reload': time(),
-                'size': ship.get_size(),
-                'max_health': ship.max_health,
-                'img': ship.img}
-
-    def set_tick(self, tick):
-        self.TICK = tick
-
-    def add_squad(self, squad):
-        for ship in squad.ships:
-            self.ships.append(self.parse_ship(ship, squad.fraction))
-        if not self.win():
-            self.status = 'BATTLE'
-
-    def win(self):
-        return len(set(ship['fraction'] for ship in self.ships)) == 1
-
-    def get_state(self):
-        BULLET_SPEED = 500
-
-        def hit(x1, y1, x2, y2, x0, y0, r):
-            a, b, c = y1 - y2, x2 - x1, x1 * y2 - x2 * y1
-            if a and b:
-                distance = abs(a * x0 + b * y0 + c) / (a**2 + b**2) ** 0.5
-                return r <= distance
-            else:
-                return False
-
-        while 1:
-            for k, ship in enumerate(self.ships):
-                if ship['status'] == 'TRAVEL':
-                    max_distance = ship['ship'].get_speed() * self.TICK
-                    route = ((ship['xf'] - ship['xs']) ** 2 + (ship['yf'] - ship['ys']) ** 2) ** 0.5
-                    if route != 0:
-                        travel_progress = (max_distance / route)
-                    else:
-                        travel_progress = 1
-
-                    if travel_progress < 1:
-                        ship['xs'] += travel_progress * (ship['xf'] - ship['xs'])
-                        ship['ys'] += travel_progress * (ship['yf'] - ship['ys'])
-                    else:
-                        ship['xs'] = ship['xf']
-                        ship['ys'] = ship['yf']
-                
-                shoot = time()
-                if (shoot - ship['reload']) >= ship['ship'].get_reload():
-                    ship['reload'] = shoot
-                    aims = {}
-                    for ind, enemy in enumerate(self.ships):
-                        if ind != k:
-                            dist = ((enemy['xs'] - ship['xs']) ** 2 + (enemy['ys'] - ship['ys']) ** 2) ** 0.5
-                            if dist < ship['ship'].get_attack_range():
-                                coef = ship['ship'].get_attack_range() / dist if dist > 0 else -1
-                                aims[dist] = {'range': ship['ship'].get_attack_range(), 'damage': ship['ship'].get_damage(), 'xs': ship['xs'], 'ys': ship['ys'], 'xf': enemy['xs'] * coef, 'yf': enemy['ys'] * coef}
-                    if aims:
-                        aim = aims[min(aims)]
-                        self.bullets.append(aim)
-            
-            for c, bullet in enumerate(self.bullets):
-                for q, w in enumerate(self.ships):
-                    if hit(bullet['xs'], bullet['ys'], bullet['xf'], bullet['yf'], w['xs'], w['ys'], w['size']):
-                        self.ships[q]['health'] -= bullet['damage']
-                if bullet['xs'] == bullet['xf'] and bullet['ys'] == bullet['yf']:
-                    del self.bullets[c]
-                max_distance = BULLET_SPEED * self.TICK
-                route = ((bullet['xf'] - bullet['xs']) ** 2 + (bullet['yf'] - bullet['ys']) ** 2) ** 0.5
-                max_distance = min(bullet['range'], max_distance)
-                    
-                if route != 0:
-                    travel_progress = (max_distance / route)
-                else:
-                    travel_progress = 1
-
-                if travel_progress < 1:
-                    bullet['range'] -=  max_distance
-                    bullet['xs'] += travel_progress * (bullet['xf'] - bullet['xs'])
-                    bullet['ys'] += travel_progress * (bullet['yf'] - bullet['ys'])
-                else:
-                    bullet['xs'] = bullet['xf']
-                    bullet['ys'] = bullet['yf']
-            for ship in self.ships:
-                if ship['health'] <= 0:
-                    self.ships.remove(ship)
-            sleep(self.TICK)
-            if self.win() and self.status == 'BATTLE':
-                self.status = 'PEACE'
-
-    def change_pos(self, ship, nx, ny):
-        nx, ny = round(nx * 10000), round(ny * 10000)
-        for k, i in enumerate(self.ships):
-            if i['ship'] == ship:
-                i['xf'] = nx
-                i['yf'] = ny
-                if i['xs'] != nx or i['yf'] != ny:
-                    self.ships[k]['status'] = 'TRAVEL'
-
-    def start_battle(self):
-        self.stime = time()
-
-    def escape(self, fraction):
-        pass
-
-
 class Planet:
 
     def __init__(self,
                  x_rel: int,
                  y_rel: int,
                  r_rel,
-                 orbit,
                  name,
                  fractions_impact,
                  produce_ship,
                  produce_timer):
         self.x_rel, self.y_rel = x_rel, y_rel
-        self.fractions_impact = fractions_impact
-        self.orbit = orbit
-        self.battle = None
+        self.fractions_impact: Dict[Fraction, float] = fractions_impact
         self.name = name
         self.r_rel = r_rel
         self.status = 'PEACE'
-        self.squads = []
-        self.fractions = set()
-        self.produce_ship = produce_ship
+        self.squads: List[Squad] = []
+        self.produce_ship: Callable = produce_ship
         self.produce_timer = produce_timer
+        self.battle = Battle(self)
         Thread(target=self.produce).start()
 
     def produce(self):
         while 1:
             sleep(self.produce_timer)
             if not self.squads:
-                Squad(self, self.get_most_fraction()).set_ships([self.produce_ship])
+                sq = Squad(self)
+                sq.set_ships([self.produce_ship()])
+                self.add_squad(sq)
             else:
-                self.squads[0].ships.append(self.produce_ship)
+                self.squads[0].ships.add(self.produce_ship())
             self.battle.update_squads()
 
     def __eq__(self, other):
@@ -218,16 +87,14 @@ class Planet:
         squad.planet = self
         squad.status = self.status
         self.squads.append(squad)
-        self.fractions.add(squad.get_fraction())
-        if self.battle:
-            self.battle.add_squad(squad)
-            self.battle.update_squads()
-        else:
-            self.battle = Battle(self.squads, self.fractions)
-        if len(self.fractions) > 1:
+        self.battle.add_squad(squad)
+        if len(self.fractions()) > 1:
             self.status = 'BATTLE'
             for squad in self.squads:
                 squad.status = 'BATTLE'
+
+    def fractions(self):
+        return set(map(lambda x: x.fraction, self.squads))
 
     def del_squad(self, squad):
         self.squads.remove(squad)
@@ -268,7 +135,6 @@ class Planet:
         img = f'planet_{sprite_num}.png'
         hd_img = f'planets_high\\planet{sprite_num}.png'
         '''
-        orbit: List[Ship] = []
         x_relative = random.randint(0, 100 - diameter)
         y_relative = random.randint(0, 100 - diameter)
         impact = {}
@@ -276,23 +142,22 @@ class Planet:
         imp = utils.break_number_sum(1 - impact[most_fraction], len(fractions) - 1)
         most_fraction_index = fractions.index(most_fraction)
         produce_ship = random.choice(SHIPS)
-        produce_timer = produce_ship.size
+        produce_timer = 5
         for i, fraction in enumerate(fractions[:most_fraction_index] + fractions[most_fraction_index + 1:]):
             impact[fraction] = imp[i]
-        return cls(x_relative, y_relative, diameter, orbit, name, impact, produce_ship, produce_timer)
+        return cls(x_relative, y_relative, diameter, name, impact, produce_ship, produce_timer)
 
 
 class Squad:
-    def __init__(self, planet, fraction):
+    def __init__(self, planet: Planet, fraction=None):
         self.planet = planet
         self.id = str(uuid.uuid4())
         self.status = 'PLANET'
-        self.ships = []        # {TYPE_OF_SHIP: N_OF_SHIPS}
-        self.fraction = fraction
-        self.planet.add_squad(self)
+        self.ships = set()        # {TYPE_OF_SHIP: N_OF_SHIPS}
+        self.fraction = fraction if fraction else planet.get_most_fraction()
 
     def merge(self, other):
-        self.ships.extend(other.ships)
+        self.ships |= other.ships
 
     def __repr__(self):
         return self.id
@@ -333,13 +198,163 @@ class Squad:
             x2, y2 = destination.get_coords()
             S = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
             self.travel_time = S / speed
-            self.travel_time = 1
+            self.travel_time = 1  # todo: remove this line
 
             def travel(planet: Planet, destination: Planet, squad: Squad):
                 destination.add_squad(squad)
 
             Thread(target=timer, args=(self.travel_time, lambda: travel(self.planet, destination, self))).start()
             return self.planet, destination, self.travel_time
+
+
+class Battle:
+    def __init__(self, planet: Planet):
+        self.stime = time()
+        self.planet = planet
+        self.size = (10000, 10000)
+        self.ships = []
+        self.bullets = []
+        self.status = 'PEACE'
+        self.set_tick(0.01)
+        Thread(target=self.get_state).start()
+
+    def update_squads(self):
+        if self.ships:
+            ships = set(map(lambda x: x['ship'], self.ships))
+            i = 0
+            while i < len(self.planet.squads):
+                new_ships = set(self.planet.squads[i].ships) - ships
+                if new_ships:
+                    self.planet.squads[i].set_ships(list(new_ships))
+                    i += 1
+                else:
+                    del self.planet.squads[i]
+
+    def add_squad(self, squad):
+        for ship in squad.ships:
+            self.ships.append(self.parse_ship(ship, squad.fraction))
+        if not self.win():
+            self.status = 'BATTLE'
+
+    def win(self):
+        return len(set(ship['fraction'] for ship in self.ships)) == 1
+
+    def parse_ship(self, ship, fraction):
+        return {'fraction': fraction,
+                'ship': ship,
+                'health': ship.get_health(),
+                'xs': random.randint(0, self.size[0]),
+                'ys': random.randint(0, self.size[1]),
+                'xf': random.randint(0, self.size[0]),
+                'yf': random.randint(0, self.size[1]),
+                'status': 'FIXED',
+                'reload': time(),
+                'size': ship.get_size(),
+                'max_health': ship.max_health,
+                'img': ship.img}
+
+    def set_tick(self, tick):
+        self.TICK = tick
+
+    def get_state(self):
+        BULLET_SPEED = 500
+
+        def hit(x1, y1, x2, y2, x0, y0, r):
+            a, b, c = y1 - y2, x2 - x1, x1 * y2 - x2 * y1
+            if a and b:
+                distance = abs(a * x0 + b * y0 + c) / (a ** 2 + b ** 2) ** 0.5
+                return r <= distance
+            else:
+                return False
+
+        while 1:
+            for k, ship in enumerate(self.ships):
+                if ship['status'] == 'TRAVEL':
+                    max_distance = ship['ship'].get_speed() * self.TICK
+                    route = ((ship['xf'] - ship['xs']) ** 2 + (
+                            ship['yf'] - ship['ys']) ** 2) ** 0.5
+                    if route != 0:
+                        travel_progress = (max_distance / route)
+                    else:
+                        travel_progress = 1
+
+                    if travel_progress < 1:
+                        ship['xs'] += travel_progress * (
+                                ship['xf'] - ship['xs'])
+                        ship['ys'] += travel_progress * (
+                                ship['yf'] - ship['ys'])
+                    else:
+                        ship['xs'] = ship['xf']
+                        ship['ys'] = ship['yf']
+
+                shoot = time()
+                if (shoot - ship['reload']) >= ship['ship'].get_reload():
+                    ship['reload'] = shoot
+                    aims = {}
+                    for ind, enemy in enumerate(self.ships):
+                        if ind != k:
+                            dist = ((enemy['xs'] - ship['xs']) ** 2 + (
+                                    enemy['ys'] - ship['ys']) ** 2) ** 0.5
+                            if dist < ship['ship'].get_attack_range():
+                                coef = ship[
+                                           'ship'].get_attack_range() / dist if dist > 0 else -1
+                                aims[dist] = {
+                                    'range': ship['ship'].get_attack_range(),
+                                    'damage': ship['ship'].get_damage(),
+                                    'xs': ship['xs'], 'ys': ship['ys'],
+                                    'xf': enemy['xs'] * coef,
+                                    'yf': enemy['ys'] * coef}
+                    if aims:
+                        aim = aims[min(aims)]
+                        self.bullets.append(aim)
+
+            for c, bullet in enumerate(self.bullets):
+                for q, w in enumerate(self.ships):
+                    if hit(bullet['xs'], bullet['ys'], bullet['xf'],
+                           bullet['yf'], w['xs'], w['ys'], w['size']):
+                        self.ships[q]['health'] -= bullet['damage']
+                if bullet['xs'] == bullet['xf'] and bullet['ys'] == bullet[
+                    'yf']:
+                    del self.bullets[c]
+                max_distance = BULLET_SPEED * self.TICK
+                route = ((bullet['xf'] - bullet['xs']) ** 2 + (
+                        bullet['yf'] - bullet['ys']) ** 2) ** 0.5
+                max_distance = min(bullet['range'], max_distance)
+
+                if route != 0:
+                    travel_progress = (max_distance / route)
+                else:
+                    travel_progress = 1
+
+                if travel_progress < 1:
+                    bullet['range'] -= max_distance
+                    bullet['xs'] += travel_progress * (
+                            bullet['xf'] - bullet['xs'])
+                    bullet['ys'] += travel_progress * (
+                            bullet['yf'] - bullet['ys'])
+                else:
+                    bullet['xs'] = bullet['xf']
+                    bullet['ys'] = bullet['yf']
+            self.ships = list(filter(lambda x: x['health'] > 0, self.ships))
+            self.update_squads()
+            sleep(self.TICK)
+            if self.win() and self.status == 'BATTLE':
+                self.status = 'PEACE'
+
+    def change_pos(self, ship, nx, ny):
+        nx, ny = round(nx * 10000), round(ny * 10000)
+        for k, i in enumerate(self.ships):
+            if i['ship'] == ship:
+                i['xf'] = nx
+                i['yf'] = ny
+                if i['xs'] != nx or i['yf'] != ny:
+                    self.ships[k]['status'] = 'TRAVEL'
+
+    def start_battle(self):
+        self.stime = time()
+
+    def escape(self, fraction):
+        pass
 
 
 class Ship:
@@ -358,6 +373,15 @@ class Ship:
 
     def __eq__(self, other):
         return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def __str__(self):
+        return self.id
+
+    def __repr__(self):
+        return self.id
 
     def get_reload(self):
         return self.reload
@@ -419,9 +443,9 @@ class Game:
         return cls(fractions, space_map)
 
 
-ship_destroyer = Ship('destroyer', 100, 50, 250, 1000, 1, 10, 'Communicationship_blue.png')
-ship_destroyer2 = Ship('destroyer2', 100, 50, 250, 1000, 1, 10, 'mothership_try.png')
-ship_speeder = Ship('speeder', 100, 50, 250, 10, 10, 3, 'alienship_new_red_try.png')
+ship_destroyer = lambda: Ship('destroyer', 100, 50, 250, 1000, 1, 10, 'Communicationship_blue.png')
+ship_destroyer2 = lambda: Ship('destroyer2', 100, 50, 250, 1000, 1, 10, 'mothership_try.png')
+ship_speeder = lambda: Ship('speeder', 100, 50, 250, 10, 10, 3, 'alienship_new_red_try.png')
 SHIPS = (ship_destroyer, ship_destroyer2, ship_speeder)
 # planet_earth = Planet(60, 20, 5, [], 3, 'earth')
 # planet_mars = Planet(30, 60, 5, [], 3, 'mars')
