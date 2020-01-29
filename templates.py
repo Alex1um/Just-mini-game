@@ -276,7 +276,8 @@ class BattleScreen(GameArea):
                              xr,
                              yr,
                              ship['size'],
-                             border=2)
+                             border=2,
+                             adopt_order=1)
             if self.ship in cls.visual:
                 self.border_color = (0, 0, 255)
             elif ship['fraction'] == cls.main.fraction:
@@ -325,11 +326,13 @@ class BattleScreen(GameArea):
         for ship in ships:
             xr, yr = ship['xs'] // 100 - ship['size'] // 2, ship['ys'] // 100 - ship['size'] // 2
             self.add_objects(StatusBar(main.resolution,
-                            round(ship['health'] / ship['max_health'] * 100),
-                             xr,
-                             yr + ship['size'],
-                             ship['size'],
-                             1),
+                                       round(ship['health'] /
+                                             ship['max_health'] * 100),
+                                       xr,
+                                       yr + ship['size'],
+                                       ship['size'],
+                                       1,
+                                       adopt_order=1),
                              self.AShip(self, ship, xr, yr))
 
     def on_key_down(self, key):

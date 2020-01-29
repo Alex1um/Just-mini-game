@@ -193,7 +193,7 @@ class Image:
                                                   round(
                                                       w_abs * self.image_width
                                                       / 100),
-                                               round(
+                                                  round(
                                                    h_abs * self.image_height
                                                    / 100)
                                                ))
@@ -858,7 +858,7 @@ class StatusBar(Object):
         if status < 0:
             status = 0
         status /= 100
-        self.bar = Object(resolution, x_rel, y_rel, w_rel * status, h_rel)
+        self.bar = Object(resolution, x_rel, y_rel, w_rel * status, h_rel, adopt_size=adopt_size, adopt_cords=adopt_cords, adopt_order=adopt_order)
         self.bar.set_color((120 * status, 100, 100), 'hsv')
 
     def set_status(self, status):
