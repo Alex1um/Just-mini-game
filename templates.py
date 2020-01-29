@@ -164,6 +164,7 @@ class SpaceMapScreen(GameArea):
                 box.set_text(text_color=(255, 255, 255), align='left')
 
         def update(self, planet, res, fraction):
+
             self.planet = planet
             if self.planet.get_most_fraction() == fraction:
                 self.border_color = (0, 255, 0)
@@ -227,14 +228,13 @@ class SpaceMapScreen(GameArea):
                     if squad.grabbed:
                         for obj in self.cls.objects:
                             if self is not obj and obj.check(squad.x, squad.y):
-                                print(squad_game.start_travel(obj.planet)) # Todo: add animation
+                                print(squad_game.start_travel(obj.planet))  # Todo: add animation
                     squad.x, squad.y = squad.sx, squad.sy
                 squad.on_mouse_up(x, y)
 
         def on_mouse_down(self, x, y, key):
             for squad in self.squads.values():
-                if squad.fraction == self.cls.main.fraction:
-                    squad.on_mouse_down(x, y)
+                squad.on_mouse_down(x, y)
 
     def update(self, main):
         for i, planet in enumerate(self.objects):
@@ -273,8 +273,8 @@ class BattleScreen(GameArea):
         for ship in ships:
             s = RadialObject(
                     main.resolution,
-                    ship['xs'] // 100,
-                    ship['ys'] // 100,
+                    ship['xs'] // 100 - ship['size'] // 2,
+                    ship['ys'] // 100 - ship['size'] // 2,
                     ship['size'],
                     border=2,
                     border_color=(0, 255, 0) if ship['fraction'] == self.main.fraction else (255, 0, 0))
@@ -293,7 +293,7 @@ class BattleScreen(GameArea):
                 elif diffx < 0 and diffy > 0:
                     deg += 150
             else:
-                deg=00
+                deg = 0
             s.set_image('space_ships\\' + ship['img'],
                         size_mode='%obj',
                         rotation=deg)

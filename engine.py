@@ -769,8 +769,6 @@ class StatusBar(Object):
         if status < 0:
             status = 0
         status /= 100
-        if status < 0:
-            status = 0
         self.bar = Object(resolution, x_rel, y_rel, w_rel * status, h_rel)
         self.bar.set_color((120 * status, 100, 100), 'hsv')
 

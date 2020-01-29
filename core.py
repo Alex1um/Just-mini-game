@@ -117,10 +117,12 @@ class Planet:
     def get_most_fraction(self):
         return max(self.get_statistic().items(), key=lambda x: x[1])[0]
 
-    def change_fraction_imact(self, fraction: Fraction, max_percent=10):
-        city_changing_impact = utils.break_number_sum(random.uniform(0, max_percent), len(self.map))
-        for i in range(len(self.map)):
-            self.map[i].change_fraction_impact(fraction, city_changing_impact[i])
+    def change_fraction_imact(self, fraction: Fraction, max_percent=50):
+        self.fractions_impact[fraction] += max_percent
+        changes = utils.break_number_sum(max_percent, len(self.fractions) - 1)
+        for i, fract in enumerate(self.fractions):
+            if fract != fraction:
+                self.fractions_impact[fract] -= changes[i]
 
     @classmethod
     def generate(cls,
@@ -223,7 +225,7 @@ class Battle:
             ships = set(map(lambda x: x['ship'], self.ships))
             i = 0
             while i < len(self.planet.squads):
-                new_ships = set(self.planet.squads[i].ships) - ships
+                new_ships = set(self.planet.squads[i].ships) & ships
                 if new_ships:
                     self.planet.squads[i].set_ships(list(new_ships))
                     i += 1
@@ -257,7 +259,7 @@ class Battle:
         self.TICK = tick
 
     def get_state(self):
-        BULLET_SPEED = 500
+        BULLET_SPEED = 50
 
         def hit(x1, y1, x2, y2, x0, y0, r):
             a, b, c = y1 - y2, x2 - x1, x1 * y2 - x2 * y1
@@ -268,11 +270,26 @@ class Battle:
                 return False
 
         while 1:
+
+            def hit(x1, y1, x2, y2, x0, y0, r):
+                a, b, c = y1 - y2, x2 - x1, x1 * y2 - x2 * y1
+                if a and b:
+                    distance = abs(a * x0 + b * y0 + c) / (
+                                a ** 2 + b ** 2) ** 0.5
+                    return r <= distance
+                else:
+                    return False
+
+            fractions = set()
             for k, ship in enumerate(self.ships):
+                fractions.add(ship['fraction'])
+                if ship['health'] <= 0:
+                    del self.ships[k]
+                    continue
                 if ship['status'] == 'TRAVEL':
                     max_distance = ship['ship'].get_speed() * self.TICK
                     route = ((ship['xf'] - ship['xs']) ** 2 + (
-                            ship['yf'] - ship['ys']) ** 2) ** 0.5
+                                ship['yf'] - ship['ys']) ** 2) ** 0.5
                     if route != 0:
                         travel_progress = (max_distance / route)
                     else:
@@ -280,9 +297,9 @@ class Battle:
 
                     if travel_progress < 1:
                         ship['xs'] += travel_progress * (
-                                ship['xf'] - ship['xs'])
+                                    ship['xf'] - ship['xs'])
                         ship['ys'] += travel_progress * (
-                                ship['yf'] - ship['ys'])
+                                    ship['yf'] - ship['ys'])
                     else:
                         ship['xs'] = ship['xf']
                         ship['ys'] = ship['yf']
@@ -294,31 +311,43 @@ class Battle:
                     for ind, enemy in enumerate(self.ships):
                         if ind != k:
                             dist = ((enemy['xs'] - ship['xs']) ** 2 + (
-                                    enemy['ys'] - ship['ys']) ** 2) ** 0.5
+                                        enemy['ys'] - ship[
+                                    'ys']) ** 2) ** 0.5
                             if dist < ship['ship'].get_attack_range():
-                                coef = ship[
-                                           'ship'].get_attack_range() / dist if dist > 0 else -1
-                                aims[dist] = {
-                                    'range': ship['ship'].get_attack_range(),
-                                    'damage': ship['ship'].get_damage(),
-                                    'xs': ship['xs'], 'ys': ship['ys'],
-                                    'xf': enemy['xs'] * coef,
-                                    'yf': enemy['ys'] * coef}
+                                # coef = ship['ship'].get_attack_range() / dist if dist > 0 else 1
+                                coef = 1
+                                aims[dist] = {'killer': ship['ship'],
+                                              'range': ship[
+                                                  'ship'].get_attack_range(),
+                                              'damage': ship[
+                                                  'ship'].get_damage(),
+                                              'xs': ship['xs'],
+                                              'ys': ship['ys'],
+                                              'xf': enemy['xs'] * coef,
+                                              'yf': enemy['ys'] * coef}
                     if aims:
                         aim = aims[min(aims)]
                         self.bullets.append(aim)
 
             for c, bullet in enumerate(self.bullets):
                 for q, w in enumerate(self.ships):
-                    if hit(bullet['xs'], bullet['ys'], bullet['xf'],
-                           bullet['yf'], w['xs'], w['ys'], w['size']):
+                    route = ((bullet['xf'] - bullet['xs']) ** 2 + (
+                                bullet['yf'] - bullet['ys']) ** 2) ** 0.5
+                    max_distance = BULLET_SPEED * self.TICK
+                    x2 = bullet['xf'] * route / max_distance
+                    y2 = bullet['yf'] * route / max_distance
+                    if hit(bullet['xs'], bullet['ys'], x2, y2, w['xs'],
+                           w['ys'], w['size']) and bullet['killer'] != w[
+                        'ship']:
                         self.ships[q]['health'] -= bullet['damage']
+                        del self.bullets[c]
+                        break
                 if bullet['xs'] == bullet['xf'] and bullet['ys'] == bullet[
                     'yf']:
                     del self.bullets[c]
                 max_distance = BULLET_SPEED * self.TICK
                 route = ((bullet['xf'] - bullet['xs']) ** 2 + (
-                        bullet['yf'] - bullet['ys']) ** 2) ** 0.5
+                            bullet['yf'] - bullet['ys']) ** 2) ** 0.5
                 max_distance = min(bullet['range'], max_distance)
 
                 if route != 0:
@@ -329,9 +358,9 @@ class Battle:
                 if travel_progress < 1:
                     bullet['range'] -= max_distance
                     bullet['xs'] += travel_progress * (
-                            bullet['xf'] - bullet['xs'])
+                                bullet['xf'] - bullet['xs'])
                     bullet['ys'] += travel_progress * (
-                            bullet['yf'] - bullet['ys'])
+                                bullet['yf'] - bullet['ys'])
                 else:
                     bullet['xs'] = bullet['xf']
                     bullet['ys'] = bullet['yf']
