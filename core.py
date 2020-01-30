@@ -316,7 +316,7 @@ class Battle:
                                         enemy['ys'] - ship[
                                     'ys']) ** 2) ** 0.5
                             if dist < ship['ship'].get_attack_range():
-                                # coef = ship['ship'].get_attack_range() / dist if dist > 0 else 1
+                                # coef = ship['ship'].get_attack_range() / dist if dist != 0 else 1
                                 coef = 1
                                 aims[dist] = {'range': ship[
                                                   'ship'].get_attack_range(),
@@ -324,8 +324,8 @@ class Battle:
                                                   'ship'].get_damage(),
                                               'xs': ship['xs'],
                                               'ys': ship['ys'],
-                                              'xf': enemy['xs'] * coef,
-                                              'yf': enemy['ys'] * coef,
+                                              'xf': enemy['xs'] + (enemy['xs'] - ship['xs']) * coef,
+                                              'yf': enemy['ys'] + (enemy['ys'] - ship['ys']) * coef,
                                               'killed': False,
                                               'fraction': ship['fraction']}
                     if aims:
