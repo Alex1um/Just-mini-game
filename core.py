@@ -120,8 +120,8 @@ class Planet:
         return max(self.get_statistic().items(), key=lambda x: x[1])[0]
 
     def change_fraction_imact(self, fraction: Fraction, max_percent=50):
-        self.fractions_impact[fraction] += max_percent
-        changes = utils.break_number_sum(max_percent, len(self.fractions_impact) - 1)
+        self.fractions_impact[fraction] += max_percent / 100
+        changes = utils.break_number_sum(max_percent / 100, len(self.fractions_impact) - 1)
         for i, fract in enumerate(self.fractions_impact.keys()):
             if fract != fraction:
                 self.fractions_impact[fract] -= changes[i]
@@ -362,6 +362,7 @@ class Battle:
             sleep(self.TICK)
             if self.win() and self.status == 'BATTLE':
                 self.status = 'PEACE'
+                self.planet.change_fraction_imact(self.ships[0]['fraction'])
 
     def change_pos(self, ship, nx, ny):
         nx, ny = round(nx * 10000), round(ny * 10000)
