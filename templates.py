@@ -85,7 +85,7 @@ class Settings(GameArea):
         bt_apply.connect_mouse_up(lambda e: change_res(e, main_object.settings))
 
         bt_fullscreen = Button(resolution, 20, 30, 5, 5, adopt_order=0, border_color=(150, 150, 150), border=2)
-        bt_fullscreen.set_image('staff\\check_box.jpg', size_mode='%obj')
+        bt_fullscreen.set_image('.\\staff\\check_box.jpg', size_mode='%obj')
         bt_fullscreen.image_enabled = main_object.full_screen
         bt_fullscreen.set_color((255, 255, 255))
 
@@ -109,9 +109,9 @@ class SpaceMapScreen(GameArea):
     def __init__(self, main_object):
         super().__init__()
         resolution = main_object.resolution
-        self.background = Background(resolution, random.choice(glob.glob('galaxes\\*')))
+        self.background = Background(resolution, random.choice(glob.glob('.\\galaxes\\*')))
         self.main = main_object
-        self.images = glob.glob('planets\\*.png')
+        self.images = glob.glob('.\\planets\\*.png')
         random.shuffle(self.images)
 
     class APlanet(RadialObject):
@@ -143,7 +143,7 @@ class SpaceMapScreen(GameArea):
                 border_color=(0, 255, 0) if squad.fraction == cls.main.fraction else (255, 0, 0),
                 adopt_order=1)
                 for sh in squad.ships:
-                    sq.set_image('space_ships\\' + sh.img)
+                    sq.set_image('.\\space_ships\\' + sh.img)
                     break
                 self.squads[squad] = sq
             self.squads = {}
@@ -157,8 +157,8 @@ class SpaceMapScreen(GameArea):
                              adopt_order=1)
 
             size = random.randint(3, 8)
-            self.img = f'planets\\{img_number}'
-            self.img_hd = f'planets_high\\{img_number}'
+            self.img = f'.\\planets\\{img_number}'
+            self.img_hd = f'.\\planets_high\\{img_number}'
             self.set_image(self.img, size_mode='%obj')
             self.set_text(planet.name, (0, 255, 0), align='left', text_pos='left' if self.x_rel > 50 else 'right')
             self.set_font(font_scale=40)
@@ -190,7 +190,7 @@ class SpaceMapScreen(GameArea):
                     adopt_order=1
                 )
                 for sh in squad.ships:
-                    sq.set_image('space_ships\\' + sh.img, size_mode='%obj')
+                    sq.set_image('.\\space_ships\\' + sh.img, size_mode='%obj')
                     break
                 self.squads[squad] = sq
                 self.squads[squad].fraction = squad.fraction
@@ -251,7 +251,7 @@ class SpaceMapScreen(GameArea):
     def load(self, resolution, space_map: SpaceMap):
         self.objects = []
         for i, planet in enumerate(space_map.planets):
-            self.add_objects(self.APlanet(resolution, planet, self.images[i][8:], self))
+            self.add_objects(self.APlanet(resolution, planet, self.images[i][10:], self))
         super().load(resolution)
 
 
@@ -259,7 +259,7 @@ class BattleScreen(GameArea):
 
     def __init__(self, main_object):
         super().__init__()
-        self.background = Background(main_object.resolution, 'staff\\space.jpg', mode='%obj')
+        self.background = Background(main_object.resolution, '.\\staff\\space.jpg', mode='%obj')
         self.planet_index = None
         self.visual = set()
 
@@ -292,7 +292,7 @@ class BattleScreen(GameArea):
                     deg += 180
             else:
                 deg = 0
-            self.set_image('space_ships\\' + ship['img'],
+            self.set_image('.\\space_ships\\' + ship['img'],
                         size_mode='%obj',
                         rotation=deg)
 
