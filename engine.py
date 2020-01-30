@@ -369,15 +369,20 @@ class Object(Sizible, Image):
             if len(color) > 3:
                 self.color.a = color[3]
 
-    def check(self, x, y):
+    def check(self, x, y, *cords):
         """
         checking position(hover or click)
         :param x:
         :param y:
         :return:
         """
-        return self.x <= x <= self.x + self.w and \
-            self.y <= y <= self.h + self.y
+        if cords:
+            for i in range(0, len(cords), 2):
+                other = self.x <= cords[i] <= self.x + self.w and\
+                        self.y <= cords[i + 1] <= self.h + self.y
+                if other:
+                    return other
+        return self.x <= x <= self.x + self.w and self.y <= y <= self.h + self.y
 
     def hover(self, x, y):
         """
@@ -506,7 +511,7 @@ class RadialObject(Object):
         self.xc, self.yc = self.x + self.r, self.y + self.r
         self.r = round(self.r_rel * resolution[self.adopt_order] / 100)
 
-    def check(self, x, y):
+    def check(self, x, y, *cords):
         """
         # probably need to optimize
         checking radial object
@@ -514,6 +519,12 @@ class RadialObject(Object):
         :param y:
         :return:
         """
+        if cords:
+            for i in range(0, len(cords), 2):
+                other = self.x <= cords[i] <= self.x + self.w and\
+                        self.y <= cords[i + 1] <= self.h + self.y
+                if other:
+                    return other
         return (x - self.xc) ** 2 + (y - self.yc) ** 2 <= self.r ** 2
 
     def draw(self, screen):

@@ -235,8 +235,8 @@ class SpaceMapScreen(GameArea):
                 else:
                     if squad.grabbed:
                         for obj in self.cls.objects:
-                            if self is not obj and obj.check(squad.x, squad.y):
-                                print(squad_game.start_travel(obj.planet))  # Todo: add animation
+                            if self is not obj and obj.check(squad.x, squad.y, squad.x + squad.w, squad.y, squad.x, squad.y + squad.h, squad.x + squad.w, squad.y + squad.h):
+                                print(squad_game.start_travel(obj.planet))  # Todo: add an animation
                     squad.x, squad.y = squad.sx, squad.sy
                 squad.on_mouse_up(x, y, key)
 
@@ -322,7 +322,7 @@ class BattleScreen(GameArea):
                              bullet['ys'] // 100,
                              1,
                              border=1,
-                             border_color=(255, 0, 0)))
+                             border_color=(255, 0, 0) if bullet['fraction'] != self.main.fraction else (0, 255, 0)))
         for ship in ships:
             xr, yr = ship['xs'] // 100 - ship['size'] // 2, ship['ys'] // 100 - ship['size'] // 2
             self.add_objects(StatusBar(main.resolution,
