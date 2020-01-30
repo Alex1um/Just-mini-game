@@ -65,7 +65,7 @@ class Planet:
             sleep(self.produce_timer)
             if not self.squads:
                 sq = Squad(self)
-                sq.set_ships([self.produce_ship()])
+                sq.set_ships({self.produce_ship()})
                 self.add_squad(sq)
             else:
                 for i in range(len(self.squads)):
