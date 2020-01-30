@@ -121,10 +121,12 @@ class Planet:
 
     def change_fraction_imact(self, fraction: Fraction, max_percent=50):
         self.fractions_impact[fraction] += max_percent / 100
-        changes = utils.break_number_sum(max_percent / 100, len(self.fractions_impact) - 1)
-        for i, fract in enumerate(self.fractions_impact.keys()):
+        changes = utils.break_number_sum(1 - max_percent / 100, len(self.fractions_impact.keys()) - 1)
+        i = 0
+        for fract in self.fractions_impact.keys():
             if fract != fraction:
                 self.fractions_impact[fract] -= changes[i]
+                i += 1
 
     @classmethod
     def generate(cls,
@@ -156,12 +158,13 @@ class Squad:
     def __init__(self, planet: Planet, fraction=None):
         self.planet = planet
         self.id = str(uuid.uuid4())
-        self.status = 'PLANET'
+        self.status = 'PEACE'
         self.ships = set()        # {TYPE_OF_SHIP: N_OF_SHIPS}
         self.fraction = fraction if fraction else planet.get_most_fraction()
 
     def merge(self, other):
-        self.ships |= other.ships
+        if self.status == 'PEACE':
+            self.ships |= other.ships
 
     def __repr__(self):
         return self.id
@@ -225,14 +228,17 @@ class Battle:
     def update_squads(self):
         if self.ships:
             ships = set(map(lambda x: x['ship'], self.ships))
+            check = set()
             i = 0
             while i < len(self.planet.squads):
                 new_ships = set(self.planet.squads[i].ships) & ships
                 if new_ships:
+                    check |= new_ships
                     self.planet.squads[i].set_ships(new_ships)
                     i += 1
                 else:
                     del self.planet.squads[i]
+            self.ships = list(filter(lambda x: x['ship'] in check, self.ships))
 
     def add_squad(self, squad):
         for ship in squad.ships:
@@ -341,10 +347,10 @@ class Battle:
                 route = ((bullet['xf'] - bullet['xs']) ** 2 + (
                             bullet['yf'] - bullet['ys']) ** 2) ** 0.5
                 # max_distance = min(bullet['range'], max_distance)
-                # if route != 0:
-                travel_progress = (max_distance / route)
-                # else:
-                # travel_progress = 1
+                if route != 0:
+                    travel_progress = (max_distance / route)
+                else:
+                    travel_progress = 1
 
                 # if travel_progress < 1:
                 # self.bullets[c]['range'] -= max_distance
