@@ -271,6 +271,9 @@ class Battle:
             def hit(x1, y1, x0, y0, r):
                 return (x1 - x0) ** 2 + (y0 - y1) ** 2 <= r ** 2
 
+            def get_new_dot(x1, y1, x2, y2, x):
+                a, b, c = y1 - y2, x2 - x1, x1 * y2 - x2 * y1
+                return (-c - a * x) / b
 
 
             fractions = set()
@@ -327,7 +330,7 @@ class Battle:
                 if bullet['killed']:
                     continue
                 for q, w in enumerate(self.ships):
-                    if hit(bullet['xs'], bullet['ys'], w['xs'], w['ys'], w['size']) and bullet['fraction'] != w['fraction']:
+                    if hit(bullet['xs'], bullet['ys'], w['xs'], w['ys'], w['size'] * 2) and bullet['fraction'] != w['fraction']:
                         self.ships[q]['health'] -= bullet['damage']
                         self.bullets[c]['killed'] = True
                         break
@@ -337,21 +340,21 @@ class Battle:
                 max_distance = BULLET_SPEED * self.TICK  # TODO: N33d to f1x th4t
                 route = ((bullet['xf'] - bullet['xs']) ** 2 + (
                             bullet['yf'] - bullet['ys']) ** 2) ** 0.5
-                max_distance = min(bullet['range'], max_distance)
-                if route != 0:
-                    travel_progress = (max_distance / route)
-                else:
-                    travel_progress = 1
+                # max_distance = min(bullet['range'], max_distance)
+                # if route != 0:
+                travel_progress = (max_distance / route)
+                # else:
+                # travel_progress = 1
 
-                if travel_progress < 1:
-                    self.bullets[c]['range'] -= max_distance
-                    self.bullets[c]['xs'] += travel_progress * (
-                                bullet['xf'] - bullet['xs'])
-                    self.bullets[c]['ys'] += travel_progress * (
-                                bullet['yf'] - bullet['ys'])
-                else:
-                    self.bullets[c]['xs'] = bullet['xf']
-                    self.bullets[c]['ys'] = bullet['yf']
+                # if travel_progress < 1:
+                # self.bullets[c]['range'] -= max_distance
+                self.bullets[c]['xs'] += travel_progress * (
+                            bullet['xf'] - bullet['xs'])
+                self.bullets[c]['ys'] += travel_progress * (
+                            bullet['yf'] - bullet['ys'])
+                # else:
+                #     self.bullets[c]['xs'] = bullet['xf']
+                #     self.bullets[c]['ys'] = bullet['yf']
 
             self.ships = list(filter(lambda x: x['health'] > 0, self.ships))
             self.bullets = list(filter(lambda x: not x['killed'], self.bullets))
@@ -463,9 +466,9 @@ class Game:
         return cls(fractions, space_map)
 
 
-ship_destroyer = lambda: Ship('destroyer', 100, 500, 1000, 100000, 10, 10, 'Communicationship_blue.png')
-ship_destroyer2 = lambda: Ship('destroyer2', 100, 500, 1000, 100000, 10, 10, 'mothership_try.png')
-ship_speeder = lambda: Ship('speeder', 10, 500, 3000, 10000000, 10, 5, 'alienship_new_red_try.png')
+ship_destroyer = lambda: Ship('destroyer', 100, 500, 1000, 100000, 1, 10, 'Communicationship_blue.png')
+ship_destroyer2 = lambda: Ship('destroyer2', 100, 500, 1000, 100000, 1, 10, 'mothership_try.png')
+ship_speeder = lambda: Ship('speeder', 10, 500, 3000, 10000000, 1, 5, 'alienship_new_red_try.png')
 SHIPS = (ship_destroyer, ship_destroyer2, ship_speeder)
 # planet_earth = Planet(60, 20, 5, [], 3, 'earth')
 # planet_mars = Planet(30, 60, 5, [], 3, 'mars')
