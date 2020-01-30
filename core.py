@@ -277,11 +277,6 @@ class Battle:
             def hit(x1, y1, x0, y0, r):
                 return (x1 - x0) ** 2 + (y0 - y1) ** 2 <= r ** 2
 
-            def get_new_dot(x1, y1, x2, y2, x):
-                a, b, c = y1 - y2, x2 - x1, x1 * y2 - x2 * y1
-                return (-c - a * x) / b
-
-
             fractions = set()
             for k, ship in enumerate(self.ships):
                 fractions.add(ship['fraction'])
@@ -317,7 +312,7 @@ class Battle:
                                     'ys']) ** 2) ** 0.5
                             if dist < ship['ship'].get_attack_range():
                                 # coef = ship['ship'].get_attack_range() / dist if dist != 0 else 1
-                                coef = 1
+                                coef = 10
                                 aims[dist] = {'range': ship[
                                                   'ship'].get_attack_range(),
                                               'damage': ship[
