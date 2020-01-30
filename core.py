@@ -91,9 +91,7 @@ class Planet:
         self.squads.append(squad)
         self.battle.add_squad(squad)
         if len(self.fractions()) > 1:
-            self.status = 'BATTLE'
-            for squad in self.squads:
-                squad.status = 'BATTLE'
+            self.battle.set_status('BATTLE')
 
     def fractions(self):
         return set(map(lambda x: x.fraction, self.squads))
@@ -120,13 +118,15 @@ class Planet:
         return max(self.get_statistic().items(), key=lambda x: x[1])[0]
 
     def change_fraction_imact(self, fraction: Fraction, max_percent=50):
+        max_fract = self.get_most_fraction()
         self.fractions_impact[fraction] += max_percent / 100
-        changes = utils.break_number_sum(1 - max_percent / 100, len(self.fractions_impact.keys()) - 1)
-        i = 0
-        for fract in self.fractions_impact.keys():
+        val = 0
+        for fract, v in sorted(self.fractions_impact.items(), key=lambda x: x[1])[:-1]:
             if fract != fraction:
-                self.fractions_impact[fract] -= changes[i]
-                i += 1
+                r = random.uniform(0, v)
+                val += r
+                self.fractions_impact[fract] -= random.uniform(0, r)
+        self.fractions_impact[max_fract] -= (100 - max_percent) / 100 - val
 
     @classmethod
     def generate(cls,
@@ -244,7 +244,7 @@ class Battle:
         for ship in squad.ships:
             self.ships.append(self.parse_ship(ship, squad.fraction))
         if not self.win():
-            self.status = 'BATTLE'
+            self.set_status('BATTLE')
 
     def win(self):
         return len(set(ship['fraction'] for ship in self.ships)) == 1
@@ -358,8 +358,14 @@ class Battle:
             self.update_squads()
             sleep(self.TICK)
             if self.win() and self.status == 'BATTLE':
-                self.status = 'PEACE'
+                self.set_status('PEACE')
                 self.planet.change_fraction_imact(self.ships[0]['fraction'])
+
+    def set_status(self, status):
+        self.planet.status = status
+        self.status = status
+        for i in range(len(self.planet.squads)):
+            self.planet.squads[i].status = status
 
     def change_pos(self, ship, nx, ny):
         nx, ny = round(nx * 10000), round(ny * 10000)
