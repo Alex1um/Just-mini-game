@@ -683,15 +683,15 @@ class Sprite(pygame.sprite.Sprite, Sizible, Image):
     """
 
     def __init__(self,
+                 resolution,
+                 image,
                  x_rel,
                  y_rel,
                  w_rel,
                  h_rel,
                  adopt_size=True,
                  adopt_cords=True,
-                 resolution=None,
-                 animated=False
-                 ):
+                 animated=False):
         self.animated = animated
         pygame.sprite.Sprite.__init__(self)
         Sizible.__init__(self,
@@ -701,7 +701,7 @@ class Sprite(pygame.sprite.Sprite, Sizible, Image):
                          h_rel,
                          adopt_size,
                          adopt_cords)
-        Image.__init__(self, animated=animated)
+        Image.__init__(self, image, animated=animated)
         if resolution:
             self.adopt(resolution)
         self.image = self.image_render(self.w, self.h)  # None

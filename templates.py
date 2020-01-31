@@ -3,6 +3,7 @@ import random
 import glob
 from core import SpaceMap, Planet, Ship
 import math
+from threading import Thread
 
 
 class MainMenu(GameArea):
@@ -114,9 +115,28 @@ class SpaceMapScreen(GameArea):
         self.images = glob.glob('.\\planets\\*.png')
         random.shuffle(self.images)
 
+    class AnimatedTravel(Sprite):
+
+        def __init__(self, xs, ys, xf, yf, time, cls):
+            super().__init__(cls.cls.main.resolution,'.\\staff\\m.jpg', xs, ys, 3, 3)
+            self.set_image(size_mode='%obj')
+            self.cls = cls
+            self.mx = (xf - xs) / time / 30
+            self.my = (yf - ys) / time / 30
+            self.xf, self.yf = xf, yf
+
+        def update(self, resolution):
+            if abs(self.x_rel) <= abs(self.xf):
+                self.x_rel += self.mx
+                self.y_rel += self.my
+                self.adopt(resolution)
+            else:
+                self.kill()
+                del self
+
     class APlanet(RadialObject):
 
-        def __init__(self, resolution, planet: Planet, img_number, cls):
+        def __init__(self, resolution, planet: Planet, img_number, cls: GameArea):
             # todo write ships
             y = (planet.y_rel + planet.r_rel) if planet.y_rel < 50 else (
                         planet.y_rel - len(planet.fractions_impact) * 2)
@@ -236,7 +256,14 @@ class SpaceMapScreen(GameArea):
                     if squad.grabbed:
                         for obj in self.cls.objects:
                             if self is not obj and obj.check(squad.x, squad.y, squad.x + squad.w, squad.y, squad.x, squad.y + squad.h, squad.x + squad.w, squad.y + squad.h):
-                                print(squad_game.start_travel(obj.planet))  # Todo: add an animation
+                                pf, ps, time = squad_game.start_travel(obj.planet)  # Todo: add an animation
+                                self.cls.add_objects(
+                                    self.cls.AnimatedTravel(pf.x_rel,
+                                                            pf.y_rel,
+                                                            ps.x_rel,
+                                                            ps.y_rel,
+                                                            time,
+                                                            self))
                     squad.x, squad.y = squad.sx, squad.sy
                 squad.on_mouse_up(x, y, key)
 
@@ -247,6 +274,8 @@ class SpaceMapScreen(GameArea):
     def update(self, main):
         for i, planet in enumerate(self.objects):
             planet.update(main.game.space_map.planets[i], main.resolution, main.fraction)
+        for sprite in self.sprites:
+            sprite.update(main.resolution)
 
     def load(self, resolution, space_map: SpaceMap):
         self.objects = []
