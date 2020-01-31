@@ -916,7 +916,7 @@ class GameArea:
         :return:
         """
         for name in file_names:
-            self.sounds[name[:name.rfind('.')]] = pygame.mixer.Sound(name)
+            self.sounds[name[name.rfind('\\') + 1:name.rfind('.')]] = pygame.mixer.Sound(name)
 
     def add_objects(self, *objects):
         """
