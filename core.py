@@ -212,6 +212,7 @@ class Squad:
 
             Thread(target=timer, args=(self.travel_time, lambda: travel(self.planet, destination, self))).start()
             return self.planet, destination, self.travel_time
+        return None, None, None
 
 
 class Battle:

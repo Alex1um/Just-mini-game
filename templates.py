@@ -118,8 +118,16 @@ class SpaceMapScreen(GameArea):
     class AnimatedTravel(Sprite):
 
         def __init__(self, xs, ys, xf, yf, time, cls):
-            super().__init__(cls.cls.main.resolution,'.\\staff\\m.jpg', xs, ys, 3, 3)
-            self.set_image(size_mode='%obj')
+            super().__init__(cls.cls.main.resolution,'.\\staff\\fleet.png', xs, ys, 3, 3)
+            diffx = xf - xs
+            diffy = xf - xs
+            if diffy != 0:
+                deg = math.degrees(math.atan(diffx / diffy))
+                if diffy > 0:
+                    deg += 180
+            else:
+                deg = 0
+            self.set_image(size_mode='%obj', rotation=deg)
             self.cls = cls
             self.mx = (xf - xs) / time / 30
             self.my = (yf - ys) / time / 30
@@ -257,13 +265,14 @@ class SpaceMapScreen(GameArea):
                         for obj in self.cls.objects:
                             if self is not obj and obj.check(squad.x, squad.y, squad.x + squad.w, squad.y, squad.x, squad.y + squad.h, squad.x + squad.w, squad.y + squad.h):
                                 pf, ps, time = squad_game.start_travel(obj.planet)  # Todo: add an animation
-                                self.cls.add_objects(
-                                    self.cls.AnimatedTravel(pf.x_rel,
-                                                            pf.y_rel,
-                                                            ps.x_rel,
-                                                            ps.y_rel,
-                                                            time,
-                                                            self))
+                                if time:
+                                    self.cls.add_objects(
+                                        self.cls.AnimatedTravel(pf.x_rel + pf.r_rel,
+                                                                pf.y_rel + pf.r_rel,
+                                                                ps.x_rel + ps.r_rel,
+                                                                ps.y_rel + ps.r_rel,
+                                                                time,
+                                                                self))
                     squad.x, squad.y = squad.sx, squad.sy
                 squad.on_mouse_up(x, y, key)
 
