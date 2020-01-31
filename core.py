@@ -174,7 +174,7 @@ class Squad:
         return self.id
 
     def __str__(self):
-        return self.id
+        return f'{self.id}: {self.ships}'
 
     def __eq__(self, other):
         return self.id == other.id

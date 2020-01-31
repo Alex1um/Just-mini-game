@@ -65,7 +65,7 @@ class Client:
         self.exit = True
 
     def new_game(self):
-        self.game = Game.generate(5, 19)
+        self.game = Game.generate(5, 1)
         self.fraction = random.choice(self.game.fractions)
         self.fraction = self.game.fractions[1]
         self.switch_game_area(self.space_map_area, self.game.space_map)
