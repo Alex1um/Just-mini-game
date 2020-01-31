@@ -312,8 +312,7 @@ class Object(Sizible, Image):
         if self.adopt_size:
             self.font = pygame.font.SysFont(
                 DEFAULTFONT,
-                round(
-                    min(self.w, self.h) * 0.75) * round(self.font_scale / 100))
+                round(min(self.w, self.h) * 0.75) * self.font_scale // 100)
             if self.text is not None:
                 self._text = self.text_render()
 
