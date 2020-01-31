@@ -328,7 +328,7 @@ class Battle:
                 if bullet['killed']:
                     continue
                 for q, w in enumerate(self.ships):
-                    if hit(bullet['xs'], bullet['ys'], w['xs'], w['ys'], w['size'] * 2) and bullet['fraction'] != w['fraction']:
+                    if hit(bullet['xs'], bullet['ys'], w['xs'], w['ys'], w['size'] * 50) and bullet['fraction'] != w['fraction']:
                         self.ships[q]['health'] -= bullet['damage']
                         self.bullets[c]['killed'] = True
                         break
@@ -471,9 +471,9 @@ class Game:
         return cls(fractions, space_map)
 
 
-ship_destroyer = lambda: Ship('destroyer', 100, 500, 1000, 100000, 1, 10, 'Communicationship_blue.png')
-ship_destroyer2 = lambda: Ship('destroyer2', 100, 500, 1000, 100000, 1, 10, 'mothership_try.png')
-ship_speeder = lambda: Ship('speeder', 10, 500, 3000, 10000000, 1, 5, 'alienship_new_red_try.png')
+ship_destroyer = lambda: Ship('destroyer', 100, 500, 1000, 100000, 10, 10, 'Communicationship_blue.png')
+ship_destroyer2 = lambda: Ship('destroyer2', 100, 500, 1000, 100000, 10, 10, 'mothership_try.png')
+ship_speeder = lambda: Ship('speeder', 10, 500, 3000, 10000000, 30, 5, 'alienship_new_red_try.png')
 SHIPS = (ship_destroyer, ship_destroyer2, ship_speeder)
 # planet_earth = Planet(60, 20, 5, [], 3, 'earth')
 # planet_mars = Planet(30, 60, 5, [], 3, 'mars')

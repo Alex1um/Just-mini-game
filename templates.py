@@ -264,13 +264,13 @@ class SpaceMapScreen(GameArea):
                     if squad.grabbed:
                         for obj in self.cls.objects:
                             if self is not obj and obj.check(squad.x, squad.y, squad.x + squad.w, squad.y, squad.x, squad.y + squad.h, squad.x + squad.w, squad.y + squad.h):
-                                pf, ps, time = squad_game.start_travel(obj.planet)  # Todo: add an animation
+                                pf, ps, time = squad_game.start_travel(obj.planet)
                                 if time:
                                     self.cls.add_objects(
-                                        self.cls.AnimatedTravel(pf.x_rel + pf.r_rel,
-                                                                pf.y_rel + pf.r_rel,
-                                                                ps.x_rel + ps.r_rel,
-                                                                ps.y_rel + ps.r_rel,
+                                        self.cls.AnimatedTravel(pf.x_rel + pf.r_rel // 2,
+                                                                pf.y_rel + pf.r_rel // 2,
+                                                                ps.x_rel + ps.r_rel // 2,
+                                                                ps.y_rel + ps.r_rel // 2,
                                                                 time,
                                                                 self))
                     squad.x, squad.y = squad.sx, squad.sy
