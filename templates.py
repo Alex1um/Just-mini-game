@@ -264,7 +264,7 @@ class SpaceMapScreen(GameArea):
                 if self.check(x, y) and key == 3:
                     self.cls.main.switch_game_area(self.cls.main.battle_screen, self.cls.main.game.space_map.planets.index(self.planet))
                 else:
-                    if squad.grabbed:
+                    if squad.grabbed and squad.fraction == self.cls.main.fraction:
                         for obj in self.cls.objects:
                             if self is not obj and obj.check(squad.x, squad.y, squad.x + squad.w, squad.y, squad.x, squad.y + squad.h, squad.x + squad.w, squad.y + squad.h):
                                 pf, ps, time = squad_game.start_travel(obj.planet)
