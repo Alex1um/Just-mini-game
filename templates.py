@@ -118,9 +118,9 @@ class SpaceMapScreen(GameArea):
     class AnimatedTravel(Sprite):
 
         def __init__(self, xs, ys, xf, yf, time, cls):
-            super().__init__(cls.cls.main.resolution,'.\\staff\\fleet.png', xs, ys, 3, 3)
+            super().__init__(cls.cls.main.resolution, '.\\staff\\fleet.png', xs, ys, 3, 3)
             diffx = xf - xs
-            diffy = xf - xs
+            diffy = yf - ys
             if diffy != 0:
                 deg = math.degrees(math.atan(diffx / diffy))
                 if diffy > 0:
@@ -129,15 +129,18 @@ class SpaceMapScreen(GameArea):
                 deg = 0
             self.set_image(size_mode='%obj', rotation=deg)
             self.cls = cls
-            self.mx = (xf - xs) / time / 30
-            self.my = (yf - ys) / time / 30
+            self.steps = time * 30
+            self.mx = (xf - xs) / self.steps
+            self.my = (yf - ys) / self.steps
+            self.step = 0
             self.xf, self.yf = xf, yf
 
         def update(self, resolution):
-            if abs(self.x_rel) <= abs(self.xf):
+            if self.step <= self.steps:
                 self.x_rel += self.mx
                 self.y_rel += self.my
                 self.adopt(resolution)
+                self.step += 1
             else:
                 self.kill()
                 del self

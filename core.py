@@ -204,8 +204,8 @@ class Squad:
             x1, y1 = self.planet.get_coords()
             x2, y2 = destination.get_coords()
             S = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
-            self.travel_time = S / speed
-            self.travel_time = 1  # todo: remove this line
+            self.travel_time = S / speed * 100
+            # self.travel_time = 1  # todo: remove this line
 
             def travel(planet: Planet, destination: Planet, squad: Squad):
                 destination.add_squad(squad)
@@ -335,7 +335,7 @@ class Battle:
                 if -1 >= bullet['xs'] >= self.size[0] or -1 >= bullet['ys'] >= self.size[1]:
                     self.bullets[c]['killed'] = True
                     break
-                max_distance = BULLET_SPEED * self.TICK  # TODO: N33d to f1x th4t
+                max_distance = BULLET_SPEED * self.TICK
                 route = ((bullet['xf'] - bullet['xs']) ** 2 + (
                             bullet['yf'] - bullet['ys']) ** 2) ** 0.5
                 # max_distance = min(bullet['range'], max_distance)
