@@ -1,8 +1,5 @@
-import time
 from typing import *
 import pygame
-from threading import Thread
-import copy
 
 """
 all cords and sizes are % of resolution by default
@@ -39,27 +36,43 @@ class Interface:
         self.buttons = []
         self.sprites = pygame.sprite.Group()
 
+    def render(self):
+        pass
+
 
 class Sizible:
-
-    def __init__(self, x_rel=0, y_rel=0, w_rel=1, h_rel=1, adopt_size=True, adopt_cords=True, adopt_order=None):
+    """
+    Object with sizes and cords
+    """
+    def __init__(self,
+                 x_rel=0,
+                 y_rel=0,
+                 w_rel=1,
+                 h_rel=1,
+                 adopt_size=True,
+                 adopt_cords=True,
+                 adopt_order=None):
+        self.x, self.y = None, None
+        self.w, self.h = None, None
         self.x_rel = x_rel
         self.y_rel = y_rel
         self.w_rel = w_rel
         self.h_rel = h_rel
-        self.adopt_size = True
-        self.adopt_cords = True
+        self.adopt_size = adopt_size
+        self.adopt_cords = adopt_cords
         self.adopt_order = adopt_order
 
     def adopt(self, resolution):
         if self.adopt_cords:
-            self.x, self.y = self.x_rel * resolution[0] // 100, self.y_rel * \
-                             resolution[1] // 100
+            self.x = round(self.x_rel * resolution[0] / 100)
+            self.y = round(self.y_rel * resolution[1] / 100)
         if self.adopt_size:
             if self.adopt_order is not None:
-                resolution = (resolution[self.adopt_order], resolution[self.adopt_order])
-            self.w, self.h = self.w_rel * resolution[0] // 100, self.h_rel * \
-                             resolution[1] // 100
+                resolution = (
+                    resolution[self.adopt_order],
+                    resolution[self.adopt_order])
+            self.w = round(self.w_rel * resolution[0] / 100)
+            self.h = round(self.h_rel * resolution[1] / 100)
 
     def resize(self, w_rel=None, h_rel=None, adopt_size=None, resolution=None):
         """
@@ -86,12 +99,12 @@ class Image:
     """
 
     def __init__(self,
-                 file_name: Union[str, Iterable]=None,
+                 file_name: Union[str, Iterable] = None,
                  width=100,
                  height=100,
-                 mode: Union[percent_img, percent_obj, pixels]='%img',
-                 animated: bool=False,
-                 animation_delay_frames: int=0):
+                 mode: Union[percent_img, percent_obj, pixels] = '%img',
+                 animated: bool = False,
+                 animation_delay_frames: int = 0):
         """
         init image
         :param file_name: name of file
@@ -99,7 +112,7 @@ class Image:
         :param height: height % or px
         :param mode: mode to scale image
         :param animated: is it animation
-        :param animation_delay_frames: delay between switching images if animated
+        :param animation_delay_frames: delay for switching frames if animated
         """
         self._image = []
         if file_name:
@@ -113,6 +126,7 @@ class Image:
         self.image_height = height
         self.image_mode = mode
         self.image_enabled = True
+        self.image_rotation = None
 
     def add_images(self, *images: str):
         """
@@ -128,7 +142,8 @@ class Image:
                   width: int = 100,
                   height: int = 100,
                   size_mode: Union[percent_obj, percent_img, 'pixels'] = '%img',
-                  index=0):
+                  index=0,
+                  rotation=None):
         """
         setting image or image params
         :param image_name: name of new image
@@ -136,8 +151,11 @@ class Image:
         :param height:
         :param size_mode: mode for rescale
         :param index: index of image
+        :param rotation: angle for rotate image(s)
         :return:
         """
+        if rotation:
+            self.image_rotation = rotation
         if image_name:
             if len(self._image) < index:
                 self._image[index] = pygame.image.load(image_name)
@@ -150,7 +168,9 @@ class Image:
         if height:
             self.image_height = height
 
-    def image_render(self, w_abs: int=None, h_abs: int=None) -> pygame.SurfaceType:
+    def image_render(self,
+                     w_abs: int = None,
+                     h_abs: int = None) -> pygame.SurfaceType:
         """
         render image with current mode
         :param w_abs: width of object to scale image
@@ -164,17 +184,32 @@ class Image:
             else:
                 self._frame += 1
         if self._image:
+            img = self._image[self.image_index]
+            if self.image_rotation:
+                img = pygame.transform.rotate(img, self.image_rotation)
             if self.image_mode == '%obj':
-                return pygame.transform.scale(self._image[self.image_index],
-                                                    (w_abs * self.image_width // 100,
-                                                     h_abs * self.image_height // 100))
+                return pygame.transform.scale(img,
+                                              (
+                                                  round(
+                                                      w_abs * self.image_width
+                                                      / 100),
+                                                  round(
+                                                   h_abs * self.image_height
+                                                   / 100)
+                                               ))
             elif self.image_mode == 'px':
-                return pygame.transform.scale(self._image[self.image_index], (self.image_width, self.image_height))
+                return pygame.transform.scale(img,
+                                              (self.image_width,
+                                               self.image_height
+                                               ))
             elif self.image_mode == '%img':
-                w, h = self._image[self.image_index].get_width(), self._image[self.image_index].get_height()
-                return pygame.transform.scale(self._image[self.image_index],
-                                                    (w * self.image_width // 100,
-                                                     h * self.image_height // 100))
+                w, h = img.get_width(), img.get_height()
+                return pygame.transform.scale(img,
+                                              (round(w * self.image_width
+                                                     / 100),
+                                               round(h * self.image_height
+                                                     / 100)
+                                               ))
         return self._image[self.image_index]
 
     def image_ready(self):
@@ -202,7 +237,14 @@ class Object(Sizible, Image):
                  border_color=(0, 0, 0),
                  adopt_order=None,
                  font_scale=100):
-        Sizible.__init__(self, x_rel, y_rel, w_rel, h_rel, adopt_size, adopt_cords, adopt_order)
+        Sizible.__init__(self,
+                         x_rel,
+                         y_rel,
+                         w_rel,
+                         h_rel,
+                         adopt_size,
+                         adopt_cords,
+                         adopt_order)
         Image.__init__(self, None)
         self.enable = True
         """
@@ -218,8 +260,10 @@ class Object(Sizible, Image):
         :param border: border width
         :param border_color:
         """
-        self.x_rel, self.y_rel, self.w_rel, self.h_rel = x_rel, y_rel, w_rel, h_rel  # relative
+        self.x_rel, self.y_rel = x_rel, y_rel
+        self.w_rel, self.h_rel = w_rel, h_rel  # relative
 
+        self.font = None
         self.text = None
         self.font_scale = font_scale
         self.adopt_size = adopt_size
@@ -252,10 +296,10 @@ class Object(Sizible, Image):
     def on_key_up(self, key):
         pass
 
-    def on_mouse_up(self, x, y):
+    def on_mouse_up(self, x, y, key):
         pass
 
-    def on_mouse_down(self, x, y):
+    def on_mouse_down(self, x, y, key):
         pass
 
     def adopt(self, resolution: Tuple[int, int]):
@@ -266,14 +310,20 @@ class Object(Sizible, Image):
         """
         super().adopt(resolution)
         if self.adopt_size:
-            self.font = pygame.font.SysFont(DEFAULTFONT, round(min(self.w, self.h) * 0.75) * self.font_scale // 100)
+            self.font = pygame.font.SysFont(
+                DEFAULTFONT,
+                round(min(self.w, self.h) * 0.75) * self.font_scale // 100)
             if self.text is not None:
                 self._text = self.text_render()
 
     def text_render(self, aa=False):
         return self.font.render(self.text, aa, self.text_color)
 
-    def set_pos(self, x_rel=None, y_rel=None, adopt_cords=None, resolution=None):
+    def set_pos(self,
+                x_rel=None,
+                y_rel=None,
+                adopt_cords=None,
+                resolution=None):
         """
         set new position or change settings of positing
         :param x_rel:
@@ -298,7 +348,9 @@ class Object(Sizible, Image):
         """
         return pygame.rect.Rect(self.x, self.y, self.w, self.h)
 
-    def set_color(self, color: Union[rgba, hsva, pygame.color.Color], fmt: str = 'rgb'):
+    def set_color(self,
+                  color: Union[rgba, hsva, pygame.color.Color],
+                  fmt: str = 'rgb'):
         """
         setting color
         :param color: color rgb or hsv
@@ -309,10 +361,6 @@ class Object(Sizible, Image):
             self.color = pygame.Color('black')
         if isinstance(color, pygame.color.Color):
             self.color = color
-            # self.color.r = color.r
-            # self.color.b = color.b
-            # self.color.g = color.g
-            # self.color.a = color.a
         elif fmt == 'hsv' and color:
             self.color.hsva = color
         elif fmt == 'rgb' and color:
@@ -320,15 +368,20 @@ class Object(Sizible, Image):
             if len(color) > 3:
                 self.color.a = color[3]
 
-    def check(self, x, y):
+    def check(self, x, y, *cords):
         """
         checking position(hover or click)
         :param x:
         :param y:
         :return:
         """
-        return self.x <= x <= self.x + self.w and \
-            self.y <= y <= self.h + self.y
+        if cords:
+            for i in range(0, len(cords), 2):
+                other = self.x <= cords[i] <= self.x + self.w and\
+                        self.y <= cords[i + 1] <= self.h + self.y
+                if other:
+                    return other
+        return self.x <= x <= self.x + self.w and self.y <= y <= self.h + self.y
 
     def hover(self, x, y):
         """
@@ -347,24 +400,32 @@ class Object(Sizible, Image):
 
     def set_font(self, *args, font_scale=None, **kwargs):
         """
-        setting font
+        Setting font
         :param args:
+        :param font_scale:
         :param kwargs:
         :return:
         """
         if self.font_scale:
             self.font_scale = font_scale
         if args:
-            self.font = args[0] if isinstance(args[0], pygame.font.FontType) else \
+            self.font = args[0] if isinstance(args[0],
+                                              pygame.font.FontType) else \
                 pygame.font.SysFont(*args, **kwargs)
 
-    def set_text(self, text: str=None, text_color: rgb = None, align:str=None, valign:str=None, text_pos=None):
+    def set_text(self,
+                 text: str = None,
+                 text_color: rgb = None,
+                 align: str = None,
+                 valign: str = None,
+                 text_pos: str = None):
         """
-        setting text and shifts
+        setting text and rendering
         :param text:
         :param text_color:
-        :param shift_x: shift x
-        :param shift_y: shift y
+        :param align:
+        :param valign:
+        :param text_pos:
         :return:
         """
         if align:
@@ -389,11 +450,17 @@ class Object(Sizible, Image):
             if self.color:
                 pygame.draw.rect(screen, self.color, self.get_rect())
             if self.border:
-                pygame.draw.rect(screen, self.border_color, self.get_rect(), self.border)
+                pygame.draw.rect(
+                    screen,
+                    self.border_color,
+                    self.get_rect(),
+                    self.border
+                )
             if self.image_ready():
                 screen.blit(self.image_render(self.w, self.h), self.get_rect())
             if self.text is not None:
-                x, y, w, h = self._text.get_rect(center=(self.w // 2 + self.x, self.h // 2 + self.y))
+                x, y, w, h = self._text.get_rect(
+                    center=(self.w // 2 + self.x, self.h // 2 + self.y))
                 if self.text_align == 'left':
                     x = self.x + 5
                 elif self.text_align == 'right':
@@ -424,7 +491,7 @@ class RadialObject(Object):
                  border_color=(0, 0, 0),
                  font_scale=100):
         self.r_rel = r_rel // 2 + 0.5
-        self.r = r_rel * resolution[adopt_order] // 100
+        self.r = round(r_rel * resolution[adopt_order] / 100)
         super().__init__(resolution,
                          x_rel,
                          y_rel,
@@ -441,9 +508,9 @@ class RadialObject(Object):
     def adopt(self, resolution: Tuple[int, int]):
         super().adopt(resolution)
         self.xc, self.yc = self.x + self.r, self.y + self.r
-        self.r = self.r_rel * resolution[self.adopt_order] // 100
+        self.r = round(self.r_rel * resolution[self.adopt_order] / 100)
 
-    def check(self, x, y):
+    def check(self, x, y, *cords):
         """
         # probably need to optimize
         checking radial object
@@ -451,13 +518,24 @@ class RadialObject(Object):
         :param y:
         :return:
         """
+        if cords:
+            for i in range(0, len(cords), 2):
+                other = self.x <= cords[i] <= self.x + self.w and\
+                        self.y <= cords[i + 1] <= self.h + self.y
+                if other:
+                    return other
         return (x - self.xc) ** 2 + (y - self.yc) ** 2 <= self.r ** 2
 
     def draw(self, screen):
         if self.color:
             pygame.draw.ellipse(screen, self.color, self.get_rect())
         if self.border:
-            pygame.draw.ellipse(screen, self.border_color, self.get_rect(), self.border)
+            pygame.draw.ellipse(
+                screen,
+                self.border_color,
+                self.get_rect(),
+                self.border
+            )
         if self.image_ready():
             screen.blit(self.image_render(self.w, self.h), self.get_rect())
         if self.text:
@@ -518,11 +596,12 @@ class Button(Object):
     def connect_mouse_up(self, action):
         self.action_on_mouse_up = action
 
-    def on_mouse_down(self, x, y):
+    def on_mouse_down(self, x, y, key):
         """
-        foo must invoke on click
+        checking mouse position and do binded action
         :param x:
         :param y:
+        :param key: mouse button
         :return:
         """
         if self.check(x, y):
@@ -542,11 +621,12 @@ class Button(Object):
             self.set_color(self.color_on_mouse_up)
             self._hovered = False
 
-    def on_mouse_up(self, x, y):
+    def on_mouse_up(self, x, y, key):
         """
-        foo must invoke on click
+        checking mouse pos and do binded action
         :param x:
         :param y:
+        :param key: mouse button
         :return:
         """
         if self.check(x, y):
@@ -571,15 +651,20 @@ class Background(Image):
                  x=0,
                  y=0,
                  scale=False):
-        Image.__init__(self, image_name, animated=animated, animation_delay_frames=frame_delay)
+        Image.__init__(self,
+                       image_name,
+                       animated=animated,
+                       animation_delay_frames=frame_delay)
         self.scale = scale
         self.x, self.y = x, y
+        self.w, self.h = None, None
         self.w_rel, self.h_rel = w, h
         self.adopt(resolution)
         self.image_mode = mode
 
     def adopt(self, resolution):
-        self.w, self.h = resolution[0] * self.w_rel // 100, resolution[1] * self.h_rel // 100
+        self.w = round(resolution[0] * self.w_rel / 100)
+        self.h = round(resolution[1] * self.h_rel / 100)
 
     def get_rect(self):
         return self.x, self.y, self.w, self.h
@@ -596,11 +681,26 @@ class Sprite(pygame.sprite.Sprite, Sizible, Image):
     Sprite or animated sprite
     """
 
-    def __init__(self, x_rel, y_rel, w_rel, h_rel, adopt_size=True, adopt_cords=True, resolution=None, animated=False):
+    def __init__(self,
+                 resolution,
+                 image,
+                 x_rel,
+                 y_rel,
+                 w_rel,
+                 h_rel,
+                 adopt_size=True,
+                 adopt_cords=True,
+                 animated=False):
         self.animated = animated
         pygame.sprite.Sprite.__init__(self)
-        Sizible.__init__(self, x_rel, y_rel, w_rel, h_rel, adopt_size, adopt_cords)
-        Image.__init__(self, animated=animated)
+        Sizible.__init__(self,
+                         x_rel,
+                         y_rel,
+                         w_rel,
+                         h_rel,
+                         adopt_size,
+                         adopt_cords)
+        Image.__init__(self, image, animated=animated)
         if resolution:
             self.adopt(resolution)
         self.image = self.image_render(self.w, self.h)  # None
@@ -611,8 +711,9 @@ class Sprite(pygame.sprite.Sprite, Sizible, Image):
                   width: int = 100,
                   height: int = 100,
                   size_mode: Union[percent_obj, percent_img, 'pixels'] = '%img',
-                  index=0):
-        super().set_image(image_name, width, height, size_mode, index)
+                  index=0,
+                  rotation=None):
+        super().set_image(image_name, width, height, size_mode, index, rotation)
         self.image = self.image_render(self.w, self.h)
         self.rect = self.get_rect()
 
@@ -662,7 +763,7 @@ class TextEdit(Object):
         self.delay = 1000
         self.text_condition: Callable = lambda *args: True
 
-    def on_mouse_up(self, x, y):
+    def on_mouse_up(self, x, y, key):
         if self.check(x, y):
             self.high = True
             self.set_color(self.color_filling)
@@ -682,8 +783,12 @@ class TextEdit(Object):
     def draw(self, screen):
         super().draw(screen)
 
-    def text_render(self):
-        return self.font.render(self.text + '|' if self.high else self.text, False, self.text_color)
+    def text_render(self, aa=False):
+        return self.font.render(
+            self.text + '|' if self.high else self.text,
+            aa,
+            self.text_color
+        )
 
 
 class MovableObject(Object):
@@ -716,21 +821,73 @@ class MovableObject(Object):
         self.grabbed_x = None
         self.grabbed_y = None
 
-    def on_mouse_down(self, x, y):
+    def on_mouse_down(self, x, y, key):
         if self.check(x, y):
             self.grabbed = True
             self.sx, self.sy = self.x, self.y
             self.grabbed_x = x
             self.grabbed_y = y
 
-    def on_mouse_up(self, x, y):
+    def on_mouse_up(self, x, y, key):
         self.grabbed = False
 
     def hover(self, x, y):
         if self.grabbed:
-            self.x, self.y = self.x + x - self.grabbed_x, self.y + y - self.grabbed_y
+            self.x = self.x + x - self.grabbed_x
+            self.y = self.y + y - self.grabbed_y
             self.grabbed_x = x
             self.grabbed_y = y
+
+
+class StatusBar(Object):
+
+    def __init__(self,
+                 resolution,
+                 status=100,
+                 x_rel=0,
+                 y_rel=0,
+                 w_rel=0,
+                 h_rel=0,
+                 adopt_size=True,
+                 adopt_cords=True,
+                 border=None,
+                 border_color=(0, 0, 0),
+                 adopt_order=None,
+                 font_scale=100):
+        super().__init__(resolution,
+                         x_rel,
+                         y_rel,
+                         w_rel,
+                         h_rel,
+                         adopt_size,
+                         adopt_cords,
+                         border,
+                         border_color,
+                         adopt_order,
+                         font_scale)
+        if status < 0:
+            status = 0
+        status /= 100
+        self.bar = Object(resolution,
+                          x_rel,
+                          y_rel,
+                          w_rel * status,
+                          h_rel,
+                          adopt_size=adopt_size,
+                          adopt_cords=adopt_cords,
+                          adopt_order=adopt_order)
+        self.bar.set_color((120 * status, 100, 100), 'hsv')
+
+    def set_status(self, status):
+        if status < 0:
+            status = 0
+        status /= 100
+        self.bar.set_color((120 * status, 100, 100), 'hsv')
+        self.bar.resize(self.w_rel * status, self.h_rel)
+
+    def draw(self, screen):
+        super().draw(screen)
+        self.bar.draw(screen)
 
 
 class GameArea:
@@ -800,7 +957,11 @@ class GameArea:
         for sprite in self.sprites:
             sprite.adopt(resolution)
 
-    def play_sound(self, sound: str, loops: int=0, maxtime: int=0, fade_ms: int=0):
+    def play_sound(self,
+                   sound: str, 
+                   loops: int = 0,
+                   maxtime: int = 0, 
+                   fade_ms: int = 0):
         """
         Don't care how to invoke it from Object
         :param sound:
@@ -811,13 +972,13 @@ class GameArea:
         """
         self.sounds[sound].play(loops, maxtime, fade_ms)
 
-    def on_mouse_up(self, x, y):
+    def on_mouse_up(self, x, y, key):
         for obj in self.objects:
-            obj.on_mouse_up(x, y)
+            obj.on_mouse_up(x, y, key)
 
-    def on_mouse_down(self, x, y):
+    def on_mouse_down(self, x, y, key):
         for obj in self.objects:
-            obj.on_mouse_down(x, y)
+            obj.on_mouse_down(x, y, key)
 
     def on_mouse_motion(self, x, y):
         for obj in self.objects:

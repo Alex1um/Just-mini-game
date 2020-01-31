@@ -1,7 +1,9 @@
 from engine import *
 import random
 import glob
-from core import SpaceMap, Planet
+from core import SpaceMap, Planet, Ship
+import math
+from threading import Thread
 
 
 class MainMenu(GameArea):
@@ -84,7 +86,7 @@ class Settings(GameArea):
         bt_apply.connect_mouse_up(lambda e: change_res(e, main_object.settings))
 
         bt_fullscreen = Button(resolution, 20, 30, 5, 5, adopt_order=0, border_color=(150, 150, 150), border=2)
-        bt_fullscreen.set_image('staff\\check_box.jpg', size_mode='%obj')
+        bt_fullscreen.set_image('.\\staff\\check_box.jpg', size_mode='%obj')
         bt_fullscreen.image_enabled = main_object.full_screen
         bt_fullscreen.set_color((255, 255, 255))
 
@@ -108,69 +110,123 @@ class SpaceMapScreen(GameArea):
     def __init__(self, main_object):
         super().__init__()
         resolution = main_object.resolution
-        self.background = Background(resolution, random.choice(glob.glob('galaxes\\*')))
+        self.background = Background(resolution, random.choice(glob.glob('.\\galaxes\\*')))
+        self.main = main_object
+        self.images = glob.glob('.\\planets\\*.png')
+        random.shuffle(self.images)
+
+    class AnimatedTravel(Sprite):
+
+        def __init__(self, xs, ys, xf, yf, time, cls):
+            super().__init__(cls.cls.main.resolution, '.\\staff\\fleet.png', xs, ys, 3, 3)
+            diffx = xf - xs
+            diffy = yf - ys
+            if diffy != 0:
+                deg = math.degrees(math.atan(diffx / diffy))
+                if diffy > 0:
+                    deg += 180
+            else:
+                deg = 0
+            self.set_image(size_mode='%obj', rotation=deg)
+            self.cls = cls
+            self.steps = time * 30
+            self.mx = (xf - xs) / self.steps
+            self.my = (yf - ys) / self.steps
+            self.step = 0
+            self.xf, self.yf = xf, yf
+
+        def update(self, resolution):
+            if self.step <= self.steps:
+                self.x_rel += self.mx
+                self.y_rel += self.my
+                self.adopt(resolution)
+                self.step += 1
+            else:
+                self.kill()
+                del self
 
     class APlanet(RadialObject):
 
-        def __init__(self, resolution, planet: Planet, img_number, cls):
+        def __init__(self, resolution, planet: Planet, img_number, cls: GameArea):
             # todo write ships
-            y = planet.y_rel + planet.r_rel if planet.y_rel < 50 else planet.y_rel - len(planet.fractions_impact) * 2
+            y = (planet.y_rel + planet.r_rel) if planet.y_rel < 50 else (
+                        planet.y_rel - len(planet.fractions_impact) * 2)
             self.stat_boxes = [Object(resolution,
                                       planet.x_rel,
                                       y + i,
-                                      5,
+                                      10,
                                       2) for i in range(
                 0,
                 len(planet.fractions_impact) * 2,
                 2
             )]
-            self.squads = {planet.squads[i]: MovableObject(
+            for i in range(len(planet.fractions_impact)):
+                self.stat_boxes[i].set_color((100, 100, 255), fmt='hsva')
+            self.squads = {}
+            for squad in planet.squads:
+                sq = MovableObject(
                 resolution,
                 planet.x_rel,
                 planet.y_rel,
                 2,
                 2,
                 border=2,
-                border_color=(255, 255, 255)
-            ) for i in range(len(planet.squads))}
+                border_color=(0, 255, 0) if squad.fraction == cls.main.fraction else (255, 0, 0),
+                adopt_order=1)
+                for sh in squad.ships:
+                    sq.set_image('.\\space_ships\\' + sh.img)
+                    break
+                self.squads[squad] = sq
             self.squads = {}
             self.cls = cls
             self.planet = planet
             super().__init__(resolution,
                              planet.x_rel,
                              planet.y_rel,
-                             planet.r_rel)
+                             planet.r_rel,
+                             border=3,
+                             adopt_order=1)
+
             size = random.randint(3, 8)
-            self.img = f'planets\\{img_number}'
-            self.img_hd = f'planets_high\\{img_number}'
+            self.img = f'.\\planets\\{img_number}'
+            self.img_hd = f'.\\planets_high\\{img_number}'
             self.set_image(self.img, size_mode='%obj')
             self.set_text(planet.name, (0, 255, 0), align='left', text_pos='left' if self.x_rel > 50 else 'right')
             self.set_font(font_scale=40)
             self.stat = False
-            for squad in self.squads.values():
-                squad.set_color((255, 255, 255))
+            # for squad in self.squads.values():
+            #     squad.set_color((255, 255, 255))
             for box in self.stat_boxes:
                 box.set_text(text_color=(255, 255, 255), align='left')
 
-        def update(self, planet, res):
+        def update(self, planet, res, fraction):
+
             self.planet = planet
+            if self.planet.get_most_fraction() == fraction:
+                self.border_color = (0, 255, 0)
+            else:
+                self.border_color = (255, 0, 0)
             for squad in set(self.squads.keys()) - set(planet.squads):
                 del self.squads[squad]
+            squad_number = len(planet.squads) - 1
             for squad in set(planet.squads) - set(self.squads.keys()):
-                self.squads[squad] = MovableObject(
+                sq = MovableObject(
                     res,
-                    planet.x_rel,
-                    planet.y_rel,
+                    planet.x_rel + squad_number % 3 * 2,
+                    planet.y_rel + squad_number // 3 * 2,
                     2,
                     2,
                     border=2,
-                    border_color=(255, 255, 255)
+                    border_color=(0, 255, 0) if squad.fraction == self.cls.main.fraction else (255, 0, 0),
+                    adopt_order=1
                 )
-            if planet.get_battle():
-                self.set_text('!' + self.text)
-            elif '!' == self.text[0]:
-                self.set_text(self.text[1:])
-
+                for sh in squad.ships:
+                    sq.set_image('.\\space_ships\\' + sh.img, size_mode='%obj')
+                    break
+                self.squads[squad] = sq
+                self.squads[squad].fraction = squad.fraction
+            if planet.status == 'BATTLE' and '!' != self.text[0]:
+                self.set_text('! ' + self.text + '! ')
 
         def draw(self, screen):
             super().draw(screen)
@@ -203,26 +259,144 @@ class SpaceMapScreen(GameArea):
             for squad in self.squads.values():
                 squad.hover(x, y)
 
-        def on_mouse_up(self, x, y):
+        def on_mouse_up(self, x, y, key):
             for squad_game, squad in self.squads.items():
-                if squad.grabbed:
-                    for obj in self.cls.objects:
-                        if self is not obj and obj.check(squad.x, squad.y):
-                            print(squad_game.start_travel(obj.planet))
+                if self.check(x, y) and key == 3:
+                    self.cls.main.switch_game_area(self.cls.main.battle_screen, self.cls.main.game.space_map.planets.index(self.planet))
+                else:
+                    if squad.grabbed and squad.fraction == self.cls.main.fraction:
+                        for obj in self.cls.objects:
+                            if self is not obj and obj.check(squad.x, squad.y, squad.x + squad.w, squad.y, squad.x, squad.y + squad.h, squad.x + squad.w, squad.y + squad.h):
+                                pf, ps, time = squad_game.start_travel(obj.planet)
+                                if time:
+                                    self.cls.add_objects(
+                                        self.cls.AnimatedTravel(pf.x_rel + pf.r_rel // 2,
+                                                                pf.y_rel + pf.r_rel // 2,
+                                                                ps.x_rel + ps.r_rel // 2,
+                                                                ps.y_rel + ps.r_rel // 2,
+                                                                time,
+                                                                self))
                     squad.x, squad.y = squad.sx, squad.sy
-                squad.on_mouse_up(x, y)
+                squad.on_mouse_up(x, y, key)
 
-        def on_mouse_down(self, x, y):
+        def on_mouse_down(self, x, y, key):
             for squad in self.squads.values():
-                squad.on_mouse_down(x, y)
+                squad.on_mouse_down(x, y, key)
 
     def update(self, main):
         for i, planet in enumerate(self.objects):
-            planet.update(main.game.space_map.planets[i], main.resolution)
+            planet.update(main.game.space_map.planets[i], main.resolution, main.fraction)
+        for sprite in self.sprites:
+            sprite.update(main.resolution)
 
     def load(self, resolution, space_map: SpaceMap):
-
-        images = random.choices(glob.glob('planets_high\\*.png'), k=len(space_map.planets))
+        self.objects = []
         for i, planet in enumerate(space_map.planets):
-            self.add_objects(self.APlanet(resolution, planet, images[i][12:], self))
+            self.add_objects(self.APlanet(resolution, planet, self.images[i][10:], self))
         super().load(resolution)
+
+
+class BattleScreen(GameArea):
+
+    def __init__(self, main_object):
+        super().__init__()
+        self.background = Background(main_object.resolution, '.\\staff\\space.jpg', mode='%obj')
+        self.planet_index = None
+        self.visual = set()
+
+    def load(self, resolution, planet_index):
+        self.planet_index = planet_index
+
+    class AShip(RadialObject):
+
+        def __init__(self, cls, ship, xr, yr):
+            self.cls = cls
+            self.ship = ship['ship']
+            self.fraction = ship['fraction']
+            super().__init__(cls.main.resolution,
+                             xr,
+                             yr,
+                             ship['size'],
+                             border=2,
+                             adopt_order=1)
+            if self.ship in cls.visual:
+                self.border_color = (0, 0, 255)
+            elif ship['fraction'] == cls.main.fraction:
+                self.border_color = (0, 255, 0)
+            else:
+                self.border_color = (255, 0, 0)
+            diffx = ship['xf'] - ship['xs']
+            diffy = ship['yf'] - ship['ys']
+            if diffy != 0:
+                deg = math.degrees(math.atan(diffx / diffy))
+                if diffy > 0:
+                    deg += 180
+            else:
+                deg = 0
+            self.set_image('.\\space_ships\\' + ship['img'],
+                        size_mode='%obj',
+                        rotation=deg)
+
+        def on_mouse_down(self, x, y, key):
+            if self.ship in self.cls.visual:
+                if key == 3:
+                    self.cls.battle.change_pos(
+                        self.ship,
+                        x / self.cls.main.resolution[0],
+                        y / self.cls.main.resolution[1])
+                elif not self.cls.main.pressed_keys['left shift']:
+                    self.cls.visual = set()
+            elif self.check(x, y) and key == 1 and self.fraction == self.cls.main.fraction:
+                if len(self.cls.visual) > 0 and not self.cls.main.pressed_keys['left shift']:
+                    self.cls.visual = set()
+                self.cls.visual.add(self.ship)
+
+        def update(self, ship):
+            '''
+            Need to rework it
+            :param ship:
+            :return:
+            '''
+            xr, yr = ship['xs'] // 100 - ship['size'] // 2, ship['ys'] // 100 - ship['size'] // 2
+            self.x_rel = xr
+            self.y_rel = yr
+            diffx = ship['xf'] - ship['xs']
+            diffy = ship['yf'] - ship['ys']
+            if diffy != 0:
+                deg = math.degrees(math.atan(diffx / diffy))
+                if diffy > 0:
+                    deg += 180
+            else:
+                deg = 0
+            if self.image_rotation != deg:
+                self.set_image(rotation=deg)
+
+
+    def update(self, main):
+        self.background.adopt(main.resolution)
+        self.main = main
+        self.objects = []
+        self.battle = main.game.space_map.planets[self.planet_index].battle
+        ships, bullets = self.battle.ships, self.battle.bullets
+        for bullet in bullets:
+            self.add_objects(RadialObject(main.resolution,
+                             bullet['xs'] // 100,
+                             bullet['ys'] // 100,
+                             1,
+                             border=1,
+                             border_color=(255, 0, 0) if bullet['fraction'] != self.main.fraction else (0, 255, 0)))
+        for ship in ships:
+            xr, yr = ship['xs'] // 100 - ship['size'] // 2, ship['ys'] // 100 - ship['size'] // 2
+            self.add_objects(StatusBar(main.resolution,
+                                       round(ship['health'] /
+                                             ship['max_health'] * 100),
+                                       xr,
+                                       yr + ship['size'],
+                                       ship['size'],
+                                       1,
+                                       adopt_order=1),
+                             self.AShip(self, ship, xr, yr))
+
+    def on_key_down(self, key):
+        if key == 'escape':
+            self.main.switch_game_area(self.main.space_map_area, self.main.game.space_map)
