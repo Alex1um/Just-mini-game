@@ -4,6 +4,7 @@ import glob
 from core import SpaceMap, Planet, Ship
 import math
 from threading import Thread
+import time
 
 
 class MainMenu(GameArea):
@@ -43,28 +44,30 @@ class Settings(GameArea):
 
         res_condition = lambda obj, key: key.isdigit() and (key != '0' if len(obj.text) == 0 else len(obj.text) < 4)
 
-        te_res_x = TextEdit(resolution, 20, 20, 25, 5, border=2)
+        te_res_x = TextEdit(resolution, 20, 40, 25, 5, border=2)
         te_res_x.color_default = (200, 200, 200)
         te_res_x.set_color((200, 200, 200))
         te_res_x.color_filling = (160, 160, 160)
         te_res_x.text_condition = res_condition
+
         te_res_x.set_text(str(resolution[0]))
 
-        te_res_y = TextEdit(resolution, 55, 20, 25, 5, border=2)
+        te_res_y = TextEdit(resolution, 55, 40, 25, 5, border=2)
         te_res_y.color_default = (200, 200, 200)
         te_res_y.set_color((200, 200, 200))
         te_res_y.color_filling = (160, 160, 160)
         te_res_y.text_condition = res_condition
         te_res_y.set_text(str(resolution[1]))
 
-        lb_res = Object(resolution, 40, 10, 20, 8)
+        lb_res = Object(resolution, 40, 30, 20, 8)
         lb_res.set_text('Разрешение', (255, 255, 255), align='center', valign='center')
 
         bt_down_color = pygame.Color('red')
 
-        bt_ok = Button(resolution, 60, 40, 20, 5, border=2)
+        bt_ok = Button(resolution, 60, 60, 20, 5, border=2)
         bt_ok.set_color((200, 200, 200))
-        bt_ok.color_on_mouse_down = bt_down_color
+        bt_ok.color_on_mouse_down = (100, 100, 100)
+        bt_ok.color_on_mouse_up = (200, 200, 200)
 
         def change_res(obj: Button, load_obj):
             main_object.switch_resolution(int(te_res_x.text), int(te_res_y.text), bt_fullscreen.image_enabled)
@@ -73,19 +76,14 @@ class Settings(GameArea):
         bt_ok.connect_mouse_up(lambda e: change_res(e, main_object.main_menu))
         bt_ok.set_text('OK')
 
-        bt_cancel = Button(resolution, 40, 40, 20, 5, border=2)
+        bt_cancel = Button(resolution, 20, 60, 20, 5, border=2)
         bt_cancel.set_color((200, 200, 200))
-        bt_cancel.color_on_mouse_down = bt_down_color
+        bt_cancel.color_on_mouse_down = (100, 100, 100)
+        bt_cancel.color_on_mouse_up = (200, 200, 200)
         bt_cancel.connect_mouse_up(lambda e: main_object.switch_game_area(main_object.main_menu))
         bt_cancel.set_text('Отмена')
 
-        bt_apply = Button(resolution, 20, 40, 20, 5, border=2)
-        bt_apply.set_text('Применить')
-        bt_apply.set_color((200, 200, 200))
-        bt_apply.color_on_mouse_down = bt_down_color
-        bt_apply.connect_mouse_up(lambda e: change_res(e, main_object.settings))
-
-        bt_fullscreen = Button(resolution, 20, 30, 5, 5, adopt_order=0, border_color=(150, 150, 150), border=2)
+        bt_fullscreen = Button(resolution, 20, 50, 5, 5, adopt_order=0, border_color=(150, 150, 150), border=2)
         bt_fullscreen.set_image('.\\staff\\check_box.jpg', size_mode='%obj')
         bt_fullscreen.image_enabled = main_object.full_screen
         bt_fullscreen.set_color((255, 255, 255))
@@ -96,10 +94,10 @@ class Settings(GameArea):
         bt_fullscreen.connect_mouse_up(switch_image)
         # bt_fullscreen.image_enabled = False
 
-        lb_fullscreen = Object(resolution, 25, 30, 10, 5)
+        lb_fullscreen = Object(resolution, 25, 50, 10, 5)
         lb_fullscreen.set_text('Полный экран', (255, 255, 255), align='left')
 
-        self.add_objects(te_res_x, te_res_y, lb_res, bt_ok, bt_cancel, bt_apply, bt_fullscreen, lb_fullscreen)
+        self.add_objects(te_res_x, te_res_y, lb_res, bt_ok, bt_cancel, bt_fullscreen, lb_fullscreen)
         # bg = Background(self.resolution, "galaxes\\galaxy_1.jpg")
         # bg.image_mode = '%obj'
         # main_menu.background = bg
@@ -117,7 +115,7 @@ class SpaceMapScreen(GameArea):
 
     class AnimatedTravel(Sprite):
 
-        def __init__(self, xs, ys, xf, yf, time, cls):
+        def __init__(self, xs, ys, xf, yf, timef, cls):
             super().__init__(cls.cls.main.resolution, '.\\staff\\fleet.png', xs, ys, 3, 3)
             diffx = xf - xs
             diffy = yf - ys
@@ -129,21 +127,23 @@ class SpaceMapScreen(GameArea):
                 deg = 0
             self.set_image(size_mode='%obj', rotation=deg)
             self.cls = cls
-            self.steps = time * 30
+            self.step = 0.1
+            self.steps = timef
             self.mx = (xf - xs) / self.steps
             self.my = (yf - ys) / self.steps
-            self.step = 0
+            self.st_time = time.time()
             self.xf, self.yf = xf, yf
+            Thread(target=self.update, args=[cls.cls.main.resolution]).start()
 
         def update(self, resolution):
-            if self.step <= self.steps:
-                self.x_rel += self.mx
-                self.y_rel += self.my
-                self.adopt(resolution)
-                self.step += 1
-            else:
-                self.kill()
-                del self
+            while self.st_time + self.steps >= time.time():
+                self.x_rel += self.mx * 0.1
+                self.y_rel += self.my * 0.1
+                time.sleep(0.1)
+                Thread(target=self.adopt, args=[resolution]).start()
+            self.kill()
+            del self
+
 
     class APlanet(RadialObject):
 
@@ -286,8 +286,8 @@ class SpaceMapScreen(GameArea):
     def update(self, main):
         for i, planet in enumerate(self.objects):
             planet.update(main.game.space_map.planets[i], main.resolution, main.fraction)
-        for sprite in self.sprites:
-            sprite.update(main.resolution)
+        # for sprite in self.sprites:
+        #     sprite.update(main.resolution)
 
     def load(self, resolution, space_map: SpaceMap):
         self.objects = []
