@@ -133,7 +133,9 @@ class Planet:
                  radius: int,
                  name: str,
                  fractions: Union[Tuple[Fraction], List[Fraction]],
-                 most_fraction: Fraction):
+                 most_fraction: Fraction,
+                 x,
+                 y):
         ''' may be realesed in game_area
         sprite_num = str(random.randint(1, 32))
         if len(sprite_num) == 1:
@@ -141,8 +143,10 @@ class Planet:
         img = f'planet_{sprite_num}.png'
         hd_img = f'planets_high\\planet{sprite_num}.png'
         '''
-        x_relative = random.randint(0, 100 - radius * 2)
-        y_relative = random.randint(0, 100 - radius * 2)
+        x_relative = x
+        y_relative = y
+        # x_relative = random.randint(0, 100 - radius * 2)
+        # y_relative = random.randint(0, 100 - radius * 2)
         impact = {}
         impact[most_fraction] = random.uniform(0.5, 1)
         imp = utils.break_number_sum(1 - impact[most_fraction], len(fractions) - 1)
@@ -450,11 +454,24 @@ class SpaceMap:
         planets = []
         with open('staff\\planet_names.set', 'rb') as f:
             names = pickle.load(f)
-        for name in random.choices(names, k=planet_count):
-            planets.append(Planet.generate(random.randint(*diameter),
-                                           name,
-                                           fractions,
-                                           random.choice(fractions)))
+        counter = planet_count
+        names = random.choices(names, k=planet_count)
+        was = set()
+        rand = (max(diameter), 100 - max(diameter) - 5)
+        while counter > 0:
+            x, y = random.randint(*rand), random.randint(*rand)
+            for x1, y1 in was:
+                if abs(x - x1) + abs(y1 - y) <= 20:
+                    break
+            else:
+                planets.append(Planet.generate(random.randint(*diameter),
+                                               names[counter - 1],
+                                               fractions,
+                                               random.choice(fractions),
+                                               x,
+                                               y,))
+                counter -= 1
+                was.add((x, y))
         return cls(planets)
 
 

@@ -351,6 +351,27 @@ class BattleScreen(GameArea):
                     self.cls.visual = set()
                 self.cls.visual.add(self.ship)
 
+        def update(self, ship):
+            '''
+            Need to rework it
+            :param ship:
+            :return:
+            '''
+            xr, yr = ship['xs'] // 100 - ship['size'] // 2, ship['ys'] // 100 - ship['size'] // 2
+            self.x_rel = xr
+            self.y_rel = yr
+            diffx = ship['xf'] - ship['xs']
+            diffy = ship['yf'] - ship['ys']
+            if diffy != 0:
+                deg = math.degrees(math.atan(diffx / diffy))
+                if diffy > 0:
+                    deg += 180
+            else:
+                deg = 0
+            if self.image_rotation != deg:
+                self.set_image(rotation=deg)
+
+
     def update(self, main):
         self.background.adopt(main.resolution)
         self.main = main
