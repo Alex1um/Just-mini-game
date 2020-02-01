@@ -39,6 +39,7 @@ class MainMenu(GameArea):
     def load(self, resolution):
         self.play_background_music()
 
+
 class Settings(GameArea):
 
     def __init__(self, main_object):
@@ -160,7 +161,8 @@ class SpaceMapScreen(GameArea):
                                       planet.x_rel,
                                       y + i,
                                       10,
-                                      2) for i in range(
+                                      2,
+                                      adopt_order=1) for i in range(
                 0,
                 len(planet.fractions_impact) * 2,
                 2
