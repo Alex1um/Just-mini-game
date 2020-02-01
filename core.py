@@ -86,7 +86,7 @@ class Planet:
         squad.status = self.status
         self.squads.append(squad)
         self.battle.add_squad(squad)
-        if len(self.fractions()) > 1:
+        if squad.fraction != self.get_most_fraction():
             self.battle.set_status('BATTLE')
 
     def fractions(self):
