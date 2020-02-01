@@ -10,6 +10,7 @@ import time
 class MainMenu(GameArea):
     def __init__(self, main_object):
         super().__init__()
+        self.set_background_music('.\\music\\mm.wav')
         resolution = main_object.resolution
 
         bt_new_game = Button(resolution, 20, 20, 60, 10,
@@ -17,7 +18,7 @@ class MainMenu(GameArea):
         bt_new_game.set_color((150, 150, 150))
         bt_new_game.color_on_mouse_down = pygame.Color('gray')
         bt_new_game.set_text('Начать игру', (0, 0, 0))
-        bt_new_game.connect_mouse_up(lambda x: main_object.new_game())
+        bt_new_game.connect_mouse_up(lambda x: (pygame.mixer_music.stop(), main_object.new_game()))
 
         bt_settings = Button(resolution, 20, 40, 60, 10,
                              border_color=(255, 255, 255), border=2)
@@ -35,6 +36,8 @@ class MainMenu(GameArea):
 
         self.add_objects(bt_new_game, bt_settings, bt_exit)
 
+    def load(self, resolution):
+        self.play_background_music()
 
 class Settings(GameArea):
 
@@ -107,6 +110,8 @@ class SpaceMapScreen(GameArea):
 
     def __init__(self, main_object):
         super().__init__()
+        self.set_background_music('.\\music\\sm.wav')
+        self.set_sounds('.\\sounds\\flying.wav', '.\\sounds\\flying2.wav')
         resolution = main_object.resolution
         self.background = Background(resolution, random.choice(glob.glob('.\\galaxes\\*')))
         self.main = main_object
@@ -142,8 +147,8 @@ class SpaceMapScreen(GameArea):
                 time.sleep(0.1)
                 Thread(target=self.adopt, args=[resolution]).start()
             self.kill()
+            self.cls.cls.play_sound('flying2')
             del self
-
 
     class APlanet(RadialObject):
 
@@ -262,6 +267,7 @@ class SpaceMapScreen(GameArea):
         def on_mouse_up(self, x, y, key):
             for squad_game, squad in self.squads.items():
                 if self.check(x, y) and key == 3:
+                    pygame.mixer_music.stop()
                     self.cls.main.switch_game_area(self.cls.main.battle_screen, self.cls.main.game.space_map.planets.index(self.planet))
                 else:
                     if squad.grabbed and squad.fraction == self.cls.main.fraction:
@@ -269,6 +275,7 @@ class SpaceMapScreen(GameArea):
                             if self is not obj and obj.check(squad.x, squad.y, squad.x + squad.w, squad.y, squad.x, squad.y + squad.h, squad.x + squad.w, squad.y + squad.h):
                                 pf, ps, time = squad_game.start_travel(obj.planet)
                                 if time:
+                                    self.cls.play_sound('flying')
                                     self.cls.add_objects(
                                         self.cls.AnimatedTravel(pf.x_rel + pf.r_rel // 2,
                                                                 pf.y_rel + pf.r_rel // 2,
@@ -290,6 +297,7 @@ class SpaceMapScreen(GameArea):
         #     sprite.update(main.resolution)
 
     def load(self, resolution, space_map: SpaceMap):
+        self.play_background_music()
         self.objects = []
         for i, planet in enumerate(space_map.planets):
             self.add_objects(self.APlanet(resolution, planet, self.images[i][10:], self))
@@ -300,11 +308,15 @@ class BattleScreen(GameArea):
 
     def __init__(self, main_object):
         super().__init__()
+        self.set_background_music('.\\music\\btle.wav')
+        self.set_sounds('.\\sounds\\laser1.wav', '.\\sounds\\laser2.wav', '.\\sounds\\flying2.wav')
         self.background = Background(main_object.resolution, '.\\staff\\space.jpg', mode='%obj')
         self.planet_index = None
+        self.bullet_count = float('inf')
         self.visual = set()
 
     def load(self, resolution, planet_index):
+        self.play_background_music()
         self.planet_index = planet_index
 
     class AShip(RadialObject):
@@ -371,13 +383,16 @@ class BattleScreen(GameArea):
             if self.image_rotation != deg:
                 self.set_image(rotation=deg)
 
-
     def update(self, main):
         self.background.adopt(main.resolution)
         self.main = main
         self.objects = []
         self.battle = main.game.space_map.planets[self.planet_index].battle
         ships, bullets = self.battle.ships, self.battle.bullets
+        bulet_count = len(bullets)
+        if bulet_count > self.bullet_count:
+            self.play_sound('laser1')
+        self.bullet_count = bulet_count
         for bullet in bullets:
             self.add_objects(RadialObject(main.resolution,
                              bullet['xs'] // 100,

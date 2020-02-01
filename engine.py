@@ -909,6 +909,14 @@ class GameArea:
     def set_background_music(self, *file_names):
         self.background_music = file_names
 
+    def play_background_music(self):
+        for name in self.background_music:
+            pygame.mixer_music.load(name)
+            pygame.mixer_music.queue(name)
+        pygame.mixer_music.play(
+            10000
+        )
+
     def set_sounds(self, *file_names: str):
         """
         Compile sounds to play

@@ -63,14 +63,10 @@ class Planet:
     def produce(self):
         while 1:
             sleep(self.produce_timer)
-            if not self.squads:
+            if len(self.squads) < 3:
                 sq = Squad(self)
                 sq.set_ships({self.produce_ship()})
                 self.add_squad(sq)
-            else:
-                for i in range(len(self.squads)):
-                    if len(self.squads[i].ships) <= 3:
-                        self.squads[i].ships.add(self.produce_ship())
             self.battle.update_squads()
 
     def __eq__(self, other):
@@ -258,10 +254,10 @@ class Battle:
         return {'fraction': fraction,
                 'ship': ship,
                 'health': ship.get_health(),
-                'xs': random.randint(100, self.size[0]),
-                'ys': random.randint(100, self.size[1]),
-                'xf': random.randint(100, self.size[0]),
-                'yf': random.randint(100, self.size[1]),
+                'xs': random.randint(100, self.size[0] - 1000),
+                'ys': random.randint(100, self.size[1] - 1000),
+                'xf': random.randint(100, self.size[0] - 1000),
+                'yf': random.randint(100, self.size[1] - 1000),
                 'status': 'FIXED',
                 'reload': time(),
                 'size': ship.get_size(),

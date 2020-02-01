@@ -11,6 +11,7 @@ class Client:
     def __init__(self):
         # Todo realize Game ares
         pygame.init()
+        pygame.mixer_music.set_volume(0.1)
         self.current_game_area: GameArea
         self.resolution = (800, 800)
         self.fps = 30
