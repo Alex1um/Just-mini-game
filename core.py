@@ -117,7 +117,8 @@ class Planet:
         max_fract = self.get_most_fraction()
         self.fractions_impact[fraction] += max_percent / 100
         val = 0
-        for fract, v in sorted(self.fractions_impact.items(), key=lambda x: x[1])[:-1]:
+        for fract, v in sorted(self.fractions_impact.items(),
+                               key=lambda x: x[1])[:-1]:
             if fract != fraction:
                 r = random.uniform(0, v)
                 val += r
@@ -145,14 +146,23 @@ class Planet:
         # y_relative = random.randint(0, 100 - radius * 2)
         impact = {}
         impact[most_fraction] = random.uniform(0.5, 1)
-        imp = utils.break_number_sum(1 - impact[most_fraction], len(fractions) - 1)
+        imp = utils.break_number_sum(1 - impact[most_fraction],
+                                     len(fractions) - 1)
         most_fraction_index = fractions.index(most_fraction)
         produce_ship = random.choice(SHIPS)
         example_ship: Ship = produce_ship()
-        produce_timer = (example_ship.health / 500 * example_ship.size + example_ship.damage / 8) / radius
-        for i, fraction in enumerate(fractions[:most_fraction_index] + fractions[most_fraction_index + 1:]):
+        produce_timer = (example_ship.health / 500 *
+                         example_ship.size + example_ship.damage / 8) / radius
+        for i, fraction in enumerate(fractions[:most_fraction_index] +
+                                     fractions[most_fraction_index + 1:]):
             impact[fraction] = imp[i]
-        return cls(x_relative, y_relative, radius, name, impact, produce_ship, produce_timer)
+        return cls(x_relative,
+                   y_relative,
+                   radius,
+                   name,
+                   impact,
+                   produce_ship,
+                   produce_timer)
 
 
 class Squad:
@@ -211,7 +221,11 @@ class Squad:
             def travel(planet: Planet, destination: Planet, squad: Squad):
                 destination.add_squad(squad)
 
-            Thread(target=timer, args=(self.travel_time, lambda: travel(self.planet, destination, self))).start()
+            Thread(target=timer,
+                   args=(self.travel_time,
+                         lambda: travel(self.planet,
+                                        destination,
+                                        self))).start()
             return self.planet, destination, self.travel_time
         return None, None, None
 
@@ -308,8 +322,8 @@ class Battle:
                             dist = ((enemy['xs'] - ship['xs']) ** 2 + (
                                         enemy['ys'] - ship[
                                     'ys']) ** 2) ** 0.5
-                            if dist < ship['ship'].get_attack_range() and ship['fraction'] != enemy['fraction']:
-                                # coef = ship['ship'].get_attack_range() / dist if dist != 0 else 1
+                            if dist < ship['ship'].get_attack_range() and\
+                                    ship['fraction'] != enemy['fraction']:
                                 coef = 10
                                 aims[dist] = {'range': ship[
                                                   'ship'].get_attack_range(),
@@ -317,8 +331,12 @@ class Battle:
                                                   'ship'].get_damage(),
                                               'xs': ship['xs'],
                                               'ys': ship['ys'],
-                                              'xf': enemy['xs'] + (enemy['xs'] - ship['xs']) * coef,
-                                              'yf': enemy['ys'] + (enemy['ys'] - ship['ys']) * coef,
+                                              'xf': enemy['xs'] + (
+                                                      enemy['xs'] -
+                                                      ship['xs']) * coef,
+                                              'yf': enemy['ys'] + (
+                                                      enemy['ys'] -
+                                                      ship['ys']) * coef,
                                               'killed': False,
                                               'fraction': ship['fraction']}
                     if aims:
@@ -329,11 +347,17 @@ class Battle:
                 if bullet['killed']:
                     continue
                 for q, w in enumerate(self.ships):
-                    if hit(bullet['xs'], bullet['ys'], w['xs'], w['ys'], w['size'] * 50) and bullet['fraction'] != w['fraction']:
+                    if hit(bullet['xs'],
+                           bullet['ys'],
+                           w['xs'],
+                           w['ys'],
+                           w['size'] * 50) and\
+                            bullet['fraction'] != w['fraction']:
                         self.ships[q]['health'] -= bullet['damage']
                         self.bullets[c]['killed'] = True
                         break
-                if -1 >= bullet['xs'] >= self.size[0] or -1 >= bullet['ys'] >= self.size[1]:
+                if -1 >= bullet['xs'] >= self.size[0] or\
+                        -1 >= bullet['ys'] >= self.size[1]:
                     self.bullets[c]['killed'] = True
                     break
                 max_distance = BULLET_SPEED * self.TICK
@@ -356,7 +380,8 @@ class Battle:
                 #     self.bullets[c]['ys'] = bullet['yf']
 
             self.ships = list(filter(lambda x: x['health'] > 0, self.ships))
-            self.bullets = list(filter(lambda x: not x['killed'], self.bullets))
+            self.bullets = list(
+                filter(lambda x: not x['killed'], self.bullets))
             self.update_squads()
             sleep(self.TICK)
             if self.win() and self.status == 'BATTLE':
@@ -387,7 +412,14 @@ class Battle:
 
 class Ship:
 
-    def __init__(self, name, damage, health, speed, attack_range, reload_time, size, img):
+    def __init__(self, name,
+                 damage,
+                 health,
+                 speed,
+                 attack_range,
+                 reload_time,
+                 size,
+                 img):
         self.size = size
         self.img = img
         self.name = name
@@ -480,14 +512,21 @@ class Game:
 
     @classmethod
     def generate(cls, number_of_fraction, planet_count):
-        fractions = [Fraction(name) for name in {'red', 'green', 'blue', 'black', 'white'}]
+        fractions = [
+            Fraction(name) for name
+            in {'red', 'green', 'blue', 'black', 'white'}]
         space_map = SpaceMap.generate(planet_count, (5, 7), fractions)
         return cls(fractions, space_map)
 
 
-station1 = lambda: Ship('destroyer', 100, 5000, 100, 10000, 5, 10, 'Communicationship_blue.png')
-station2 = lambda: Ship('destroyer2', 300, 4000, 100, 10000, 7, 10, 'mothership_try.png')
-ship_speeder = lambda: Ship('speeder', 20, 500, 3000, 1000, 0.5, 5, 'alienship_new_red_try.png')
-medium_ship = lambda: Ship('medium', 50, 1200, 1500, 10000, 2, 7, 'spaceship_enemy.png')
-sniper = lambda: Ship('sniper', 1000, 200, 500, 100000000, 10, 4, 'small_ships.png')
+station1 = lambda: Ship('destroyer', 100,
+                        5000, 100, 10000, 5, 10, 'Communicationship_blue.png')
+station2 = lambda: Ship('destroyer2', 300,
+                        4000, 100, 10000, 7, 10, 'mothership_try.png')
+ship_speeder = lambda: Ship('speeder', 20, 500,
+                            3000, 1000, 0.5, 5, 'alienship_new_red_try.png')
+medium_ship = lambda: Ship('medium', 50,
+                           1200, 1500, 10000, 2, 7, 'spaceship_enemy.png')
+sniper = lambda: Ship('sniper', 1000,
+                      200, 500, 100000000, 10, 4, 'small_ships.png')
 SHIPS = (station1, station2, ship_speeder, medium_ship, sniper)

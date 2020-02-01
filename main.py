@@ -50,7 +50,8 @@ class Client:
         caption = pygame.display.get_caption()
         cursor = pygame.mouse.get_cursor()  # Duoas 16-04-2007
         flags = self.screen.get_flags()
-        if fullscreen and not self.full_screen or not fullscreen and self.full_screen:
+        if fullscreen and not self.full_screen or\
+                not fullscreen and self.full_screen:
             flags ^= FULLSCREEN
             self.full_screen = not self.full_screen
         bits = self.screen.get_bitsize()
@@ -81,9 +82,11 @@ class Client:
                 if e.type == pygame.MOUSEMOTION:
                     self.current_game_area.on_mouse_motion(*e.dict['pos'])
                 elif e.type == pygame.MOUSEBUTTONUP:
-                    self.current_game_area.on_mouse_up(*e.dict['pos'], e.dict['button'])
+                    self.current_game_area.on_mouse_up(*e.dict['pos'],
+                                                       e.dict['button'])
                 elif e.type == pygame.MOUSEBUTTONDOWN:
-                    self.current_game_area.on_mouse_down(*e.dict['pos'], e.dict['button'])
+                    self.current_game_area.on_mouse_down(*e.dict['pos'],
+                                                         e.dict['button'])
                 elif e.type == pygame.QUIT:
                     self.exit = True
                 elif e.type == pygame.KEYDOWN:
