@@ -38,6 +38,7 @@ class Client:
         pygame.draw.rect(self.screen, (0, 0, 0), (0, 0, *self.resolution))
         self.current_game_area = game_area
         self.current_game_area.load(self.resolution, *args, **kwargs)
+        self.current_game_area.change_resolution(self.resolution)
 
     def switch_resolution(self, width=None, height=None, fullscreen=False):
         w, h = self.resolution
