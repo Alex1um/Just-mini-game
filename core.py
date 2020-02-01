@@ -133,17 +133,8 @@ class Planet:
                  most_fraction: Fraction,
                  x,
                  y):
-        ''' may be realesed in game_area
-        sprite_num = str(random.randint(1, 32))
-        if len(sprite_num) == 1:
-            sprite_num = '0' + sprite_num
-        img = f'planet_{sprite_num}.png'
-        hd_img = f'planets_high\\planet{sprite_num}.png'
-        '''
         x_relative = x
         y_relative = y
-        # x_relative = random.randint(0, 100 - radius * 2)
-        # y_relative = random.randint(0, 100 - radius * 2)
         impact = {}
         impact[most_fraction] = random.uniform(0.5, 1)
         imp = utils.break_number_sum(1 - impact[most_fraction],
