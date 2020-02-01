@@ -148,7 +148,8 @@ class Planet:
         imp = utils.break_number_sum(1 - impact[most_fraction], len(fractions) - 1)
         most_fraction_index = fractions.index(most_fraction)
         produce_ship = random.choice(SHIPS)
-        produce_timer = 1
+        example_ship: Ship = produce_ship()
+        produce_timer = (example_ship.health / 500 * example_ship.size + example_ship.damage / 8) / radius
         for i, fraction in enumerate(fractions[:most_fraction_index] + fractions[most_fraction_index + 1:]):
             impact[fraction] = imp[i]
         return cls(x_relative, y_relative, radius, name, impact, produce_ship, produce_timer)
@@ -485,6 +486,8 @@ class Game:
 
 
 station1 = lambda: Ship('destroyer', 100, 5000, 100, 10000, 5, 10, 'Communicationship_blue.png')
-station2 = lambda: Ship('destroyer2', 150, 4000, 100, 10000, 5, 10, 'mothership_try.png')
-ship_speeder = lambda: Ship('speeder', 10, 500, 3000, 1000, 1, 5, 'alienship_new_red_try.png')
-SHIPS = (station1, station2, ship_speeder)
+station2 = lambda: Ship('destroyer2', 300, 4000, 100, 10000, 7, 10, 'mothership_try.png')
+ship_speeder = lambda: Ship('speeder', 20, 500, 3000, 1000, 0.5, 5, 'alienship_new_red_try.png')
+medium_ship = lambda: Ship('medium', 50, 1200, 1500, 10000, 2, 7, 'spaceship_enemy.png')
+sniper = lambda: Ship('sniper', 1000, 200, 500, 100000000, 10, 4, 'small_ships.png')
+SHIPS = (station1, station2, ship_speeder, medium_ship, sniper)
